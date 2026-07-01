@@ -20,26 +20,23 @@ docs: PLAN 로드맵 갱신
 
 - **커밋 전에, 상세 본문을 포함한 커밋 메시지를 먼저 작성해 확인받고 → 승인받은 메시지 그대로 커밋한다.** (임의로 메시지를 정해 바로 커밋하지 않는다.)
 
-## 브랜치 전략 — GitHub Flow
+## 브랜치 전략 — Git Flow (1인 프로젝트용 간소화)
 
-1인 프로젝트에 맞춘 경량 전략 (정통 Git Flow의 develop/release/hotfix는 미사용).
+Git Flow를 따르되, 1인·자동배포 환경에 불필요한 `develop`·`release`·`hotfix`·`bugfix`는 생략한다.
 
-- **`main`**: 기본 브랜치. 항상 배포 가능한 상태 유지. main 머지 시 자동 배포(아래).
-- **feature 브랜치**: 작업은 짧은 수명의 브랜치에서 → PR → `main` 머지.
-- **develop 브랜치 없음** (feature+PR로 main 진입을 이미 통제).
+- **`main`**: 장기 브랜치. 항상 배포 가능한 상태. main 머지 시 자동 배포.
+- **`feature/*`**: 모든 작업은 `main`에서 분기 → PR → `main` 머지 후 삭제.
 
 ### 브랜치 네이밍
 
-`type/짧은-설명` — 작업 대분류가 드러나게 (commit type과 동일 prefix):
+`feature/<짧은-설명>`:
 
 ```
-feat/클릭카메라
-fix/레이캐스트-오프셋
-docs/plan-갱신
-chore/deps
-ci/pages-배포
-refactor/씬그래프
+feature/click-camera
+feature/painting-mode
 ```
+
+문서·진행상황(PROGRESS 등) 갱신은 별도 브랜치를 만들지 않고, 그 작업을 진행한 `feature` 브랜치 안에서 함께 커밋한다.
 
 ## 푸시 / PR
 
