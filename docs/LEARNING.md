@@ -23,6 +23,9 @@
 - **`declare module` / 모듈 보강(module augmentation)** — 외부 모듈의 타입에 내 타입을 덧붙여 확장. styled-components의 빈 `DefaultTheme` interface를 `AppTheme`으로 확장하면 전역 styled에서 `theme.colors...`가 자동완성·타입체크된다. (interface 선언 병합 이용)
 - **`createGlobalStyle` vs 루트 CSS** — GlobalStyle은 TS 안에서 전역 CSS를 정의하고 `<GlobalStyle/>`로 렌더. 테마 값 직접 주입(`theme.colors...`)·동적 스타일 가능. 순수 CSS는 JS 테마 접근 불가(CSS 변수로 우회), 대신 가볍다.
 - **`interface` vs `type`** — interface는 선언 병합 가능(모듈 보강 필수)·객체 shape 위주. type은 union·튜플·매핑 등 표현력이 크고 병합 불가. 예: `type ThemeMode = 'light' | 'dark'`, `interface AppTheme`.
+- **GitHub Pages의 단일 사이트 한계** — 레포당 Pages 사이트가 1개라 스테이징/프로덕션 분리·PR 프리뷰가 기본 기능으로 불가. 다중 환경이 필요하면 Vercel/Netlify류가 적합.
+- **Vercel 프리뷰 배포** — Git 연동 시 브랜치·PR마다 자동 프리뷰 URL 생성(main=프로덕션, 그 외=프리뷰). 별도 CI 워크플로 없이 배포·프리뷰 자동화.
+- **Git Flow의 develop·release 역할** — develop=feature 통합("다음 릴리스"), release=배포 전 최종 검증·버전 태깅. main은 릴리스된(프로덕션) 상태만 유지.
 
 ---
 

@@ -99,7 +99,7 @@ src/
 | Phase | 내용 |
 |---|---|
 | **0. 셋업** | Vite+R3F+TS, styled-components+ThemeProvider, 기본 씬, PLAN.md |
-| **0.5. 배포 파이프라인** | public 레포 + GitHub Actions + Pages + base 경로 (초반 구축, 매 푸시 자동배포) |
+| **0.5. 배포 파이프라인** | Vercel 연결 (main=프로덕션 / develop=스테이징 / PR=프리뷰), Git 연동 자동 CI/CD |
 | **1. 맵 + 클릭 카메라** ★ | 저폴리/파스텔, 기울어진 항공뷰, 바닥 클릭→카메라 트윈 이동 |
 | **2. 스테이션 + 상호작용 + 미니맵** ★ | 스테이션 데이터 정의, 임시 Box, 클릭/근접 트리거, 우상단 미니맵 |
 | **3. 2D/3D 전환** ★ | 벽 + 카메라 정면 이동 + `<Html transform>` 패널, 닫기 복귀 |
@@ -116,11 +116,11 @@ src/
 
 ## 9. 배포
 
-- **GitHub Pages + GitHub Actions** (public 레포, 무료 Pages).
-- Vite `base` 경로 설정(`/portfolio-r3f/` 또는 커스텀 도메인 루트).
-- SPA 라우팅(`/print` 등) → Pages용 404 폴백 또는 hash 라우팅.
-- Firebase 설정값은 GitHub Actions 시크릿/변수로 주입(공개값이지만 관리 일원화).
-- CI/CD는 **초반(Phase 0~1)** 구축.
+- **Vercel** (Git 연동 자동 CI/CD, 별도 Actions 불필요).
+- 환경: `main` → 프로덕션(라이브) / `develop` → 스테이징 프리뷰 / PR·`release/*` → 자동 프리뷰.
+- Vite 자동 감지(build `npm run build`, output `dist`), 루트 도메인 + SPA 처리로 base 경로 문제 없음.
+- Firebase 등 환경변수는 Vercel 프로젝트 설정에 주입.
+- 브랜치 전략: Git Flow (main+develop+feature, 운영 시 release·hotfix 추가) — 상세는 CONVENTIONS.
 
 ## 10. 진행 방식
 
@@ -137,4 +137,5 @@ src/
 - 2D 벽: drei `<Html transform>`
 - 데이터: 전부 Firestore / 방명록: 공개 작성 + 봇 방지
 - 프로젝트: Firestore 정보 + 전시 벽 + "체험하기" 버튼(코드 데모)
-- 배포: GitHub Pages + Actions(초반), 미니맵 우상단
+- 배포: Vercel (main=프로덕션 / develop=스테이징 / PR=프리뷰), 미니맵 우상단
+- 브랜치: Git Flow (main+develop+feature, 운영 시 release·hotfix)

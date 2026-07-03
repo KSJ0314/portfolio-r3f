@@ -64,8 +64,10 @@
   - **기본 3D 씬**: `src/scene/Experience/` — Canvas + ambient/directional 조명(테마 연동) + 바닥 plane + 임시 박스 + 임시 OrbitControls (Phase 1 클릭 이동으로 대체 예정)
   - **트러블슈팅·결정**: `@vitejs/plugin-react` v6가 oxc 사용(`babel` 옵션 없음) 확인 → `babel-plugin-styled-components` 제거, `vite.config.ts` `react()`로 원복
   - **정리**: 미사용 보일러플레이트 삭제(`index.css`·`App.css`·`src/assets/*`·`public/icons.svg`), `index.html`(title `3D Portfolio: SoJung Kim`, lang `ko`), 채워진 폴더 `.gitkeep` 제거
+  - **브랜치 전략 확장**: 풀 Git Flow(main+develop+feature, 운영 시 release·hotfix)로 결정, `develop` 브랜치 부트스트랩(main·develop baseline 동기화 + 원격 push)
+  - **배포처 결정**: GitHub Pages → Vercel (main=프로덕션 / develop=스테이징 / PR=프리뷰), Phase 0.5에서 연결
 
 ## 다음 할 일
 
-1. Phase 0.5 — 배포 파이프라인 (GitHub Pages + Actions)
+1. Phase 0.5 — Vercel 연결 (main=프로덕션 / develop=스테이징 / PR=프리뷰)
 2. Phase 1 — 맵 + 클릭 카메라 이동

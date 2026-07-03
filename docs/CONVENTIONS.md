@@ -20,23 +20,23 @@ docs: PLAN 로드맵 갱신
 
 - **커밋 전에, 상세 본문을 포함한 커밋 메시지를 먼저 작성해 확인받고 → 승인받은 메시지 그대로 커밋한다.** (임의로 메시지를 정해 바로 커밋하지 않는다.)
 
-## 브랜치 전략 — Git Flow (1인 프로젝트용 간소화)
+## 브랜치 전략 — Git Flow
 
-Git Flow를 따르되, 1인·자동배포 환경에 불필요한 `develop`·`release`·`hotfix`·`bugfix`는 생략한다.
+- **`main`**: 프로덕션(라이브). 릴리스된 것만 반영 → Vercel 프로덕션 배포.
+- **`develop`**: 통합 브랜치. feature들이 모이는 "다음 릴리스" 상태 → Vercel 스테이징 프리뷰.
+- **`feature/*`**: 신규 기능·작업. `develop`에서 분기 → PR → `develop` 머지 후 삭제.
+- **`release/*`**: (운영 시작 후) 배포 전 최종 검증·버전 태깅 → `main`(+`develop`) 머지.
+- **`hotfix/*`**: (운영 후) 라이브 긴급 수정. `main`에서 분기 → `main`(+`develop`) 머지.
 
-- **`main`**: 장기 브랜치. 항상 배포 가능한 상태. main 머지 시 자동 배포.
-- **`feature/*`**: 모든 작업은 `main`에서 분기 → PR → `main` 머지 후 삭제.
+### 개발 단계 규칙 (운영 전)
+
+- 라이브 사용자가 없는 개발 단계에서는 `release`·`hotfix` 미사용.
+- 흐름: `feature → develop → main` 직접 승격.
+- `release`·`hotfix`는 실제 운영 시작 후 도입.
 
 ### 브랜치 네이밍
 
-`feature/<짧은-설명>`:
-
-```
-feature/click-camera
-feature/painting-mode
-```
-
-문서·진행상황(PROGRESS 등) 갱신은 별도 브랜치를 만들지 않고, 그 작업을 진행한 `feature` 브랜치 안에서 함께 커밋한다.
+`feature/<짧은-설명>` (예: `feature/click-camera`, `feature/painting-mode`)
 
 ## 푸시 / PR
 
@@ -44,13 +44,15 @@ feature/painting-mode
 - PR 제목도 커밋 컨벤션을 따른다.
 - 솔로지만 PR을 거쳐 머지 이력을 남긴다 (포트폴리오 신호).
 
-## 배포 (계획 — 아직 미구현)
+## 배포 — Vercel (Phase 0.5에서 연결)
 
-> 실제 구현은 Phase 0.5에서. 현재는 규칙만 확정.
-
-- **GitHub Actions**로 CI/CD: `main`에 머지되면 → 빌드 → **GitHub Pages 자동 배포**.
-- 수동 트리거(`workflow_dispatch`)도 두어 필요 시 수동 배포.
-- 공식 GitHub Pages 액션(`actions/upload-pages-artifact` + `deploy-pages`) 사용 예정.
+- **Vercel** Git 연동으로 자동 CI/CD (별도 Actions 워크플로 불필요).
+- 환경 매핑:
+  - `main` → **프로덕션** (라이브 URL)
+  - `develop` → **스테이징** 프리뷰 URL
+  - PR·`release/*` → **자동 프리뷰** URL (배포 전 검증)
+- Framework: Vite 자동 감지 (build `npm run build`, output `dist`).
+- Firebase 등 환경변수는 Vercel 프로젝트 설정에 주입.
 - 레포: **public** (`portfolio-r3f`).
 
 ---
