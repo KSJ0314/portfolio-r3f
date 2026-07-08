@@ -1,0 +1,45 @@
+import { useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { Vector3 } from 'three'
+import type { Mesh } from 'three'
+import { useThemeStore } from '../../state/useThemeStore'
+import { themes } from '../../theme/themes'
+import { useCameraStore } from '../../state/useCameraStore'
+
+/** 이동 속도(유닛/초). 거리와 무관하게 항상 일정. */
+const MOVE_SPEED = 8
+
+const _dir = new Vector3()
+
+/**
+ * 임시 캐릭터 플레이스홀더. 매 프레임 목표점(target)을 향해 고정 속도로 한 걸음씩
+ * 이동한다. 우클릭을 누르고 있으면 목표점이 커서를 따라 갱신되어 계속 이동한다.
+ * Phase 7에서 실제 캐릭터·걷기 애니메이션으로 교체.
+ */
+export function Character() {
+  const ref = useRef<Mesh>(null)
+  const mode = useThemeStore((s) => s.mode)
+  const theme = themes[mode]
+  const position = useCameraStore((s) => s.position)
+  const target = useCameraStore((s) => s.target)
+
+  useFrame((_, delta) => {
+    const dist = position.distanceTo(target)
+    if (dist > 1e-4) {
+      const step = MOVE_SPEED * delta
+      if (dist <= step) {
+        position.copy(target)
+      } else {
+        position.add(_dir.subVectors(target, position).normalize().multiplyScalar(step))
+      }
+    }
+    ref.current?.position.set(position.x, 0.4, position.z)
+  })
+
+  return (
+    <mesh ref={ref}>
+      <boxGeometry args={[0.6, 0.8, 0.6]} />
+      <meshStandardMaterial color={theme.colors.accent} />
+    </mesh>
+  )
+}
