@@ -8,11 +8,19 @@ _작성 예정_
 
 ## 씬 그래프 (3D)
 
-_작성 예정 (Experience / World / CameraRig / Stations)_
+현재(Phase 1):
+
+- `Experience` (`<Canvas orthographic>`) — Orthographic 카메라(아이소메트릭 오프셋)·조명(테마 연동)·배경, 우클릭 메뉴 차단.
+  - `World` — 임시 바닥(레이캐스트 대상) + 테스트용 격자. 우클릭 홀드 입력으로 목표점(`useCameraStore`) 갱신.
+  - `Character` — 임시 캐릭터(박스). 매 프레임 `target`으로 고정 속도 이동, 위치를 `useCameraStore.position`에 반영.
+  - `CameraRig` — 캐릭터와의 고정 오프셋 유지하며 매 프레임 따라가 화면 중앙에 둠.
+
+예정: `Stations`(Phase 2), 프로젝트 전시 벽(Phase 3~4).
 
 ## 상태 관리 (zustand)
 
-_작성 예정_
+- `useThemeStore` — 테마 모드(light/dark) + toggle, 2D·3D 동시 전환.
+- `useCameraStore` — 이동 상태: `position`(현재 위치, 좌표만 변경) · `target`(목표점, 경계 clamp) · `setTarget(point)` · 상수 `CAMERA_BOUNDS`.
 
 ## 데이터 흐름 (Firestore → UI)
 

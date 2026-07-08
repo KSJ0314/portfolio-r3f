@@ -1,19 +1,19 @@
 # 진행 상황 (PROGRESS)
 
-> 이 문서는 프로젝트의 현재 진행 상황을 추적합니다. 마지막 업데이트: **2026-07-01**
+> 이 문서는 프로젝트의 현재 진행 상황을 추적합니다. 마지막 업데이트: **2026-07-07**
 > 전체 계획은 [PLAN.md](./PLAN.md) 참고.
 
 ## 현재 단계
 
-**Phase 0 — 셋업 완료** → 다음: Phase 0.5(배포 파이프라인) 또는 Phase 1(맵 + 클릭 카메라)
+**Phase 1 — 맵 + 우클릭 카메라 이동 완료** → 다음: Phase 2(스테이션 + 상호작용 + 미니맵)
 
 ## 단계별 상태
 
 | Phase | 내용 | 상태 |
 |---|---|---|
 | 0 | 셋업 (Vite+R3F+TS, 테마, 기본 씬, 문서) | 🟢 완료 |
-| 0.5 | 배포 파이프라인 (GitHub Pages + Actions) | ⚪ 대기 |
-| 1 | 맵 + 클릭 카메라 이동 | ⚪ 대기 |
+| 0.5 | 배포 파이프라인 (Vercel Git 연동) | 🟢 완료 |
+| 1 | 맵 + 클릭 카메라 이동 | 🟢 완료 |
 | 2 | 스테이션 + 상호작용 + 미니맵 | ⚪ 대기 |
 | 3 | 2D/3D 전환 (벽 + Html transform) | ⚪ 대기 |
 | 3.5 | Firebase 데이터 레이어 | ⚪ 대기 |
@@ -64,8 +64,25 @@
   - **기본 3D 씬**: `src/scene/Experience/` — Canvas + ambient/directional 조명(테마 연동) + 바닥 plane + 임시 박스 + 임시 OrbitControls (Phase 1 클릭 이동으로 대체 예정)
   - **트러블슈팅·결정**: `@vitejs/plugin-react` v6가 oxc 사용(`babel` 옵션 없음) 확인 → `babel-plugin-styled-components` 제거, `vite.config.ts` `react()`로 원복
   - **정리**: 미사용 보일러플레이트 삭제(`index.css`·`App.css`·`src/assets/*`·`public/icons.svg`), `index.html`(title `3D Portfolio: SoJung Kim`, lang `ko`), 채워진 폴더 `.gitkeep` 제거
+  - **브랜치 전략 확장**: 풀 Git Flow(main+develop+feature, 운영 시 release·hotfix)로 결정, `develop` 브랜치 부트스트랩(main·develop baseline 동기화 + 원격 push)
+  - **배포처 결정**: GitHub Pages → Vercel (main=프로덕션 / develop=스테이징 / PR=프리뷰), Phase 0.5에서 연결
+- **2026-07-03**
+  - **Phase 0.5 — Vercel 배포 연결**: Vercel Git 연동으로 배포 파이프라인 구성 (별도 CI 워크플로 불필요, Vite 자동 감지: build `npm run build` / output `dist`)
+  - **환경 매핑 확정**: `main`=프로덕션 / `develop`=스테이징 프리뷰 / PR=자동 프리뷰 (레포 default 브랜치를 프로덕션으로 자동 지정)
+  - **프로덕션 라이브 URL**: https://portfolio-r3f-blue.vercel.app/
+- **2026-07-07**
+  - **Phase 1 — 맵 + 우클릭 카메라 이동** 구현
+  - **이동 방식**: 우클릭 홀드로 캐릭터가 목적지로 이동. 누른 동안 매 프레임 커서 밑 바닥 지점을 레이캐스트해 목표점 갱신 → 커서가 정지해 있어도(카메라가 따라가며 월드가 밀리므로) 계속 이동, 떼면 정지. 좌클릭은 인터랙션용 예약. 거리와 무관한 **고정 속도**(매 프레임 step).
+  - **카메라**: 캐릭터와의 상대 오프셋(아이소메트릭 각도·거리)을 고정한 채 매 프레임 캐릭터를 따라가 **화면 중앙 고정**(캐릭터 팔로우). 원근 제거 위해 **Orthographic 카메라**(zoom 기반) 채택 — 춘식이식 평면 아이소메트릭 뷰.
+  - **월드/경계**: 임시 진한 초록 바닥(테스트 가시성) + 테스트용 격자(drei `Grid`, raycast 제외). 이동 범위를 `CAMERA_BOUNDS`로 clamp → 경계에서 투명 벽처럼 정지, 맵을 크게 둬 가장자리 미노출. 저폴리/파스텔 디자인·텍스처는 후속(바닥 전체 적용 예정).
+  - **컴포넌트 구조**:
+    - `src/state/useCameraStore.ts` — 공유 상태(position/target/setTarget, 경계 clamp)
+    - `src/scene/CameraRig/` — 카메라 팔로우(오프셋 유지 + lookAt)
+    - `src/scene/Character/` — 임시 캐릭터(박스) + 매 프레임 고정 속도 이동
+    - `src/scene/World/` — 바닥·격자 + 우클릭 입력·레이캐스트
+    - `Experience` — Orthographic Canvas + 우클릭 메뉴 차단, 임시 박스·OrbitControls 제거
+  - **트러블슈팅**: 새로고침 시 가끔 맵 미표시 — 오프셋 초기화를 passive `useEffect`로 해 첫 `useFrame`이 먼저 돌면 offset이 (0,0,0)으로 굳어 카메라가 원점에 박히는 레이스. `useLayoutEffect`(첫 프레임보다 먼저 실행) + `ready` 가드로 해결.
 
 ## 다음 할 일
 
-1. Phase 0.5 — 배포 파이프라인 (GitHub Pages + Actions)
-2. Phase 1 — 맵 + 클릭 카메라 이동
+1. Phase 2 — 스테이션 + 상호작용 + 미니맵
