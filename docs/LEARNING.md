@@ -16,6 +16,14 @@
 - **참고**: 링크·문서
 ```
 
+### 2026-07-07
+
+- **`useLayoutEffect` vs `useFrame` 실행 순서** — layout effect는 커밋 직후 동기 실행돼 첫 rAF 프레임보다 먼저. `useFrame`보다 위에 선언하면 초기화가 항상 먼저. passive `useEffect`는 늦어 프레임과 레이스.
+- **`useRef` vs `useState`** — 리렌더 불필요 + 프레임 루프에서 즉시 읽는 명령형 플래그는 ref. state는 불필요 리렌더 + 콜백 클로저 캡처로 값 갱신 타이밍 문제.
+- **Orthographic 카메라** — fov 없이 `zoom`으로 배율. 원근 왜곡 없는 아이소메트릭.
+- **캐릭터 팔로우 카메라** — 카메라-타겟 오프셋 고정 + 매 프레임 `lookAt`로 대상을 화면 중앙 유지.
+- **매 프레임 레이캐스트 홀드 이동** — 커서 NDC에서 바닥 평면으로 `intersectPlane` → 월드 지점. 커서 정지 중에도 월드가 밀리면 지점이 바뀌어 계속 이동.
+
 ### 2026-07-01
 
 - **`Record<K, V>`** — 키 K, 값 V 객체 타입. `Record<ThemeMode, AppTheme>`는 `light`·`dark` 키를 모두 `AppTheme` 값으로 강제하고, `themes[mode]` 접근을 타입 안전하게 만든다.
@@ -45,4 +53,10 @@
 - **참고**: 관련 링크·이슈·커밋
 ```
 
-_아직 기록된 이슈 없음._
+### [2026-07-07] 새로고침 시 가끔 맵이 안 뜸 (카메라 오프셋 레이스)
+
+- **증상**: 새로고침 반복 중 드물게 3D 맵이 빈 화면.
+- **환경**: @react-three/fiber v9, Orthographic 카메라.
+- **원인**: `CameraRig`가 오프셋을 passive `useEffect`로 초기화. 첫 `useFrame`이 먼저 돌면 offset이 (0,0,0)이라 카메라를 원점으로 옮기고, 이후 effect가 원점이 된 위치를 읽어 offset이 (0,0,0)으로 굳음 → 카메라가 원점에 박혀 렌더 안 됨. 순서가 매번 달라 "가끔" 발생.
+- **해결**: 오프셋 초기화를 `useLayoutEffect`로(첫 프레임보다 먼저 실행) + `ready` 가드(초기화 전 카메라 미조작, 훅 순서 변경 회귀 방지).
+- **참고**: `src/scene/CameraRig/CameraRig.tsx`
