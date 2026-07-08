@@ -13,6 +13,9 @@ const GROUND_SIZE = 200
 /** 임시 바닥 색(테스트 가시성용 진한 초록). 실제 디자인/텍스처는 이후 단계에서 교체. */
 const TEMP_GROUND_COLOR = '#5f9e46'
 
+/** 클릭과 홀드를 구분하는 임계 시간(ms). 이보다 짧게 누르면 클릭(정확 도착), 길면 홀드(커서 추적). */
+const HOLD_THRESHOLD = 180
+
 const _raycaster = new Raycaster()
 const _groundPlane = new Plane(new Vector3(0, 1, 0), 0)
 const _hit = new Vector3()
@@ -24,6 +27,7 @@ export function World() {
   const setTarget = useCameraStore((s) => s.setTarget)
   const holding = useRef(false)
   const pointer = useRef(new Vector2())
+  const pressTime = useRef(0)
 
   // 우클릭을 뗐을 때(캔버스 밖 포함) 이동 갱신 중단
   useEffect(() => {
@@ -37,6 +41,10 @@ export function World() {
   // 누르고 있는 동안 매 프레임 현재 커서 밑 바닥 지점을 목표로 갱신 → 계속 이동
   useFrame(() => {
     if (!holding.current) return
+    // 홀드 임계 시간 전에는 커서 재조준을 하지 않는다. 짧은 클릭에서 캐릭터가
+    // 움직이며 커서 밑 월드 지점이 앞으로 밀려 목표점이 클릭 지점을 넘어서는(오버슛)
+    // 것을 막는다. 임계 이후에만 커서를 계속 따라가 홀드 이동으로 전환.
+    if (performance.now() - pressTime.current < HOLD_THRESHOLD) return
     _raycaster.setFromCamera(pointer.current, camera)
     if (_raycaster.ray.intersectPlane(_groundPlane, _hit)) {
       setTarget(_hit)
@@ -53,6 +61,9 @@ export function World() {
           e.stopPropagation()
           pointer.current.copy(e.pointer)
           holding.current = true
+          pressTime.current = performance.now()
+          // 클릭 즉시 정확한 클릭 지점을 목표로 고정 → 짧은 클릭 정확도 보장
+          setTarget(e.point)
         }}
         onPointerMove={(e) => {
           pointer.current.copy(e.pointer)
