@@ -10,6 +10,7 @@ import { useCameraStore } from '../../state/useCameraStore'
 const MOVE_SPEED = 8
 
 const _dir = new Vector3()
+const _prev = new Vector3()
 
 /**
  * 임시 캐릭터 플레이스홀더. 매 프레임 목표점(target)을 향해 고정 속도로 한 걸음씩
@@ -24,6 +25,7 @@ export function Character() {
   const target = useCameraStore((s) => s.target)
 
   useFrame((_, delta) => {
+    _prev.copy(position)
     const dist = position.distanceTo(target)
     if (dist > 1e-4) {
       const step = MOVE_SPEED * delta
@@ -34,6 +36,8 @@ export function Character() {
       }
     }
     ref.current?.position.set(position.x, 0.4, position.z)
+    // 이번 프레임 실제 이동 속도(유닛/초) 기록 — 디버그/튜닝용(구독 알림 없이 in-place).
+    useCameraStore.getState().motion.speed = delta > 0 ? position.distanceTo(_prev) / delta : 0
   })
 
   return (
