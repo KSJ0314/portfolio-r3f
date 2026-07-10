@@ -16,6 +16,13 @@
 - **참고**: 링크·문서
 ```
 
+### 2026-07-09
+
+- **Vite HMR와 R3F `useFrame`** — Fast Refresh는 react-dom `useEffect`(정리·재실행)를 갱신하지만, R3F `useFrame` 콜백은 편집을 반복하면 낡은 채로 멈출 수 있다. 동작이 이상하면 개발 서버 재시작/하드리프레시로 확인.
+- **매 프레임 값은 구독 대신 `getState`** — zustand에서 프레임마다 바뀌는 값(위치 등)은 셀렉터 구독(리렌더) 대신 `store.getState()`로 읽고, 상태 반영은 값이 바뀔 때만 `set`. 매 프레임 리렌더 폭주 방지.
+- **미니맵 회전각을 카메라에서 유도** — 카메라가 대상을 바라보는 방향을 지면(xz)에 투영하면 화면상 "위"에 해당. 그 방향이 미니맵 위(-y)로 가도록 회전각을 계산하면 하드코딩 없이 뷰와 일치. 회전 변환은 거리를 보존.
+- **Windows 케이싱과 TypeScript** — 대소문자 무시 파일시스템이어도 TS는 폴더/파일 케이싱을 구분한다. import 케이싱과 실제 디스크 케이싱이 다르면 같은 파일을 둘로 인식(TS1261).
+
 ### 2026-07-07
 
 - **`useLayoutEffect` vs `useFrame` 실행 순서** — layout effect는 커밋 직후 동기 실행돼 첫 rAF 프레임보다 먼저. `useFrame`보다 위에 선언하면 초기화가 항상 먼저. passive `useEffect`는 늦어 프레임과 레이스.
@@ -52,6 +59,22 @@
 - **해결**: 적용한 조치 (코드/설정 변경)
 - **참고**: 관련 링크·이슈·커밋
 ```
+
+### [2026-07-09] 근접 판정이 전혀 동작 안 함 (R3F useFrame HMR 낡음)
+
+- **증상**: 캐릭터가 스테이션에 가까이 가도 근접(near) 상태가 안 잡힘. 코드 로직은 정상.
+- **환경**: Windows, Vite dev(HMR), @react-three/fiber v9.
+- **원인**: 개발 중 해당 파일을 반복 수정하면서 R3F `useFrame` 콜백이 HMR로 갱신되지 않고 낡은 채 멈춤. (react-dom `useEffect`/rAF는 Fast Refresh가 정리·재실행해 정상 동작하는 것과 대비됨.)
+- **해결**: 개발 서버 완전 재시작(또는 하드리프레시)로 정상화 — 코드 변경 아님. 진단 과정에서 임시로 react-dom rAF로 우회해 원인을 격리한 뒤 정통 `useFrame`으로 원복.
+- **참고**: `src/scene/Stations/Stations.tsx`
+
+### [2026-07-09] import 빨간줄·빌드 실패 (TS1261 케이싱 충돌)
+
+- **증상**: 에디터 import 빨간줄 + `tsc -b` 실패: TS1261 "differs from file name ... only in casing".
+- **환경**: Windows(대소문자 무시 파일시스템), TypeScript project references(`tsc -b`).
+- **원인**: 폴더가 소문자 `src/scene/stations`(Phase 0 빈 폴더 `.gitkeep` 잔재)인데 import는 `Stations`(PascalCase). `include` 글롭은 실제 디스크 케이싱으로, import는 다른 케이싱으로 잡혀 같은 파일을 둘로 인식.
+- **해결**: 폴더를 컨벤션(PascalCase) `Stations`로 통일(임시명 경유 rename), 불필요한 `.gitkeep` 제거. `tsc --noEmit`으론 안 잡히고 `tsc -b`에서 드러남.
+- **참고**: `src/scene/Stations/`
 
 ### [2026-07-07] 새로고침 시 가끔 맵이 안 뜸 (카메라 오프셋 레이스)
 
