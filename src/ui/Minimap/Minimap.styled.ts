@@ -2,6 +2,8 @@ import styled from 'styled-components'
 
 export const MinimapPanel = styled.div`
   position: fixed;
+  /* 표시 전용 미니맵 — 캔버스 위를 덮어도 씬 클릭/드래그를 막지 않도록 포인터 통과 */
+  pointer-events: none;
   top: 16px;
   right: 16px;
   z-index: 10;

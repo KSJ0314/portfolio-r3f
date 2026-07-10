@@ -31,12 +31,12 @@
 | 출력 | react-to-print |
 | 저장(페인팅) | localforage (IndexedDB) — Phase 13 |
 | 개발 보조 | leva (라이트/카메라 값 튜닝) |
-| 배포 | GitHub Pages + GitHub Actions (public 레포) |
+| 배포 | Vercel (Git 연동 자동 CI/CD, public 레포) |
 
 ## 4. 핵심 설계 결정
 
 - **통합 테마 토글**: 라이트=낮 / 다크=밤+네온·야광. 하나의 토글이 styled-components 테마(2D)와 3D 씬(라이트·하늘·fog·Bloom)을 동시에 전환. gsap 트윈.
-- **카메라**: 기울어진 항공뷰(isometric-ish) + 바닥 클릭 시 카메라 부드럽게 이동(point-to-move). 캐릭터 없이 타겟 기반 카메라(캐릭터는 Phase 13).
+- **카메라**: 기울어진 항공뷰(isometric-ish) + 클릭으로 부드러운 이동(point-to-move). 캐릭터를 화면 중앙에 두고 따라가는 **캐릭터 팔로우**(현재는 임시 캐릭터, 실제 캐릭터·걷기는 Phase 13). 상세: DECISIONS 003.
 - **스테이션 = 월드 내 고유 오브젝트**: 각 스테이션을 내용 암시하는 서로 다른 3D 오브젝트로 배치. 좌클릭 시 카메라가 그 오브젝트에 포커스하고, 오브젝트가 제자리에서 활성화·확장돼 상세를 보여준다(2D 패널 / 3D 확장 / 혼합). 3D 맵은 주변에 유지, 닫기 → 항공뷰 복귀. 겉모습·상세는 `id → 전용 컴포넌트` 레지스트리로 스테이션별 독립 구현. (drei `<Html transform>`은 상세가 2D일 때 쓰는 한 옵션.)
 - **단일 소스(Single Source of Truth)**: 3D 상세 뷰와 인쇄 뷰가 같은 데이터(Firestore) 사용. 프로젝트는 로컬 메타 + 캡처 이미지.
 
@@ -56,7 +56,7 @@
 - 각 프로젝트 스테이션에 **"체험하기" 버튼** → 그 프로젝트의 **메인 기능 인터랙티브 데모**(프로젝트마다 별도 코드 구현)를 **포커스 모드(전용 화면/오버레이)**로 실행.
 - 연결: Firestore 프로젝트 문서의 `demoKey` ↔ 로컬 데모 레지스트리 매칭.
 
-```
+```text
 src/features/projects/
   ProjectGallery/             # Firestore에서 프로젝트 스테이션 배치(Projects 길)
   demos/
@@ -69,7 +69,7 @@ Firestore `projects` 문서 예: `{ title, summary, tech[], images[], links, dem
 ## 7. 폴더/컴포넌트 규칙
 
 각 컴포넌트는 전용 폴더로 분리:
-```
+```text
 ComponentName/
   index.ts                 # re-export (배럴)
   ComponentName.tsx        # 로직/마크업
@@ -79,7 +79,7 @@ ComponentName/
 ```
 
 예상 전체 구조:
-```
+```text
 src/
   main.tsx · App.tsx
   scene/        # Experience(<Canvas>) · World · CameraRig · stations/
