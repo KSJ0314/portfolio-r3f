@@ -4,6 +4,7 @@ import { themes } from '../../theme/themes'
 import { CameraRig } from '../CameraRig'
 import { World } from '../World'
 import { Character } from '../Character'
+import { Stations } from '../Stations'
 
 export function Experience() {
   const mode = useThemeStore((s) => s.mode)
@@ -25,6 +26,7 @@ export function Experience() {
       />
 
       <World />
+      <Stations />
       <Character />
       <CameraRig />
     </Canvas>

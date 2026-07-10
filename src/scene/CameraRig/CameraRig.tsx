@@ -19,6 +19,13 @@ export function CameraRig() {
   useLayoutEffect(() => {
     offset.current.copy(camera.position).sub(position)
     ready.current = true
+
+    // 미니맵 회전각을 카메라에서 유도한다. 카메라가 캐릭터를 바라보는 방향을 지면에 투영한
+    // (fx, fz)가 화면상 "위(멀어지는 방향)"에 해당 → 그 방향이 미니맵의 위(-y)로 가도록 하는
+    // 회전각. 오프셋(=camera-캐릭터)의 반대가 바라보는 방향이므로 부호를 뒤집는다.
+    const fx = -offset.current.x
+    const fz = -offset.current.z
+    useCameraStore.getState().setViewAngle(-Math.PI / 2 - Math.atan2(fz, fx))
   }, [camera, position])
 
   useFrame(() => {

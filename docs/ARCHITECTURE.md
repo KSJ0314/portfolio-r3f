@@ -15,7 +15,7 @@ _작성 예정_
   - `Character` — 임시 캐릭터(박스). 매 프레임 `target`으로 고정 속도 이동, 위치를 `useCameraStore.position`에 반영.
   - `CameraRig` — 캐릭터와의 고정 오프셋 유지하며 매 프레임 따라가 화면 중앙에 둠.
 
-예정: `Stations`(Phase 2), 프로젝트 전시 벽(Phase 3~4).
+예정: `Stations`(Phase 2) · 스테이션 상세/활성화(Phase 3) · 프로젝트 스테이션(Phase 7) · 스테이션 고유 오브젝트 모델링(Phase 8).
 
 ## 상태 관리 (zustand)
 
@@ -28,7 +28,7 @@ _작성 예정_
 
 ## 2D / 3D 브릿지
 
-_작성 예정 (`<Html transform>` 벽 + 카메라 정면 트윈)_
+_작성 예정 (스테이션 오브젝트 제자리 활성화·확장 + 카메라 포커스; 상세가 2D일 때 `<Html transform>`을 한 옵션으로 사용)_
 
 ## 렌더링 / 후처리 파이프라인
 

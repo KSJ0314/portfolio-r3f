@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+# develop 을 타겟(base)으로 하는 PR 만 자동 리뷰(소스 브랜치는 제한하지 않음).
+# main 은 develop 에서 검증을 끝내고 올리는 운영 브랜치라 리뷰 대상에서 제외.
+reviews:
+  auto_review:
+    base_branches:
+      - "develop"
