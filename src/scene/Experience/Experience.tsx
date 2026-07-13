@@ -5,6 +5,7 @@ import { CameraRig } from '../CameraRig'
 import { World } from '../World'
 import { Character } from '../Character'
 import { Stations } from '../Stations'
+import { ActiveStationScene } from '../../features/stations'
 
 export function Experience() {
   const mode = useThemeStore((s) => s.mode)
@@ -29,6 +30,8 @@ export function Experience() {
       <Stations />
       <Character />
       <CameraRig />
+      {/* 활성 스테이션의 3D 상세 자리 — 활성화 중 카메라 제어권은 이 안의 구현이 가진다. */}
+      <ActiveStationScene />
     </Canvas>
   )
 }

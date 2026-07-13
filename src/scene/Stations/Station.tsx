@@ -1,7 +1,6 @@
 import type { CSSProperties } from 'react'
 import { Html } from '@react-three/drei'
 import { getSection, type Station as StationData } from '../../content/stations'
-import { useStationStore } from '../../state/useStationStore'
 
 /** 임시 라벨 스타일. 라이트/다크 양쪽에서 읽히도록 어두운 알약 배경 + 흰 글자(플레이스홀더). */
 const LABEL_STYLE: CSSProperties = {
@@ -17,23 +16,20 @@ const LABEL_STYLE: CSSProperties = {
 
 /**
  * 스테이션 한 개(현재는 임시 박스 + 이름 라벨 플레이스홀더).
- * 좌클릭으로 선택 토글(근접 시에만 선택됨 — 스토어가 판정). 우클릭 이동은 뒤의 바닥으로 통과.
+ * 좌클릭 활성화는 Stations가 레이캐스트로 판정하므로, 여기서는 userData에 id만 실어둔다.
+ * 우클릭 이동은 뒤의 바닥으로 통과.
  * 근접/선택에 따른 시각 연출은 넣지 않는다 — 실제 고유 오브젝트·상세는 이후 스테이션마다
  * `id → 전용 컴포넌트` 레지스트리로 따로 구현한다. (DECISIONS 006)
  */
 export function Station({ data }: { data: StationData }) {
   const [x, z] = data.position
   const color = getSection(data.sectionId).color
-  const toggleActive = useStationStore((s) => s.toggleActive)
 
   return (
     <group position={[x, 0, z]}>
       <mesh
         position={[0, 0.7, 0]}
-        onClick={(e) => {
-          e.stopPropagation()
-          toggleActive(data.id)
-        }}
+        userData={{ stationId: data.id }}
         onPointerOver={() => {
           document.body.style.cursor = 'pointer'
         }}

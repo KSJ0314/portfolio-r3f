@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useCameraStore } from '../state/useCameraStore'
-import { useStationStore } from '../state/useStationStore'
+import { isMovementLocked, useStationStore } from '../state/useStationStore'
 
 /**
  * 개발용 상태 HUD. 개발 중 확인이 필요한 실시간 값을 좌하단에 표시한다.
@@ -9,11 +9,15 @@ import { useStationStore } from '../state/useStationStore'
  * - pos / target: 캐릭터 좌표 · 목표점
  * - speed: 실제 이동 속도(유닛/초)
  * - view: 미니맵 회전각(도)
- * - near / active: 스테이션 스토어의 근접·선택 상태
+ * - near / active: 스테이션 스토어의 근접·활성 상태
+ * - phase: 활성화 라이프사이클 (idle → entering → active → exiting)
+ * - locked: 애니메이션 재생 중이라 캐릭터 이동이 잠긴 상태인지
+ * - camera: 카메라 제어권 — follow(공통층이 캐릭터 팔로우) / station(활성 스테이션이 제어)
  */
 export function DebugHUD() {
   const nearId = useStationStore((s) => s.nearId)
   const activeId = useStationStore((s) => s.activeId)
+  const phase = useStationStore((s) => s.phase)
   const posRef = useRef<HTMLSpanElement>(null)
   const targetRef = useRef<HTMLSpanElement>(null)
   const speedRef = useRef<HTMLSpanElement>(null)
@@ -59,6 +63,9 @@ export function DebugHUD() {
       {'\n'}view:    <span ref={viewRef}>0°</span>
       {'\n'}near:    {nearId ?? '—'}
       {'\n'}active:  {activeId ?? '—'}
+      {'\n'}phase:   {phase}
+      {'\n'}locked:  {isMovementLocked(phase) ? 'yes' : 'no'}
+      {'\n'}camera:  {activeId === null ? 'follow' : 'station'}
     </div>
   )
 }
