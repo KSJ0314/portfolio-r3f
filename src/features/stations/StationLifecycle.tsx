@@ -25,7 +25,9 @@ export function StationLifecycle() {
   }, [requestClose])
 
   // 등록된 구현이 없는 스테이션은 애니메이션도 없다 → 진입·종료를 즉시 끝난 것으로 처리한다.
-  const hasImplementation = active !== null
+  // 레지스트리에 항목만 있고 Scene·Overlay가 둘 다 없으면 알려줄 주체가 없는 것은 마찬가지이므로,
+  // 항목 유무가 아니라 실제 컴포넌트 유무로 판정한다.
+  const hasImplementation = Boolean(active?.entry.Scene || active?.entry.Overlay)
   useEffect(() => {
     if (hasImplementation) return
     const { enterComplete, exitComplete } = useStationStore.getState()

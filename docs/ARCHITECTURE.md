@@ -38,7 +38,7 @@ _작성 예정_
 
 **라이프사이클**
 
-```
+```text
 idle ──근접 + 좌클릭──> entering ──enterComplete()──> active
                        [이동 잠금]                     │
                                      우클릭 · ESC ─────┘
