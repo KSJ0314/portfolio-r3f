@@ -16,6 +16,13 @@
 - **참고**: 링크·문서
 ```
 
+### 2026-07-13
+
+- **Pointer Events vs Mouse Events (버튼 조합)** — `pointerdown`은 포인터가 "비활성 → 활성"이 될 때만 발생한다. 이미 어떤 버튼이 눌려 활성 상태면, 추가로 누른 버튼은 `pointerdown`을 만들지 않고 `buttons` 값만 바뀐 `pointermove`로 알려준다. 반면 `mousedown`은 버튼마다 매번 발생한다. 버튼 조합(우클릭 홀드 + 좌클릭)을 다루려면 mouse 이벤트를 쓰거나 `pointermove`의 `buttons` 변화를 감지해야 한다.
+- **R3F의 이벤트는 전부 pointer 이벤트 기반** — `onClick`·`onPointerDown` 등이 pointer 이벤트 위에 올라가 있어, 위 제약을 그대로 물려받는다. 게다가 `onClick`은 누른 순간과 뗀 순간의 hit 대상이 같아야 성립하므로, 카메라가 움직이는 중에는 클릭이 성립하지 않을 수 있다.
+- **eslint `react-hooks/immutability`** — 훅이 돌려준 값(`useThree().camera` 등)의 프로퍼티에 직접 대입하면(`cam.zoom = 120`) 에러가 난다. 메서드 호출(`cam.position.copy(...)`)은 통과한다. `useFrame((state) => ...)`이 넘겨주는 `state.camera`를 쓰면 훅 반환값이 아니므로 해결된다.
+- **상태 머신으로 인터랙션 모델링** — boolean 플래그(`locked`) 하나로는 "애니메이션 중에만 잠금"처럼 단계가 있는 흐름을 표현할 수 없다. `idle → entering → active → exiting` 같은 phase로 두면 각 단계의 허용 입력과 잠금 여부가 명확해지고, 파생값(`isMovementLocked(phase)`)으로 중복 상태를 없앨 수 있다.
+
 ### 2026-07-09
 
 - **Vite HMR와 R3F `useFrame`** — Fast Refresh는 react-dom `useEffect`(정리·재실행)를 갱신하지만, R3F `useFrame` 콜백은 편집을 반복하면 낡은 채로 멈출 수 있다. 동작이 이상하면 개발 서버 재시작/하드리프레시로 확인.
@@ -59,6 +66,14 @@
 - **해결**: 적용한 조치 (코드/설정 변경)
 - **참고**: 관련 링크·이슈·커밋
 ```
+
+### [2026-07-13] 우클릭 홀드로 이동 중에 스테이션 좌클릭이 안 먹음
+
+- **증상**: 가만히 서 있을 때는 스테이션 좌클릭이 되는데, 우클릭을 누른 채 이동하면서 스테이션 박스를 좌클릭하면 아무 반응이 없음. `onClick` → `onPointerDown`으로 바꿔도, R3F 이벤트 대신 캔버스에 `pointerdown` 리스너를 직접 달아도 동일.
+- **환경**: Windows, Chrome, @react-three/fiber v9.
+- **원인**: `pointerdown`은 포인터가 비활성에서 활성으로 바뀔 때만 발생한다. 우클릭으로 이미 활성 상태이므로 추가로 누른 좌클릭은 `pointerdown`을 발생시키지 않고, `buttons` 값만 바뀐 `pointermove`로만 온다. R3F의 포인터 이벤트가 전부 이 위에 올라가 있어 `onClick`·`onPointerDown` 모두 잡히지 않았다. (진단: `window`에 capture 단계로 `pointerdown`·`mousedown` 로그를 심어 비교 → `mousedown`만 `{ button: 0, buttons: 3 }`으로 찍힘.)
+- **해결**: `Stations`가 캔버스의 `mousedown`을 직접 듣고, 커서 위치를 NDC로 변환해 스테이션 그룹에 레이캐스트한 뒤 `userData.stationId`로 활성화. `mousedown`은 버튼마다 매번 발생하므로 버튼 조합에서도 잡힌다.
+- **참고**: `src/scene/Stations/Stations.tsx`
 
 ### [2026-07-09] 근접 판정이 전혀 동작 안 함 (R3F useFrame HMR 낡음)
 
