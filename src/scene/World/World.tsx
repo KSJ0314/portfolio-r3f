@@ -5,9 +5,12 @@ import { Plane, Raycaster, Vector2, Vector3 } from 'three'
 import { useThemeStore } from '../../state/useThemeStore'
 import { themes } from '../../theme/themes'
 import { useCameraStore } from '../../state/useCameraStore'
+import { isMovementLocked, useStationStore } from '../../state/useStationStore'
 
-/** 임시 바닥 크기. 이동 범위(CAMERA_BOUNDS)보다 크게 두어 가장자리가 화면에 안 보이게 한다.
- *  최종엔 바닥 전체 + 경계 투명벽으로 대체, 텍스처는 바닥 전체에 입힌다. */
+/**
+ * 임시 바닥 크기. 이동 범위(CAMERA_BOUNDS)보다 크게 두어 가장자리가 화면에 안 보이게 한다.
+ * 최종엔 바닥 전체 + 경계 투명벽으로 대체, 텍스처는 바닥 전체에 입힌다.
+ */
 const GROUND_SIZE = 200
 
 /** 임시 바닥 색(테스트 가시성용 진한 초록). 실제 디자인/텍스처는 이후 단계에서 교체. */
@@ -41,9 +44,13 @@ export function World() {
   // 누르고 있는 동안 매 프레임 현재 커서 밑 바닥 지점을 목표로 갱신 → 계속 이동
   useFrame(() => {
     if (!holding.current) return
-    // 홀드 임계 시간 전에는 커서 재조준을 하지 않는다. 짧은 클릭에서 캐릭터가
-    // 움직이며 커서 밑 월드 지점이 앞으로 밀려 목표점이 클릭 지점을 넘어서는(오버슛)
-    // 것을 막는다. 임계 이후에만 커서를 계속 따라가 홀드 이동으로 전환.
+    // 스테이션이 활성/애니메이션 중이면 목표점을 갱신하지 않는다(홀드 중 상태가 바뀌었을 수도 있으므로 매 프레임 확인).
+    // 종료 후 이동은 스토어가 우클릭 지점으로 다시 시작시킨다.
+    if (useStationStore.getState().phase !== 'idle') return
+    // 홀드 임계 시간 전에는 커서 재조준을 하지 않는다.
+    // 짧은 클릭에서 캐릭터가 움직이며 커서 밑 월드 지점이 앞으로 밀려
+    // 목표점이 클릭 지점을 넘어서는(오버슛) 것을 막는다.
+    // 임계 이후에만 커서를 계속 따라가 홀드 이동으로 전환.
     if (performance.now() - pressTime.current < HOLD_THRESHOLD) return
     _raycaster.setFromCamera(pointer.current, camera)
     if (_raycaster.ray.intersectPlane(_groundPlane, _hit)) {
@@ -53,11 +60,25 @@ export function World() {
 
   return (
     <group>
-      {/* 클릭(레이캐스트) 대상 바닥 — 우클릭 누름/홀드로 이동, 좌클릭은 인터랙션용 예약 */}
+      {/* 클릭(레이캐스트) 대상 바닥 — 우클릭 누름/홀드로 이동.
+          좌클릭은 스테이션 상세 내부 요소 상호작용용이라 여기서 쓰지 않는다. */}
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
         onPointerDown={(e) => {
           if (e.button !== 2) return
+          const { phase, requestClose } = useStationStore.getState()
+
+          // 애니메이션 재생 중(진입·종료)에는 이동 입력을 받지 않는다.
+          if (isMovementLocked(phase)) return
+
+          // 스테이션이 활성 상태면 우클릭이 곧 종료 트리거다.
+          // 캐릭터는 지금 움직이지 않고, 종료 애니메이션이 끝난 뒤 이 지점으로 출발한다.
+          if (phase === 'active') {
+            e.stopPropagation()
+            requestClose(e.point)
+            return
+          }
+
           e.stopPropagation()
           pointer.current.copy(e.pointer)
           holding.current = true

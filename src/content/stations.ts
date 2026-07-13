@@ -94,3 +94,8 @@ const SECTION_BY_ID: Record<SectionId, Section> = Object.fromEntries(
 
 /** id로 섹션을 조회한다(색·방향 등 참조용). */
 export const getSection = (id: SectionId): Section => SECTION_BY_ID[id]
+
+const STATION_BY_ID: Record<string, Station> = Object.fromEntries(STATIONS.map((s) => [s.id, s]))
+
+/** id로 스테이션을 조회한다(없으면 undefined). */
+export const getStation = (id: string): Station | undefined => STATION_BY_ID[id]

@@ -5,6 +5,7 @@ import type { Mesh } from 'three'
 import { useThemeStore } from '../../state/useThemeStore'
 import { themes } from '../../theme/themes'
 import { useCameraStore } from '../../state/useCameraStore'
+import { isMovementLocked, useStationStore } from '../../state/useStationStore'
 
 /** 이동 속도(유닛/초). 거리와 무관하게 항상 일정. */
 const MOVE_SPEED = 8
@@ -13,8 +14,8 @@ const _dir = new Vector3()
 const _prev = new Vector3()
 
 /**
- * 임시 캐릭터 플레이스홀더. 매 프레임 목표점(target)을 향해 고정 속도로 한 걸음씩
- * 이동한다. 우클릭을 누르고 있으면 목표점이 커서를 따라 갱신되어 계속 이동한다.
+ * 임시 캐릭터 플레이스홀더. 매 프레임 목표점(target)을 향해 고정 속도로 한 걸음씩 이동한다.
+ * 우클릭을 누르고 있으면 목표점이 커서를 따라 갱신되어 계속 이동한다.
  * Phase 7에서 실제 캐릭터·걷기 애니메이션으로 교체.
  */
 export function Character() {
@@ -26,6 +27,10 @@ export function Character() {
 
   useFrame((_, delta) => {
     _prev.copy(position)
+    // 스테이션 진입·종료 애니메이션 중에는 이동이 잠긴다.
+    // 이동 중 활성화했을 수 있으므로 남은 목표점을 현재 위치로 스냅해 즉시 멈춘다(관성 없이).
+    // 종료 애니메이션이 끝나면 스토어가 우클릭했던 지점을 목표로 다시 설정한다.
+    if (isMovementLocked(useStationStore.getState().phase)) target.copy(position)
     const dist = position.distanceTo(target)
     if (dist > 1e-4) {
       const step = MOVE_SPEED * delta
