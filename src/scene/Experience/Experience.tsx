@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { useThemeStore } from '../../state/useThemeStore'
 import { themes } from '../../theme/themes'
@@ -14,7 +15,10 @@ export function Experience() {
   return (
     <Canvas
       orthographic
-      camera={{ position: [10, 10, 10], zoom: 120, near: 0.1, far: 100 }}
+      // 카메라 위치가 시점의 단일 소스다(CameraRig가 여기서 오프셋·미니맵 각도를 유도한다).
+      // x·z를 다르게 둬 정확한 대각선(45°)을 피하고 방위각을 30° 정도로 틀었다.
+      // y는 내려다보는 고도각을 정한다(약 42°). 높일수록 위에서 내려다보는 시점이 된다.
+      camera={{ position: [12, 12.5, 7], zoom: 85, near: 0.1, far: 100 }}
       style={{ position: 'fixed', inset: 0 }}
       onContextMenu={(e) => e.preventDefault()}
     >
@@ -26,7 +30,10 @@ export function Experience() {
         position={[5, 8, 5]}
       />
 
-      <World />
+      {/* 바닥은 모눈 텍스처를 불러오는 동안 잠시 비어 있다(로딩 연출은 폴리싱 단계에서). */}
+      <Suspense fallback={null}>
+        <World />
+      </Suspense>
       <Stations />
       <Character />
       <CameraRig />
