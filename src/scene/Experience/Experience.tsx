@@ -16,9 +16,9 @@ export function Experience() {
     <Canvas
       orthographic
       // 카메라 위치가 시점의 단일 소스다(CameraRig가 여기서 오프셋·미니맵 각도를 유도한다).
-      // x·z를 다르게 둬 정확한 대각선(45°)을 피하고 방위각을 30° 정도로 틀었다.
+      // 캐릭터를 비스듬히 내려다보는 항공뷰. 정확한 대각선(45°)을 피해 방위각을 살짝 틀었다.
       // y는 내려다보는 고도각을 정한다(약 42°). 높일수록 위에서 내려다보는 시점이 된다.
-      camera={{ position: [12, 12.5, 7], zoom: 85, near: 0.1, far: 100 }}
+      camera={{ position: [-7, 12.5, 12], zoom: 85, near: 0.1, far: 100 }}
       style={{ position: 'fixed', inset: 0 }}
       onContextMenu={(e) => e.preventDefault()}
     >

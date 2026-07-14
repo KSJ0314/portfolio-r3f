@@ -15,7 +15,8 @@ interface GridPaperState {
 }
 
 /**
- * 모눈종이 텍스처의 개발용 튜닝 상태. 프로덕션에서는 HUD가 렌더되지 않아 항상 기본값이다.
+ * 모눈종이 텍스처의 개발용 튜닝 상태.
+ * 프로덕션에서는 HUD가 렌더되지 않아 항상 기본값이다.
  * 여기서 맞춘 값을 gridPaper.constants.ts에 반영하고 스크립트로 PNG를 다시 구우면 확정된다.
  */
 export const useGridPaperStore = create<GridPaperState>((set) => ({

@@ -52,7 +52,7 @@ function createTexture(
  * HUD를 건드리기 전(`tuned`가 false)에는 null을 반환하고, 바닥은 구워둔 PNG를 그대로 쓴다.
  *
  * 값이 바뀌면 저해상도로 즉시 구워 반응을 주고, 조작이 멈추면 고해상도로 다시 굽는다.
- * 텍스처를 브라우저에서 굽는 일은 무겁기 때문이다.
+ * 텍스처를 브라우저에서 굽는 일이 무겁기 때문.
  */
 export function useGridPaperPreview(size: number, anisotropy: number) {
   const params = useGridPaperStore((s) => s.params)

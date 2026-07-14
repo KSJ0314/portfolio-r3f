@@ -1,10 +1,18 @@
 import { useCallback, useEffect, useRef } from 'react'
+import { Text } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import type { ThreeEvent } from '@react-three/fiber'
 import { Plane, Raycaster, Vector2, Vector3 } from 'three'
 import { useCameraStore } from '../../state/useCameraStore'
 import { isMovementLocked, useStationStore } from '../../state/useStationStore'
 import { PaperGround } from './PaperGround'
+
+/**
+ * 씬 안 글씨용 손글씨 폰트(감자꽃).
+ * 3D 텍스트는 웹폰트(woff2)가 아니라 ttf를 직접 읽음.
+ * 상용 한글 2350자로 서브셋.
+ */
+const HAND_FONT = '/fonts/gamja-flower/GamjaFlower-Subset.ttf'
 
 /**
  * 바닥 크기. 이동 범위(CAMERA_BOUNDS)보다 크게 두어 가장자리가 화면에 안 보이게 한다.
@@ -90,6 +98,20 @@ export function World() {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
       />
+
+      {/* 손글씨 3D 텍스트 확인용. 바닥에 눕혀 캐릭터 시작 지점 위쪽에 배치 */}
+      <Text
+        font={HAND_FONT}
+        position={[0, 0.01, -2]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={1}
+        color="#3a3a3a"
+        anchorX="center"
+        anchorY="middle"
+        raycast={() => null}
+      >
+        HOME
+      </Text>
     </group>
   )
 }

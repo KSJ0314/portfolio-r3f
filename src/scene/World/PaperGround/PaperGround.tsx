@@ -8,11 +8,12 @@ import { useGridPaperPreview } from './PaperGround.hooks'
 import type { PaperGroundProps } from './PaperGround.types'
 
 /**
- * 모눈종이 바닥. 손그림 모눈 텍스처(scripts/generate-grid-paper.mjs로 생성한 심리스 이미지)를
- * 바닥 전체에 타일링한다.
+ * 모눈종이 바닥.
+ * 손그림 모눈 텍스처(scripts/generate-grid-paper.mjs로 생성한 심리스 이미지)를 바닥 전체에 타일링한다.
  *
- * 조명을 받지 않는 재질(basic)을 쓴다. 조명을 받게 하면 종이색에 광량(1 미만)이 곱해져
- * 흰 종이가 회색으로 찍히기 때문이다. 낮/밤은 조명 대신 종이에 색을 곱해 표현한다.
+ * 조명을 받지 않는 재질(basic)을 쓴다.
+ * 조명을 받게 하면 종이색에 광량(1 미만)이 곱해져 흰 종이가 회색으로 찍힘.
+ * 낮/밤은 조명 대신 종이에 색을 곱해 표현한다.
  * 이동 입력은 World가 처리하므로 여기서는 레이캐스트 대상인 mesh와 겉모습만 담당한다.
  */
 export function PaperGround({ size, onPointerDown, onPointerMove }: PaperGroundProps) {
@@ -42,7 +43,7 @@ export function PaperGround({ size, onPointerDown, onPointerMove }: PaperGroundP
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} onPointerDown={onPointerDown} onPointerMove={onPointerMove}>
       <planeGeometry args={[size, size]} />
-      {/* 톤 매핑을 거치면 흰 종이가 회색으로 눌린다. 이 바닥만 그 보정에서 빼둔다. */}
+      {/* 톤 매핑을 거치면 흰 종이가 회색으로 눌린다. 이 바닥만 그 보정에서 제외. */}
       <meshBasicMaterial map={map} color={tint} toneMapped={false} />
     </mesh>
   )

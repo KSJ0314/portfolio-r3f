@@ -54,32 +54,34 @@ export interface Signpost {
 /** 모든 길이 갈라지는 중앙 광장(캐릭터 시작점). */
 export const HUB: Coord = [0, 0]
 
+// 맵 기준 배치. 캐릭터 시작점에서 오른쪽(+X)이 About, 아래(+Z)가 Projects, 왼쪽(-X)이 Guestbook.
+// 위(-Z)는 빈 공간.
 export const SECTIONS: Section[] = [
-  { id: 'about', label: 'About', color: '#f0a6ca', direction: [0, -1] },
-  { id: 'projects', label: 'Projects', color: '#8ab6d6', direction: [1, 0] },
-  { id: 'guestbook', label: 'Guestbook', color: '#a8d5ba', direction: [0, 1] },
+  { id: 'about', label: 'About', color: '#f0a6ca', direction: [1, 0] },
+  { id: 'projects', label: 'Projects', color: '#8ab6d6', direction: [0, 1] },
+  { id: 'guestbook', label: 'Guestbook', color: '#a8d5ba', direction: [-1, 0] },
 ]
 
 export const STATIONS: Station[] = [
-  // About 길 (-Z 방향) — 3개
-  { id: 'about-intro', sectionId: 'about', label: 'Intro & Skills', short: 'Intro', position: [0, -8] },
-  { id: 'about-career', sectionId: 'about', label: 'Experience & Education', short: 'Career', position: [0, -15] },
-  { id: 'about-award', sectionId: 'about', label: 'Awards & Certifications', short: 'Award', position: [0, -22] },
+  // About 길 (+X) — 3개
+  { id: 'about-intro', sectionId: 'about', label: 'Intro & Skills', short: 'Intro', position: [8, 0] },
+  { id: 'about-career', sectionId: 'about', label: 'Experience & Education', short: 'Career', position: [15, 0] },
+  { id: 'about-award', sectionId: 'about', label: 'Awards & Certifications', short: 'Award', position: [22, 0] },
 
-  // Projects 길 (+X 방향) — 프로젝트마다 1개 (현재 플레이스홀더 3개)
-  { id: 'project-1', sectionId: 'projects', label: 'Project 1', short: 'Proj 1', position: [8, 0] },
-  { id: 'project-2', sectionId: 'projects', label: 'Project 2', short: 'Proj 2', position: [15, 0] },
-  { id: 'project-3', sectionId: 'projects', label: 'Project 3', short: 'Proj 3', position: [22, 0] },
+  // Projects 길 (+Z) — 프로젝트마다 1개 (현재 플레이스홀더 3개)
+  { id: 'project-1', sectionId: 'projects', label: 'Project 1', short: 'Proj 1', position: [0, 8] },
+  { id: 'project-2', sectionId: 'projects', label: 'Project 2', short: 'Proj 2', position: [0, 15] },
+  { id: 'project-3', sectionId: 'projects', label: 'Project 3', short: 'Proj 3', position: [0, 22] },
 
-  // Guestbook 길 (+Z 방향) — 1개
-  { id: 'guestbook', sectionId: 'guestbook', label: 'Guestbook', short: 'Guest', position: [0, 10] },
+  // Guestbook 길 (-X) — 1개
+  { id: 'guestbook', sectionId: 'guestbook', label: 'Guestbook', short: 'Guest', position: [-10, 0] },
 ]
 
-/** 중앙 광장의 3방향 안내 표지판. 각 화살표는 소속 섹션의 direction을 향한다. */
+/** 중앙 광장의 3방향 안내 표지판. 화면 기준 오른쪽 아래에 배치. */
 export const SIGNPOSTS: Signpost[] = [
   {
     id: 'hub',
-    position: [3, 3],
+    position: [4.1, -1.08],
     arrows: [
       { label: 'About', sectionId: 'about' },
       { label: 'Projects', sectionId: 'projects' },
