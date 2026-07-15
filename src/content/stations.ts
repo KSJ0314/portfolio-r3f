@@ -1,16 +1,16 @@
 /**
  * 스테이션 배치 데이터 (단일 소스).
  *
- * 여기 담기는 것은 스테이션의 "공통 배치 정보"뿐이다 — 위치·섹션(길) 소속·이름·표지판.
+ * 여기 담기는 것은 스테이션의 "공통 배치 정보"뿐이다 — 위치·섹션 소속·이름.
  * 스테이션의 겉모습(고유 3D 오브젝트)과 활성화 시 상세 연출은 데이터가 아니라
  * `스테이션 id → 전용 컴포넌트` 레지스트리로 스테이션마다 따로 구현한다. (DECISIONS 006)
  *
- * 이 데이터를 렌더(Stations)·미니맵·표지판·근접 감지가 공유한다.
- * 좌표는 `CAMERA_BOUNDS`(useCameraStore) 안, 중앙 광장(원점)에서 길이 주제별로 갈라지는 구조.
- * 좌표·개수는 임시이며 이후 자유롭게 조정한다. (프로젝트는 Phase 4에서 Firestore 개수대로 생성)
+ * 이 데이터를 렌더(Stations)·미니맵·근접 감지가 공유한다.
+ * 좌표는 `CAMERA_BOUNDS`(useCameraStore) 안에서 주제별로 흩어 둔 오픈월드 배치이며 임시다.
+ * 스테이션 최종 배치·스케일은 각 스테이션 상세 구현(Phase 8)에서 정한다.
  */
 
-/** 섹션(길) 식별자. */
+/** 섹션 식별자. */
 export type SectionId = 'about' | 'projects' | 'guestbook'
 
 /** 맵 평면 좌표 [x, z]. 렌더 시 y는 고정한다. */
@@ -18,12 +18,10 @@ export type Coord = readonly [number, number]
 
 export interface Section {
   id: SectionId
-  /** 표지판·미니맵에 쓰는 섹션 이름. */
+  /** 미니맵 등에 쓰는 섹션 이름. */
   label: string
   /** 임시 대표 색(플레이스홀더). 실제 아트는 이후 교체. */
   color: string
-  /** 허브에서 이 섹션의 길이 뻗는 방향(단위 벡터 근사, [x, z]). 표지판 화살표·길 배치 참고. */
-  direction: Coord
 }
 
 export interface Station {
@@ -37,64 +35,33 @@ export interface Station {
   position: Coord
 }
 
-export interface SignpostArrow {
-  /** 이 방향에 무엇이 있는지 안내 문구. */
-  label: string
-  /** 가리키는 섹션. 방향은 해당 섹션의 direction을 따른다. */
-  sectionId: SectionId
-}
-
-export interface Signpost {
-  id: string
-  position: Coord
-  /** 갈림길에서 가리키는 안내들. */
-  arrows: SignpostArrow[]
-}
-
-/** 모든 길이 갈라지는 중앙 광장(캐릭터 시작점). */
-export const HUB: Coord = [0, 0]
-
-// 맵 기준 배치. 캐릭터 시작점에서 오른쪽(+X)이 About, 아래(+Z)가 Projects, 왼쪽(-X)이 Guestbook.
-// 위(-Z)는 빈 공간.
 export const SECTIONS: Section[] = [
-  { id: 'about', label: 'About', color: '#f0a6ca', direction: [1, 0] },
-  { id: 'projects', label: 'Projects', color: '#8ab6d6', direction: [0, 1] },
-  { id: 'guestbook', label: 'Guestbook', color: '#a8d5ba', direction: [-1, 0] },
+  { id: 'about', label: 'About', color: '#f0a6ca' },
+  { id: 'projects', label: 'Projects', color: '#8ab6d6' },
+  { id: 'guestbook', label: 'Guestbook', color: '#a8d5ba' },
 ]
 
+// 현재 배치는 임시다. 주제별로 흩어 둔 것뿐이고, 최종 배치·스케일은 Phase 8에서 정한다.
 export const STATIONS: Station[] = [
-  // About 길 (+X) — 3개
+  // About — 3개
   { id: 'about-intro', sectionId: 'about', label: 'Intro & Skills', short: 'Intro', position: [8, 0] },
   { id: 'about-career', sectionId: 'about', label: 'Experience & Education', short: 'Career', position: [15, 0] },
   { id: 'about-award', sectionId: 'about', label: 'Awards & Certifications', short: 'Award', position: [22, 0] },
 
-  // Projects 길 (+Z) — 프로젝트마다 1개 (현재 플레이스홀더 3개)
+  // Projects — 프로젝트마다 1개 (현재 플레이스홀더 3개)
   { id: 'project-1', sectionId: 'projects', label: 'Project 1', short: 'Proj 1', position: [0, 8] },
   { id: 'project-2', sectionId: 'projects', label: 'Project 2', short: 'Proj 2', position: [0, 15] },
   { id: 'project-3', sectionId: 'projects', label: 'Project 3', short: 'Proj 3', position: [0, 22] },
 
-  // Guestbook 길 (-X) — 1개
+  // Guestbook — 1개
   { id: 'guestbook', sectionId: 'guestbook', label: 'Guestbook', short: 'Guest', position: [-10, 0] },
-]
-
-/** 중앙 광장의 3방향 안내 표지판. 화면 기준 오른쪽 아래에 배치. */
-export const SIGNPOSTS: Signpost[] = [
-  {
-    id: 'hub',
-    position: [4.1, -1.08],
-    arrows: [
-      { label: 'About', sectionId: 'about' },
-      { label: 'Projects', sectionId: 'projects' },
-      { label: 'Guestbook', sectionId: 'guestbook' },
-    ],
-  },
 ]
 
 const SECTION_BY_ID: Record<SectionId, Section> = Object.fromEntries(
   SECTIONS.map((s) => [s.id, s]),
 ) as Record<SectionId, Section>
 
-/** id로 섹션을 조회한다(색·방향 등 참조용). */
+/** id로 섹션을 조회한다(색·이름 등 참조용). */
 export const getSection = (id: SectionId): Section => SECTION_BY_ID[id]
 
 const STATION_BY_ID: Record<string, Station> = Object.fromEntries(STATIONS.map((s) => [s.id, s]))
