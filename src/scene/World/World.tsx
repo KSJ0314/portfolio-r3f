@@ -1,20 +1,24 @@
-import { useEffect, useRef } from 'react'
-import { Grid } from '@react-three/drei'
+import { useCallback, useEffect, useRef } from 'react'
+import { Text } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
+import type { ThreeEvent } from '@react-three/fiber'
 import { Plane, Raycaster, Vector2, Vector3 } from 'three'
-import { useThemeStore } from '../../state/useThemeStore'
-import { themes } from '../../theme/themes'
 import { useCameraStore } from '../../state/useCameraStore'
 import { isMovementLocked, useStationStore } from '../../state/useStationStore'
+import { PaperGround } from './PaperGround'
 
 /**
- * 임시 바닥 크기. 이동 범위(CAMERA_BOUNDS)보다 크게 두어 가장자리가 화면에 안 보이게 한다.
- * 최종엔 바닥 전체 + 경계 투명벽으로 대체, 텍스처는 바닥 전체에 입힌다.
+ * 씬 안 글씨용 손글씨 폰트(감자꽃).
+ * 3D 텍스트는 웹폰트(woff2)가 아니라 ttf를 직접 읽음.
+ * 상용 한글 2350자로 서브셋.
+ */
+const HAND_FONT = '/fonts/gamja-flower/GamjaFlower-Subset.ttf'
+
+/**
+ * 바닥 크기. 이동 범위(CAMERA_BOUNDS)보다 크게 두어 가장자리가 화면에 안 보이게 한다.
+ * 최종엔 경계 투명벽을 함께 둔다.
  */
 const GROUND_SIZE = 200
-
-/** 임시 바닥 색(테스트 가시성용 진한 초록). 실제 디자인/텍스처는 이후 단계에서 교체. */
-const TEMP_GROUND_COLOR = '#5f9e46'
 
 /** 클릭과 홀드를 구분하는 임계 시간(ms). 이보다 짧게 누르면 클릭(정확 도착), 길면 홀드(커서 추적). */
 const HOLD_THRESHOLD = 180
@@ -25,8 +29,6 @@ const _hit = new Vector3()
 
 export function World() {
   const { camera } = useThree()
-  const mode = useThemeStore((s) => s.mode)
-  const theme = themes[mode]
   const setTarget = useCameraStore((s) => s.setTarget)
   const holding = useRef(false)
   const pointer = useRef(new Vector2())
@@ -58,56 +60,58 @@ export function World() {
     }
   })
 
+  // 우클릭 누름/홀드로 이동. 좌클릭은 스테이션 상세 내부 요소 상호작용용이라 여기서 쓰지 않는다.
+  const handlePointerDown = useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      if (e.button !== 2) return
+      const { phase, requestClose } = useStationStore.getState()
+
+      // 애니메이션 재생 중(진입·종료)에는 이동 입력을 받지 않는다.
+      if (isMovementLocked(phase)) return
+
+      // 스테이션이 활성 상태면 우클릭이 곧 종료 트리거다.
+      // 캐릭터는 지금 움직이지 않고, 종료 애니메이션이 끝난 뒤 이 지점으로 출발한다.
+      if (phase === 'active') {
+        e.stopPropagation()
+        requestClose(e.point)
+        return
+      }
+
+      e.stopPropagation()
+      pointer.current.copy(e.pointer)
+      holding.current = true
+      pressTime.current = performance.now()
+      // 클릭 즉시 정확한 클릭 지점을 목표로 고정 → 짧은 클릭 정확도 보장
+      setTarget(e.point)
+    },
+    [setTarget],
+  )
+
+  const handlePointerMove = useCallback((e: ThreeEvent<PointerEvent>) => {
+    pointer.current.copy(e.pointer)
+  }, [])
+
   return (
     <group>
-      {/* 클릭(레이캐스트) 대상 바닥 — 우클릭 누름/홀드로 이동.
-          좌클릭은 스테이션 상세 내부 요소 상호작용용이라 여기서 쓰지 않는다. */}
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        onPointerDown={(e) => {
-          if (e.button !== 2) return
-          const { phase, requestClose } = useStationStore.getState()
-
-          // 애니메이션 재생 중(진입·종료)에는 이동 입력을 받지 않는다.
-          if (isMovementLocked(phase)) return
-
-          // 스테이션이 활성 상태면 우클릭이 곧 종료 트리거다.
-          // 캐릭터는 지금 움직이지 않고, 종료 애니메이션이 끝난 뒤 이 지점으로 출발한다.
-          if (phase === 'active') {
-            e.stopPropagation()
-            requestClose(e.point)
-            return
-          }
-
-          e.stopPropagation()
-          pointer.current.copy(e.pointer)
-          holding.current = true
-          pressTime.current = performance.now()
-          // 클릭 즉시 정확한 클릭 지점을 목표로 고정 → 짧은 클릭 정확도 보장
-          setTarget(e.point)
-        }}
-        onPointerMove={(e) => {
-          pointer.current.copy(e.pointer)
-        }}
-      >
-        <planeGeometry args={[GROUND_SIZE, GROUND_SIZE]} />
-        <meshStandardMaterial color={TEMP_GROUND_COLOR} />
-      </mesh>
-
-      {/* 임시 격자 — 이동을 눈으로 확인하기 위한 테스트용 참조선(raycast 제외) */}
-      <Grid
-        cellSize={1}
-        cellThickness={0.6}
-        sectionSize={5}
-        sectionThickness={1.2}
-        cellColor={theme.scene.directional}
-        sectionColor={theme.colors.accent}
-        fadeDistance={60}
-        fadeStrength={1.5}
-        infiniteGrid
-        position={[0, 0.01, 0]}
-        raycast={() => null}
+      <PaperGround
+        size={GROUND_SIZE}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
       />
+
+      {/* 손글씨 3D 텍스트 확인용. 바닥에 눕혀 캐릭터 시작 지점 위쪽에 배치 */}
+      <Text
+        font={HAND_FONT}
+        position={[0, 0.01, -2]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={1}
+        color="#3a3a3a"
+        anchorX="center"
+        anchorY="middle"
+        raycast={() => null}
+      >
+        HOME
+      </Text>
     </group>
   )
 }

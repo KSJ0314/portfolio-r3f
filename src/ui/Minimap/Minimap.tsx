@@ -109,8 +109,9 @@ export function Minimap() {
                 x={0}
                 y={-3.2}
                 textAnchor="middle"
-                fontSize={2.4}
-                fontWeight={600}
+                // 스테이션 이름은 씬 안 라벨과 같은 손글씨로 쓴다.
+                fontFamily={theme.fonts.hand}
+                fontSize={3}
                 fill={theme.colors.text}
                 stroke={theme.colors.surface}
                 strokeWidth={0.5}

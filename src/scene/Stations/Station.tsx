@@ -1,15 +1,17 @@
 import type { CSSProperties } from 'react'
 import { Html } from '@react-three/drei'
 import { getSection, type Station as StationData } from '../../content/stations'
+import { lightTheme } from '../../theme/themes'
 
 /** 임시 라벨 스타일. 라이트/다크 양쪽에서 읽히도록 어두운 알약 배경 + 흰 글자(플레이스홀더). */
 const LABEL_STYLE: CSSProperties = {
-  padding: '2px 8px',
+  padding: '2px 10px',
   borderRadius: 999,
   background: 'rgba(0, 0, 0, 0.6)',
   color: '#fff',
-  fontSize: 12,
-  fontWeight: 600,
+  // 씬 안의 글씨는 손글씨다. 폰트는 낮/밤이 같으므로 테마를 구독하지 않고 토큰만 가져다 쓴다.
+  fontFamily: lightTheme.fonts.hand,
+  fontSize: 15,
   whiteSpace: 'nowrap',
   userSelect: 'none',
 }
