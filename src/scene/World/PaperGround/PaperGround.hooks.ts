@@ -78,14 +78,18 @@ export function useGridPaperPreview(size: number, anisotropy: number) {
     }
 
     let cancelled = false
+    let timer = 0
     const repeat = size / PAPER_TILE_SIZE
     // 값이 바뀌면 저해상도로 즉시 반응을 주고, 조작이 멈추면 고해상도로 다시 굽는다.
+    // settle 타이머는 draft를 그린 뒤에 건다. 나란히 걸면 백그라운드 탭에서 rAF가 멈춘 사이
+    // setTimeout이 먼저 돌아 고해상도 preview를 저해상도 draft가 덮어쓸 수 있다.
     const raf = requestAnimationFrame(() => {
-      if (!cancelled) swap(createTexture(params, DRAFT, repeat, anisotropy))
+      if (cancelled) return
+      swap(createTexture(params, DRAFT, repeat, anisotropy))
+      timer = window.setTimeout(() => {
+        if (!cancelled) swap(createTexture(params, PREVIEW, repeat, anisotropy))
+      }, SETTLE_DELAY)
     })
-    const timer = window.setTimeout(() => {
-      if (!cancelled) swap(createTexture(params, PREVIEW, repeat, anisotropy))
-    }, SETTLE_DELAY)
 
     return () => {
       cancelled = true
