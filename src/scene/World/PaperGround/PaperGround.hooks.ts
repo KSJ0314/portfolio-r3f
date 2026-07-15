@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from 'three'
 import { renderGridPaper } from '../../../lib/gridPaper'
 import type { GridPaperParams, GridPaperRenderOptions } from '../../../lib/gridPaper'
@@ -58,32 +58,44 @@ export function useGridPaperPreview(size: number, anisotropy: number) {
   const params = useGridPaperStore((s) => s.params)
   const tuned = useGridPaperStore((s) => s.tuned)
 
-  // 값이 바뀌면 렌더 중에 곧바로 저해상도로 굽는다(파생값이므로 상태가 아니라 useMemo다).
-  const draft = useMemo(
-    () => (tuned ? createTexture(params, DRAFT, size / PAPER_TILE_SIZE, anisotropy) : null),
-    [params, tuned, size, anisotropy],
-  )
+  const [texture, setTexture] = useState<CanvasTexture | null>(null)
+  // 지금 화면에 물린 텍스처를 붙들어, 새 것으로 갈아끼울 때 옛 것을 해제한다.
+  const live = useRef<CanvasTexture | null>(null)
 
-  // 고해상도는 조작이 멈춘 뒤에 굽는다. 어떤 값으로 구웠는지 함께 들고 있어야
-  // 값이 바뀐 직후에 옛 텍스처를 그대로 쓰는 일이 없다.
-  const [settled, setSettled] = useState<{ params: GridPaperParams; texture: CanvasTexture } | null>(
-    null,
-  )
+  // 텍스처 생성은 부수효과라 렌더(useMemo)가 아니라 아래 effect의 비동기 콜백에서만 한다.
+  // 렌더 중 대입을 피해 StrictMode 이중 실행에도 텍스처가 새지 않는다.
+  const swap = useCallback((next: CanvasTexture | null) => {
+    if (live.current && live.current !== next) live.current.dispose()
+    live.current = next
+    setTexture(next)
+  }, [])
 
   useEffect(() => {
-    if (!tuned) return
+    if (!tuned) {
+      // 튜닝을 끄면 물려 있던 텍스처를 해제한다.
+      const raf = requestAnimationFrame(() => swap(null))
+      return () => cancelAnimationFrame(raf)
+    }
+
+    let cancelled = false
+    const repeat = size / PAPER_TILE_SIZE
+    // 값이 바뀌면 저해상도로 즉시 반응을 주고, 조작이 멈추면 고해상도로 다시 굽는다.
+    const raf = requestAnimationFrame(() => {
+      if (!cancelled) swap(createTexture(params, DRAFT, repeat, anisotropy))
+    })
     const timer = window.setTimeout(() => {
-      const texture = createTexture(params, PREVIEW, size / PAPER_TILE_SIZE, anisotropy)
-      setSettled({ params, texture })
+      if (!cancelled) swap(createTexture(params, PREVIEW, repeat, anisotropy))
     }, SETTLE_DELAY)
-    return () => window.clearTimeout(timer)
-  }, [params, tuned, size, anisotropy])
 
-  // 텍스처는 GPU 자원이라 쓰임이 끝나면 직접 정리한다.
-  useEffect(() => () => draft?.dispose(), [draft])
-  useEffect(() => () => settled?.texture.dispose(), [settled])
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(raf)
+      window.clearTimeout(timer)
+    }
+  }, [params, tuned, size, anisotropy, swap])
 
-  if (!tuned) return null
-  // 고해상도가 지금 값으로 구워졌을 때만 그것을 쓰고, 아니면 저해상도 초안을 쓴다.
-  return settled?.params === params ? settled.texture : draft
+  // 언마운트 시 남은 텍스처 정리.
+  useEffect(() => () => live.current?.dispose(), [])
+
+  return tuned ? texture : null
 }

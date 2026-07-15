@@ -27,6 +27,8 @@ export function PaperGround({ size, onPointerDown, onPointerMove }: PaperGroundP
   // 구워둔 PNG의 타일링 설정. 미리보기 텍스처는 만들 때 같은 설정을 이미 받는다.
   useEffect(() => {
     const repeat = size / PAPER_TILE_SIZE
+    // 훅 반환값(useTexture) 직접 대입은 eslint(react-hooks/immutability)가 막는다.
+    // 배열에서 꺼낸 값은 추적하지 않으므로 이 우회가 필요하다(불필요한 반복이 아님).
     for (const texture of [baked]) {
       texture.wrapS = RepeatWrapping
       texture.wrapT = RepeatWrapping

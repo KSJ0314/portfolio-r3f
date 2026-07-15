@@ -36,6 +36,16 @@ function toParams(flat: FlatParams): GridPaperParams {
   return { ...rest, wobbleCyclesPerCell: [wobble0, wobble1, wobble2, wobble3] }
 }
 
+/**
+ * 값이 기본값과 같은지 필드별로 비교한다.
+ * JSON.stringify는 키 순서에 민감해, 재구성한 객체의 순서가 달라지면 같은 값도 다르게 본다.
+ */
+function isDefault(params: GridPaperParams): boolean {
+  const a = flatten(params)
+  const b = flatten(DEFAULT_GRID_PAPER_PARAMS)
+  return (Object.keys(b) as (keyof FlatParams)[]).every((key) => a[key] === b[key])
+}
+
 /** 패널을 우하단 구석에 고정. 접힌 상태의 제목 표시줄만 보인다. */
 const PANEL_CONTAINER_STYLE: CSSProperties = {
   position: 'fixed',
@@ -218,7 +228,7 @@ export function GridPaperHUD() {
   // 브라우저에서 굽지 않고 구워둔 PNG를 그대로 쓴다.
   useEffect(() => {
     const params = toParams(values)
-    if (JSON.stringify(params) === JSON.stringify(D)) {
+    if (isDefault(params)) {
       reset()
       return
     }
