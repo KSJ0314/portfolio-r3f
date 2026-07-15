@@ -8,10 +8,10 @@ _작성 예정_
 
 ## 씬 그래프 (3D)
 
-현재(Phase 3):
+현재(Phase 5):
 
 - `Experience` (`<Canvas orthographic>`) — Orthographic 카메라(아이소메트릭 오프셋)·조명(테마 연동)·배경, 우클릭 메뉴 차단.
-  - `World` — 임시 바닥(레이캐스트 대상) + 테스트용 격자. 우클릭 홀드 입력으로 목표점(`useCameraStore`) 갱신. 스테이션이 활성 상태면 우클릭이 종료 트리거가 된다.
+  - `World` — 모눈종이 바닥(PaperGround, 레이캐스트 대상). 우클릭 홀드 입력으로 목표점(`useCameraStore`) 갱신. 스테이션이 활성 상태면 우클릭이 종료 트리거가 된다.
   - `Stations` — 스테이션 배치 + 매 프레임 근접 판정(`nearId`) + 좌클릭 활성화(캔버스 `mousedown`을 직접 듣고 레이캐스트).
     - `Station` — 임시 박스 + 이름 라벨. `userData.stationId`만 실어둔다(클릭 판정은 `Stations`가 함).
   - `Character` — 임시 캐릭터(박스). 매 프레임 `target`으로 고정 속도 이동, 위치를 `useCameraStore.position`에 반영. 이동 잠금 중에는 목표점을 현재 위치로 스냅해 멈춘다.
