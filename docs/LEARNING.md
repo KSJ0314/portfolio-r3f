@@ -16,6 +16,30 @@
 - **참고**: 링크·문서
 ```
 
+### 2026-07-14
+
+- **three의 물리 기반 광량과 1/π** — r155부터 조명이 물리 단위라 diffuse 반사에 `1/π`가 걸린다. `intensity: 1`은 직관과 달리 어두운 빛이고, 흰색 표면이 화면에서도 희게 나오려면 `ambient + directional×dotNL`의 합이 π를 넘어야 한다. 그 아래면 흰색을 줘도 회색으로 찍힌다.
+- **톤 매핑(ACES)은 흰색을 누른다** — R3F `Canvas`의 기본 톤 매핑은 사실적 렌더링용이라 밝은 색의 채도·밝기를 떨어뜨린다. 종이처럼 납작한 스타일 아트에서는 해당 오브젝트만 `toneMapped: false`로 빼거나 렌더러 설정을 끈다.
+- **이방성 필터링(anisotropy)** — 바닥이 비스듬히 눕는 아이소메트릭 뷰에서는 밉맵이 텍스처를 뭉개 미세한 결·선이 통째로 사라진다. `texture.anisotropy = gl.capabilities.getMaxAnisotropy()`로 살린다.
+- **심리스 타일 텍스처 만들기** — 타일을 반복해도 이음매가 없으려면, 무늬를 만드는 함수가 **타일 폭을 주기로** 가져야 한다. 사인파는 타일 폭을 정수 번 반복하면 끝에서 시작값으로 돌아오고, 값 노이즈는 격자 인덱스를 타일 폭으로 나눈 나머지로 감아 반대편과 같은 난수를 참조하게 만든다.
+- **한글 웹폰트는 유니코드 범위별로 쪼갠다** — 한글은 글자 수가 많아 폰트 파일이 크다. Google Fonts는 CSS에서 `unicode-range`로 90~180개 조각으로 나눠 서빙하고, 브라우저는 화면에 실제로 뜬 글자에 해당하는 조각만 받는다. self-host할 때도 이 CSS 구조를 그대로 가져오면 된다.
+- **3D 텍스트는 웹폰트를 쓰지 못한다** — drei `<Text>`(troika)는 폰트 파일을 직접 파싱해 글리프를 뽑으므로 woff2가 아니라 ttf가 필요하다. 한글 ttf는 12MB 넘게 나오므로 `fontTools.subset`으로 상용 2350자만 남겨 1MB로 줄였다.
+- **DOM 오버레이(drei `Html`)는 카메라가 움직이면 밀린다** — 3D 좌표를 화면 좌표로 바꿔 CSS로 옮기는 방식이라 WebGL 렌더보다 한 프레임 늦게 반영된다. 씬 안의 글씨는 `<Text>`(WebGL 메시)로 그리면 같은 프레임에 렌더돼 밀림이 없다.
+
+### 2026-07-13
+
+- **Pointer Events vs Mouse Events (버튼 조합)** — `pointerdown`은 포인터가 "비활성 → 활성"이 될 때만 발생한다. 이미 어떤 버튼이 눌려 활성 상태면, 추가로 누른 버튼은 `pointerdown`을 만들지 않고 `buttons` 값만 바뀐 `pointermove`로 알려준다. 반면 `mousedown`은 버튼마다 매번 발생한다. 버튼 조합(우클릭 홀드 + 좌클릭)을 다루려면 mouse 이벤트를 쓰거나 `pointermove`의 `buttons` 변화를 감지해야 한다.
+- **R3F의 이벤트는 전부 pointer 이벤트 기반** — `onClick`·`onPointerDown` 등이 pointer 이벤트 위에 올라가 있어, 위 제약을 그대로 물려받는다. 게다가 `onClick`은 누른 순간과 뗀 순간의 hit 대상이 같아야 성립하므로, 카메라가 움직이는 중에는 클릭이 성립하지 않을 수 있다.
+- **eslint `react-hooks/immutability`** — 훅이 돌려준 값(`useThree().camera` 등)의 프로퍼티에 직접 대입하면(`cam.zoom = 120`) 에러가 난다. 메서드 호출(`cam.position.copy(...)`)은 통과한다. `useFrame((state) => ...)`이 넘겨주는 `state.camera`를 쓰면 훅 반환값이 아니므로 해결된다.
+- **상태 머신으로 인터랙션 모델링** — boolean 플래그(`locked`) 하나로는 "애니메이션 중에만 잠금"처럼 단계가 있는 흐름을 표현할 수 없다. `idle → entering → active → exiting` 같은 phase로 두면 각 단계의 허용 입력과 잠금 여부가 명확해지고, 파생값(`isMovementLocked(phase)`)으로 중복 상태를 없앨 수 있다.
+
+### 2026-07-09
+
+- **Vite HMR와 R3F `useFrame`** — Fast Refresh는 react-dom `useEffect`(정리·재실행)를 갱신하지만, R3F `useFrame` 콜백은 편집을 반복하면 낡은 채로 멈출 수 있다. 동작이 이상하면 개발 서버 재시작/하드리프레시로 확인.
+- **매 프레임 값은 구독 대신 `getState`** — zustand에서 프레임마다 바뀌는 값(위치 등)은 셀렉터 구독(리렌더) 대신 `store.getState()`로 읽고, 상태 반영은 값이 바뀔 때만 `set`. 매 프레임 리렌더 폭주 방지.
+- **미니맵 회전각을 카메라에서 유도** — 카메라가 대상을 바라보는 방향을 지면(xz)에 투영하면 화면상 "위"에 해당. 그 방향이 미니맵 위(-y)로 가도록 회전각을 계산하면 하드코딩 없이 뷰와 일치. 회전 변환은 거리를 보존.
+- **Windows 케이싱과 TypeScript** — 대소문자 무시 파일시스템이어도 TS는 폴더/파일 케이싱을 구분한다. import 케이싱과 실제 디스크 케이싱이 다르면 같은 파일을 둘로 인식(TS1261).
+
 ### 2026-07-07
 
 - **`useLayoutEffect` vs `useFrame` 실행 순서** — layout effect는 커밋 직후 동기 실행돼 첫 rAF 프레임보다 먼저. `useFrame`보다 위에 선언하면 초기화가 항상 먼저. passive `useEffect`는 늦어 프레임과 레이스.
@@ -52,6 +76,45 @@
 - **해결**: 적용한 조치 (코드/설정 변경)
 - **참고**: 관련 링크·이슈·커밋
 ```
+
+### [2026-07-14] 흰 종이 바닥이 화면에서 회색(#D4CFC8)으로 찍힘
+
+- **증상**: 바닥 색을 순백(`#ffffff`)으로 줘도 화면에서는 회색으로 나옴. 색상 추출 도구로 찍으면 `#D4CFC8`.
+- **환경**: three 0.185 / @react-three/fiber 9 / MeshStandardMaterial
+- **원인**: 바닥이 조명을 받는 재질이라 화면 밝기가 `종이색 × 광량`이 된다. three는 물리 기반 광량이라 diffuse 반사에 1/π가 걸리는데, 당시 조명값(ambient 0.9 + directional 1.3)이 만드는 광량은 `(0.9 + 1.3×0.75)/π ≈ 0.6`이라 1에 한참 못 미쳤다. 측정값 `#D4CFC8`(선형 0.65)과 계산이 일치한다.
+- **해결**: 바닥만 조명을 받지 않는 재질(`MeshBasicMaterial` + `toneMapped: false`)로 교체. 조명을 올려 해결하면 씬의 모든 오브젝트가 함께 밝아지므로 답이 아니다. 낮/밤은 종이색에 색을 곱해 표현. (DECISIONS 010)
+- **삽질 기록**: 회색의 원인을 톤 매핑으로 오판해 톤 매핑을 끄고 조명을 오히려 낮췄다가 더 어두워졌다. 톤 매핑도 흰색을 누르는 것은 맞지만 주된 원인은 광량이었다.
+
+### [2026-07-14] 스테이션 이름 라벨이 카메라 이동 중에 박스에서 미끄러짐
+
+- **증상**: 캐릭터가 움직이면 라벨이 스테이션 박스와 따로 놀다가, 멈추면 제자리로 붙음.
+- **환경**: @react-three/drei `<Html>`
+- **원인**: `<Html>`은 3D가 아니라 캔버스 위에 얹은 DOM이다. 매 프레임 3D 좌표를 화면 좌표로 변환해 CSS로 옮기는데, 이 DOM 갱신이 WebGL 렌더보다 한 프레임 늦게 반영된다.
+- **해결**: 씬 안 글씨는 drei `<Text>`(WebGL 메시)로 그린다. 같은 프레임에 렌더되므로 밀리지 않는다. 단 troika는 폰트 파일을 직접 읽으므로 woff2가 아니라 ttf가 필요하다.
+
+### [2026-07-13] 우클릭 홀드로 이동 중에 스테이션 좌클릭이 안 먹음
+
+- **증상**: 가만히 서 있을 때는 스테이션 좌클릭이 되는데, 우클릭을 누른 채 이동하면서 스테이션 박스를 좌클릭하면 아무 반응이 없음. `onClick` → `onPointerDown`으로 바꿔도, R3F 이벤트 대신 캔버스에 `pointerdown` 리스너를 직접 달아도 동일.
+- **환경**: Windows, Chrome, @react-three/fiber v9.
+- **원인**: `pointerdown`은 포인터가 비활성에서 활성으로 바뀔 때만 발생한다. 우클릭으로 이미 활성 상태이므로 추가로 누른 좌클릭은 `pointerdown`을 발생시키지 않고, `buttons` 값만 바뀐 `pointermove`로만 온다. R3F의 포인터 이벤트가 전부 이 위에 올라가 있어 `onClick`·`onPointerDown` 모두 잡히지 않았다. (진단: `window`에 capture 단계로 `pointerdown`·`mousedown` 로그를 심어 비교 → `mousedown`만 `{ button: 0, buttons: 3 }`으로 찍힘.)
+- **해결**: `Stations`가 캔버스의 `mousedown`을 직접 듣고, 커서 위치를 NDC로 변환해 스테이션 그룹에 레이캐스트한 뒤 `userData.stationId`로 활성화. `mousedown`은 버튼마다 매번 발생하므로 버튼 조합에서도 잡힌다.
+- **참고**: `src/scene/Stations/Stations.tsx`
+
+### [2026-07-09] 근접 판정이 전혀 동작 안 함 (R3F useFrame HMR 낡음)
+
+- **증상**: 캐릭터가 스테이션에 가까이 가도 근접(near) 상태가 안 잡힘. 코드 로직은 정상.
+- **환경**: Windows, Vite dev(HMR), @react-three/fiber v9.
+- **원인**: 개발 중 해당 파일을 반복 수정하면서 R3F `useFrame` 콜백이 HMR로 갱신되지 않고 낡은 채 멈춤. (react-dom `useEffect`/rAF는 Fast Refresh가 정리·재실행해 정상 동작하는 것과 대비됨.)
+- **해결**: 개발 서버 완전 재시작(또는 하드리프레시)로 정상화 — 코드 변경 아님. 진단 과정에서 임시로 react-dom rAF로 우회해 원인을 격리한 뒤 정통 `useFrame`으로 원복.
+- **참고**: `src/scene/Stations/Stations.tsx`
+
+### [2026-07-09] import 빨간줄·빌드 실패 (TS1261 케이싱 충돌)
+
+- **증상**: 에디터 import 빨간줄 + `tsc -b` 실패: TS1261 "differs from file name ... only in casing".
+- **환경**: Windows(대소문자 무시 파일시스템), TypeScript project references(`tsc -b`).
+- **원인**: 폴더가 소문자 `src/scene/stations`(Phase 0 빈 폴더 `.gitkeep` 잔재)인데 import는 `Stations`(PascalCase). `include` 글롭은 실제 디스크 케이싱으로, import는 다른 케이싱으로 잡혀 같은 파일을 둘로 인식.
+- **해결**: 폴더를 컨벤션(PascalCase) `Stations`로 통일(임시명 경유 rename), 불필요한 `.gitkeep` 제거. `tsc --noEmit`으론 안 잡히고 `tsc -b`에서 드러남.
+- **참고**: `src/scene/Stations/`
 
 ### [2026-07-07] 새로고침 시 가끔 맵이 안 뜸 (카메라 오프셋 레이스)
 

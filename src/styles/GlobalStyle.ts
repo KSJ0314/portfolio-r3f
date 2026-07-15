@@ -15,7 +15,7 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   body {
-    font-family: system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
+    font-family: ${({ theme }) => theme.fonts.body};
     background: ${({ theme }) => theme.colors.background};
     color: ${({ theme }) => theme.colors.text};
     overflow: hidden;
