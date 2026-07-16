@@ -129,3 +129,12 @@
   - **읽기는 커스텀 훅**(`useCollection`/`useDoc`)으로 제공해 스테이션이 로딩·에러와 함께 데이터를 받는다.
 - **이유**: 배관과 콘텐츠 모델링을 분리해, 실제 이력서 내용이 정해질 때 필드를 정한다. 콘솔 규칙은 지금 규모에 충분하고 설정이 단순하다. web config(apiKey 등)는 번들에 노출되는 공개값이라 숨김이 아니라 규칙+App Check로 보호하며, env는 비밀이 아니라 환경 분리용이다.
 - **영향**: `src/lib/firebase/`(firebase·firestore·hooks)·`.env.example`·`scripts/seed-firestore.mjs` 추가. 규칙 파일은 레포에 없음. 배포 전 규칙 잠금·App Check는 Phase 11~12 과제로 남는다.
+
+### 012. 콘텐츠 스키마 확정: 컬렉션별 최소 정보 원칙, 프로젝트는 Firestore 최소 필드 + 로컬 상세 확장
+
+- **날짜**: 2026-07-16
+- **상태**: 채택
+- **맥락**: Phase 7에서 콘텐츠 7종(profile·skills·experiences·education·awards·spec·projects)의 실제 필드를 정하며 데이터를 입력했다. PLAN.md 초안에는 `projects` 문서 예시로 `{ title, summary, tech[], images[], links, demoKey }`가 있었으나, 이 Firebase 프로젝트는 다른 프로젝트와도 공유하는 DB라 프로젝트마다 성격이 다른 상세 필드(기술스택·이미지·데모 연결)를 여기 넣기엔 부담이 있었다.
+- **결정**: `projects`는 Firestore에 `{ title, summary, startDate, endDate, link, order }`만 두고, `link`는 노션 등 외부 상세 문서로 연결한다. `tech`·`images`·`demoKey` 같은 이 포트폴리오 전용 상세 필드는 로컬에 별도 저장하며, 실제 필드는 스테이션 상세 컴포넌트를 구현하는 **Phase 8**에서 정한다. 다른 컬렉션(profile·skills·experiences·education·awards·spec)은 각각 필요한 필드만 두는 최소 원칙으로 확정했다(상세는 FIRESTORE.md).
+- **이유**: Firebase 프로젝트를 여러 프로젝트가 공유하므로, 이 포트폴리오에만 필요한 상세 데이터를 Firestore 스키마에 얹으면 다른 프로젝트와의 경계가 흐려진다. 최소 정보 + 로컬 확장으로 분리하면 Firestore는 가볍게 유지되고, 상세 UI 요구사항이 정해지는 시점(Phase 8)에 맞춰 로컬 데이터 구조를 유연하게 설계할 수 있다.
+- **영향**: PLAN.md 6장 프로젝트 예시 갱신. FIRESTORE.md에 컬렉션별 확정 필드 반영. Phase 8에서 로컬 프로젝트 상세 데이터 구조를 새로 설계해야 한다.
