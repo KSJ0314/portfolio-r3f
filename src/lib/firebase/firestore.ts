@@ -56,7 +56,7 @@ export async function fetchDoc<T extends DocBase = DocBase>(
 // ── 쓰기 (개발용 — 콘텐츠 컬렉션 입력에 쓴다. 앱 UI에서 쓰지 않는다) ──────────────
 // 콘텐츠(방명록 제외 7종: profile·skills·experiences·education·awards·spec·projects)는
 // 관리자가 개발 중에 넣는 데이터다.
-// 방명록 쓰기는 여기 없다 — 입력 검증·App Check와 함께 Phase 11에서 만든다.
+// 방명록 쓰기는 여기 없다 — 입력 검증·App Check와 함께 Phase 8에서 만든다.
 
 /** 지정 id로 문서를 만들거나 덮어쓴다. profile(단일 문서 `main`)처럼 id가 정해진 경우. */
 export async function setDocData(

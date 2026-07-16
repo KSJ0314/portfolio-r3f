@@ -20,7 +20,7 @@ _작성 예정_
 
 Canvas 밖(`App`): `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) + ESC 종료 + 미구현 스테이션 fallback. `Minimap` · `ThemeToggle` · `DebugHUD`(dev 전용).
 
-예정: 프로젝트 스테이션(Phase 9) · 스테이션 고유 오브젝트 모델링·표지판(Phase 8).
+예정: 프로젝트 스테이션(Phase 8) · 스테이션 고유 오브젝트 모델링·표지판(Phase 8).
 
 ## 상태 관리 (zustand)
 
