@@ -50,7 +50,7 @@
 | `role` | string | 직무 |
 | `employmentType` | string | 고용형태 |
 | `startDate` | string ("YYYY-MM") | 시작 |
-| `endDate` | string \| null | 종료(재직 중이면 null) |
+| `endDate` | string ("YYYY-MM") \| null | 종료(재직 중이면 null) |
 | `description` | string[] | 업무 내용 |
 
 **education** (과정 1건 = 문서 1개, `order` 없음 — `startDate` 기준 정렬)
@@ -60,7 +60,7 @@
 | `institution` | string | 기관명 |
 | `program` | string | 과정명 |
 | `startDate` | string ("YYYY-MM") | 시작 |
-| `endDate` | string \| null | 종료 |
+| `endDate` | string ("YYYY-MM") \| null | 종료 |
 
 **awards** (수상 1건 = 문서 1개, `order` 없음 — `date` 기준 정렬)
 
@@ -86,7 +86,7 @@
 | `title` | string | 프로젝트명 |
 | `summary` | string | 한줄 요약 |
 | `startDate` | string ("YYYY-MM") | 시작 |
-| `endDate` | string \| null | 종료 |
+| `endDate` | string ("YYYY-MM") \| null | 종료 |
 | `link` | string | 상세 정보 링크(노션) |
 | `order` | number | 표시 순서 |
 

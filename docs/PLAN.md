@@ -45,7 +45,7 @@
 
 ## 5. 데이터 (Firestore)
 
-컬렉션: `profile · skills · experiences · awards · projects · guestbook`
+컬렉션: `profile · skills · experiences · education · awards · spec · projects · guestbook`
 
 - **콘텐츠 전부 Firestore** (향후 웹 이력서 사이트와 데이터 공유 목적).
 - 트레이드오프: 로딩 상태 처리 필요, SEO 약간 불리(포트폴리오엔 허용 범위).
@@ -57,7 +57,7 @@
 - **기본 설명은 Firestore `projects`** 에 저장 → 데이터로 프로젝트 스테이션 생성.
 - 맵의 **Projects 구역에 프로젝트마다 스테이션 오브젝트**를 배치. 인터랙션 → 카메라가 그 오브젝트에 포커스 + 제자리 활성화 상세.
 - 각 프로젝트 스테이션에 **"체험하기" 버튼** → 그 프로젝트의 **메인 기능 인터랙티브 데모**(프로젝트마다 별도 코드 구현)를 **포커스 모드(전용 화면/오버레이)**로 실행.
-- 연결: Firestore 프로젝트 문서의 `demoKey` ↔ 로컬 데모 레지스트리 매칭.
+- 연결: 로컬에 저장한 프로젝트별 `demoKey` ↔ 로컬 데모 레지스트리 매칭([DECISIONS 012] — `demoKey`는 Firestore가 아니라 로컬 상세 데이터에 둔다).
 
 ```text
 src/features/projects/
