@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Raycaster, Vector2 } from 'three'
 import type { Group } from 'three'
-import { STATIONS } from '../../content/stations'
+import { STATIONS, getStation } from '../../content/stations'
+import { fetchCollection } from '../../lib/firebase'
 import { useCameraStore } from '../../state/useCameraStore'
 import { useStationStore } from '../../state/useStationStore'
 import { Station } from './Station'
@@ -20,6 +21,7 @@ const _pointer = new Vector2()
 export function Stations() {
   const { camera, gl } = useThree()
   const groupRef = useRef<Group>(null)
+  const activeId = useStationStore((s) => s.activeId)
 
   useFrame(() => {
     // 캐릭터 위치는 좌표만 바뀌므로 구독 없이 getState로 읽는다.
@@ -67,6 +69,19 @@ export function Stations() {
     canvas.addEventListener('mousedown', onMouseDown)
     return () => canvas.removeEventListener('mousedown', onMouseDown)
   }, [camera, gl])
+
+  // 스테이션이 활성화되면 그 스테이션에 매핑된 컬렉션을 읽어 콘솔에 찍는다(연결 확인용).
+  // 읽어온 데이터로 무엇을 할지는 각 스테이션 상세 구현에서 정한다.
+  useEffect(() => {
+    if (!activeId) return
+    const station = getStation(activeId)
+    if (!station) return
+    for (const col of station.collections) {
+      fetchCollection(col)
+        .then((data) => console.log('[read]', activeId, col, data))
+        .catch((err) => console.error('[read:error]', activeId, col, err))
+    }
+  }, [activeId])
 
   return (
     <group ref={groupRef}>

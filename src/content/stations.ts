@@ -10,6 +10,8 @@
  * 스테이션 최종 배치·스케일은 각 스테이션 상세 구현(Phase 8)에서 정한다.
  */
 
+import type { CollectionName } from '../lib/firebase/firestore'
+
 /** 섹션 식별자. */
 export type SectionId = 'about' | 'projects' | 'guestbook'
 
@@ -33,6 +35,8 @@ export interface Station {
   short: string
   /** 맵 배치 좌표 [x, z]. */
   position: Coord
+  /** 활성화되면 읽어올 Firestore 컬렉션들. 데이터 활용은 스테이션 상세 구현에서. */
+  collections: CollectionName[]
 }
 
 export const SECTIONS: Section[] = [
@@ -44,17 +48,17 @@ export const SECTIONS: Section[] = [
 // 현재 배치는 임시다. 주제별로 흩어 둔 것뿐이고, 최종 배치·스케일은 Phase 8에서 정한다.
 export const STATIONS: Station[] = [
   // About — 3개
-  { id: 'about-intro', sectionId: 'about', label: 'Intro & Skills', short: 'Intro', position: [8, 0] },
-  { id: 'about-career', sectionId: 'about', label: 'Experience & Education', short: 'Career', position: [15, 0] },
-  { id: 'about-award', sectionId: 'about', label: 'Awards & Certifications', short: 'Award', position: [22, 0] },
+  { id: 'about-intro', sectionId: 'about', label: 'Intro & Skills', short: 'Intro', position: [8, 0], collections: ['profile', 'skills'] },
+  { id: 'about-career', sectionId: 'about', label: 'Experience & Education', short: 'Career', position: [15, 0], collections: ['experiences', 'education', 'spec'] },
+  { id: 'about-award', sectionId: 'about', label: 'Awards & Certifications', short: 'Award', position: [22, 0], collections: ['awards'] },
 
   // Projects — 프로젝트마다 1개 (현재 플레이스홀더 3개)
-  { id: 'project-1', sectionId: 'projects', label: 'Project 1', short: 'Proj 1', position: [0, 8] },
-  { id: 'project-2', sectionId: 'projects', label: 'Project 2', short: 'Proj 2', position: [0, 15] },
-  { id: 'project-3', sectionId: 'projects', label: 'Project 3', short: 'Proj 3', position: [0, 22] },
+  { id: 'project-1', sectionId: 'projects', label: 'Project 1', short: 'Proj 1', position: [0, 8], collections: ['projects'] },
+  { id: 'project-2', sectionId: 'projects', label: 'Project 2', short: 'Proj 2', position: [0, 15], collections: ['projects'] },
+  { id: 'project-3', sectionId: 'projects', label: 'Project 3', short: 'Proj 3', position: [0, 22], collections: ['projects'] },
 
   // Guestbook — 1개
-  { id: 'guestbook', sectionId: 'guestbook', label: 'Guestbook', short: 'Guest', position: [-10, 0] },
+  { id: 'guestbook', sectionId: 'guestbook', label: 'Guestbook', short: 'Guest', position: [-10, 0], collections: ['guestbook'] },
 ]
 
 const SECTION_BY_ID: Record<SectionId, Section> = Object.fromEntries(
