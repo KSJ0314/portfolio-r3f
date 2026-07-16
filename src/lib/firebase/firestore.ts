@@ -39,7 +39,8 @@ export async function fetchCollection<T extends DocBase = DocBase>(
   name: CollectionName,
 ): Promise<T[]> {
   const snap = await getDocs(collection(db, name))
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) }) as T)
+  // data()에 id 필드가 있어도 문서 id가 이기도록 스프레드 뒤에 id를 둔다.
+  return snap.docs.map((d) => ({ ...(d.data() as DocumentData), id: d.id }) as T)
 }
 
 /** 컬렉션에서 문서 하나를 읽는다(없으면 null). */
@@ -49,7 +50,7 @@ export async function fetchDoc<T extends DocBase = DocBase>(
 ): Promise<T | null> {
   const snap = await getDoc(doc(db, name, id))
   if (!snap.exists()) return null
-  return { id: snap.id, ...(snap.data() as DocumentData) } as T
+  return { ...(snap.data() as DocumentData), id: snap.id } as T
 }
 
 // ── 쓰기 (개발용 — 콘텐츠 컬렉션 입력에 쓴다. 앱 UI에서 쓰지 않는다) ──────────────
