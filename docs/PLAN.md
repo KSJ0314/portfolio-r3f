@@ -45,7 +45,7 @@
 
 ## 5. 데이터 (Firestore)
 
-컬렉션: `profile · skills · experiences · awards · projects · guestbook`
+컬렉션: `profile · skills · experiences · education · awards · spec · projects · guestbook`
 
 - **콘텐츠 전부 Firestore** (향후 웹 이력서 사이트와 데이터 공유 목적).
 - 트레이드오프: 로딩 상태 처리 필요, SEO 약간 불리(포트폴리오엔 허용 범위).
@@ -57,7 +57,7 @@
 - **기본 설명은 Firestore `projects`** 에 저장 → 데이터로 프로젝트 스테이션 생성.
 - 맵의 **Projects 구역에 프로젝트마다 스테이션 오브젝트**를 배치. 인터랙션 → 카메라가 그 오브젝트에 포커스 + 제자리 활성화 상세.
 - 각 프로젝트 스테이션에 **"체험하기" 버튼** → 그 프로젝트의 **메인 기능 인터랙티브 데모**(프로젝트마다 별도 코드 구현)를 **포커스 모드(전용 화면/오버레이)**로 실행.
-- 연결: Firestore 프로젝트 문서의 `demoKey` ↔ 로컬 데모 레지스트리 매칭.
+- 연결: 로컬에 저장한 프로젝트별 `demoKey` ↔ 로컬 데모 레지스트리 매칭([DECISIONS 012] — `demoKey`는 Firestore가 아니라 로컬 상세 데이터에 둔다).
 
 ```text
 src/features/projects/
@@ -67,7 +67,7 @@ src/features/projects/
     <demoKey>/
       index.ts · Demo.tsx · Demo.styled.ts · Demo.types.ts
 ```
-Firestore `projects` 문서 예: `{ title, summary, tech[], images[], links, demoKey }`
+Firestore `projects` 문서 예: `{ title, summary, startDate, endDate, link, order }`. Firebase는 다른 프로젝트와 공유하는 DB라 최소 정보만 두고, `tech`·`images`·`demoKey` 등 상세 필드는 로컬에 별도 저장한다(스테이션 상세 구현 시 확정, [DECISIONS 012]).
 
 ## 7. 폴더/컴포넌트 규칙
 
@@ -111,8 +111,8 @@ src/
 | **4. 아트 디렉션 확정** ☆ | 팔레트·저폴리/파스텔 스타일·라이트/다크(밤+네온) 룩·레퍼런스·**에셋 소싱 방식** → DESIGN.md 완성 |
 | **5. 맵/환경 베이스 디자인** ☆ | 스케치북 바닥(모눈종이) — Phase 4에서 완성. 길·경계벽·소품은 스케치북 전환으로 소멸, 스테이션 최종 배치·표지판·바닥 화살표는 Phase 8로 이관 |
 | **6. Firebase 데이터 레이어** ★ | SDK 초기화, 스키마, 보안 규칙, App Check, env/secrets |
-| **7. 콘텐츠** ★ | Firestore(profile/skills/experiences/awards/projects) → 스테이션 상세 + 프로젝트 스테이션 |
-| **8. 스테이션 디자인/모델링** ☆ | 맵 룩+콘텐츠 기반, 각 스테이션 고유 오브젝트 + 활성화 상세를 `id→전용 컴포넌트` 레지스트리로 교체, **표지판·소품** 포함 |
+| **7. 콘텐츠** ★ | Firestore 콘텐츠 7종(profile/skills/experiences/education/awards/spec/projects) 스키마 확정 + 데이터 입력 |
+| **8. 스테이션 디자인/모델링** ☆ | 맵 룩+콘텐츠 기반, 각 스테이션 고유 오브젝트 + **활성화 상세 컴포넌트 구현**을 `id→전용 컴포넌트` 레지스트리로 교체, **표지판·소품** 포함 |
 | **9. 프로젝트 인터랙티브 데모** ★ | "체험하기" 버튼 → 코드 데모, 프로젝트별 점진 추가 (포트폴리오 메인) |
 | **10. 출력(인쇄/PDF)** | PrintView, A4·PPT 레이아웃, 단일 소스 |
 | **11. 방명록** | 쓰기 폼 + 봇 방지 + 규칙 (선택적 3D 표현) |

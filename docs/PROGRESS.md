@@ -5,7 +5,7 @@
 
 ## 현재 단계
 
-**Phase 6 — Firebase 데이터 레이어 완료** → 다음: Phase 7(콘텐츠)
+**Phase 7 — 콘텐츠 완료** → 다음: Phase 8(스테이션 디자인/모델링)
 
 ## 단계별 상태
 
@@ -21,7 +21,7 @@
 | 4 | 아트 디렉션 확정 (팔레트·룩·에셋 소싱) ☆ | 🟢 완료 |
 | 5 | 맵/환경 베이스 (바닥 — Phase 4에 흡수, 나머지 소멸·Phase 8 이관) ☆ | 🟢 완료 |
 | 6 | Firebase 데이터 레이어 | 🟢 완료 |
-| 7 | 콘텐츠 (Firestore) | ⚪ 대기 |
+| 7 | 콘텐츠 (Firestore) | 🟢 완료 |
 | 8 | 스테이션 디자인/모델링 (고유 오브젝트·표지판) ☆ | ⚪ 대기 |
 | 9 | 프로젝트 인터랙티브 데모 (메인) | ⚪ 대기 |
 | 10 | 출력 (인쇄/PDF) | ⚪ 대기 |
@@ -133,7 +133,12 @@
   - **컬렉션 8개**(profile·skills·experiences·education·awards·spec·projects·guestbook): Firestore는 빈 컬렉션을 못 만들어 `scripts/seed-firestore.mjs`가 각 컬렉션에 빈 `_placeholder` 문서를 넣어 생성. config는 `.env.local`에서 읽어 하드코딩 안 함. 필드 설계는 Phase 7.
   - **스테이션 매핑 + 활성화 시 읽기**: 각 스테이션에 읽을 컬렉션을 매핑(`stations.ts`의 `collections`), 활성화되면 `fetchCollection`으로 읽어 콘솔에 확인 출력. 데이터 활용은 스테이션 상세 구현에서(콘솔 출력은 그때까지 유지).
   - **보안 규칙**: 콘솔 관리. 개발 중엔 열린 규칙, 배포 전 잠금(콘텐츠 write 차단, guestbook은 Phase 11) — DECISIONS 011. web config는 공개값이라 env는 비밀이 아니라 환경 분리용.
+  - **Phase 7 — 콘텐츠** 스키마 확정 + 데이터 입력. 컬렉션별로 순서대로 진행: 스키마 제안 → 확정 → 실제 값 입력. 일회성 스크립트로 컬렉션마다 데이터를 추가하고 `_placeholder` 문서를 삭제(스크립트는 작업 후 정리, 결과는 콘솔에서 확인).
+    - **profile**: 1건. **skills**: 7건(React·Kotlin·SpringBoot·Electron·ThreeJS·ReactNative·Vue3, `order`는 전체 순위 하나로 카테고리 필터 후 정렬도 겸함). **experiences**: 1건(`order` 없이 `startDate` 기준 정렬). **education**: 2건(학교가 아니라 SSAFY 등 교육 과정이라 `school/major` 대신 `institution/program`으로 재구성). **awards**: 3건. **spec**: 4건.
+    - **projects**: 3건. Firebase가 다른 프로젝트와 공유하는 DB라 `{ title, summary, startDate, endDate, link, order }`만 두고, `tech`·`images`·`demoKey` 등 상세는 로컬로 분리(PLAN.md 초안 예시와 다름 — DECISIONS 012).
+  - **로드맵 문구 정정**: PLAN.md Phase 7 항목에 있던 "스테이션 상세"가 Phase 8 몫("활성화 상세를 레지스트리로 교체")과 겹쳐 보여 혼동을 일으킴. Phase 7은 데이터 입력까지로, "스테이션 상세 컴포넌트 구현"은 Phase 8로 문구를 정리(FIRESTORE.md 스키마 문서화 포함).
+  - **남긴 한계**: `skills`의 ThreeJS 항목은 description이 요약 1줄만 있음. 상세 내용은 이 포트폴리오 프로젝트 완성 후 보강 예정.
 
 ## 다음 할 일
 
-1. Phase 7 — 콘텐츠 (Firestore에 데이터 입력 + 스테이션 상세·프로젝트 스테이션 연결)
+1. Phase 8 — 스테이션 디자인/모델링 (고유 오브젝트 + 활성화 상세 컴포넌트 구현, 표지판·소품 포함)
