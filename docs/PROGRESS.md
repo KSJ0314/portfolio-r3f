@@ -1,11 +1,11 @@
 # 진행 상황 (PROGRESS)
 
-> 이 문서는 프로젝트의 현재 진행 상황을 추적합니다. 마지막 업데이트: **2026-07-15**
+> 이 문서는 프로젝트의 현재 진행 상황을 추적합니다. 마지막 업데이트: **2026-07-16**
 > 전체 계획은 [PLAN.md](./PLAN.md) 참고.
 
 ## 현재 단계
 
-**Phase 5 — 맵/환경 베이스(바닥) 완료** → 다음: Phase 6(Firebase 데이터 레이어)
+**Phase 6 — Firebase 데이터 레이어 완료** → 다음: Phase 7(콘텐츠)
 
 ## 단계별 상태
 
@@ -20,7 +20,7 @@
 | 3 | 2D/3D 전환 (스테이션 활성화·상세) | 🟢 완료 |
 | 4 | 아트 디렉션 확정 (팔레트·룩·에셋 소싱) ☆ | 🟢 완료 |
 | 5 | 맵/환경 베이스 (바닥 — Phase 4에 흡수, 나머지 소멸·Phase 8 이관) ☆ | 🟢 완료 |
-| 6 | Firebase 데이터 레이어 | ⚪ 대기 |
+| 6 | Firebase 데이터 레이어 | 🟢 완료 |
 | 7 | 콘텐츠 (Firestore) | ⚪ 대기 |
 | 8 | 스테이션 디자인/모델링 (고유 오브젝트·표지판) ☆ | ⚪ 대기 |
 | 9 | 프로젝트 인터랙티브 데모 (메인) | ⚪ 대기 |
@@ -127,6 +127,13 @@
   - **경계벽 불필요**: 기존 `CAMERA_BOUNDS` clamp가 곧 최종. 바닥을 이동범위보다 크게 둬 가장자리가 안 보이므로 별도 물리 경계벽을 두지 않는다 (DECISIONS 005 갱신).
   - **Phase 8 이관**: 스테이션 최종 배치·스케일·표지판·바닥 화살표는 스테이션별 상세 구현에서 각자 정한다.
 
+- **2026-07-16**
+  - **Phase 6 — Firebase 데이터 레이어** 구현·연결. 앱↔Firestore 연결과 읽기·쓰기 접근 함수를 이 단계에서 완성. 실제 데이터 입력·화면 연결은 Phase 7.
+  - **초기화·데이터 접근**(`src/lib/firebase/`): `initializeApp` + `getFirestore`. 읽기는 커스텀 훅(`useCollection`/`useDoc`, `{ data, loading, error }`), 콘텐츠 5종 입력은 개발용 쓰기 함수(`setDocData`/`addDocData`). 방명록 쓰기·App Check는 Phase 11.
+  - **컬렉션 8개**(profile·skills·experiences·education·awards·spec·projects·guestbook): Firestore는 빈 컬렉션을 못 만들어 `scripts/seed-firestore.mjs`가 각 컬렉션에 빈 `_placeholder` 문서를 넣어 생성. config는 `.env.local`에서 읽어 하드코딩 안 함. 필드 설계는 Phase 7.
+  - **스테이션 매핑 + 활성화 시 읽기**: 각 스테이션에 읽을 컬렉션을 매핑(`stations.ts`의 `collections`), 활성화되면 `fetchCollection`으로 읽어 콘솔에 확인 출력. 데이터 활용은 스테이션 상세 구현에서(콘솔 출력은 그때까지 유지).
+  - **보안 규칙**: 콘솔 관리. 개발 중엔 열린 규칙, 배포 전 잠금(콘텐츠 write 차단, guestbook은 Phase 11) — DECISIONS 011. web config는 공개값이라 env는 비밀이 아니라 환경 분리용.
+
 ## 다음 할 일
 
-1. Phase 6 — Firebase 데이터 레이어 (SDK 초기화·스키마·보안 규칙·App Check·env)
+1. Phase 7 — 콘텐츠 (Firestore에 데이터 입력 + 스테이션 상세·프로젝트 스테이션 연결)
