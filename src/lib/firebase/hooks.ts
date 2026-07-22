@@ -30,6 +30,9 @@ export function useCollection<T extends DocBase = DocBase>(name: CollectionName)
         if (alive) setResult({ data, error: null, forName: name })
       })
       .catch((error: unknown) => {
+        // 읽기가 실패하면 그리는 쪽은 데이터가 없는 것과 구분되지 않아 화면만 빈다.
+        // 쓰는 쪽이 error를 안 봐도 원인이 남도록 여기서 알린다.
+        console.error(`[firestore] ${name} 읽기 실패`, error)
         if (alive) setResult({ data: [], error: error as Error, forName: name })
       })
     return () => {
@@ -63,6 +66,8 @@ export function useDoc<T extends DocBase = DocBase>(
         if (alive) setResult({ data, error: null, forName: name, forId: id })
       })
       .catch((error: unknown) => {
+        // 읽기 실패를 조용히 넘기지 않는다(위 useCollection과 같은 이유).
+        console.error(`[firestore] ${name}/${id} 읽기 실패`, error)
         if (alive) setResult({ data: null, error: error as Error, forName: name, forId: id })
       })
     return () => {
