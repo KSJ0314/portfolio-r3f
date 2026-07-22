@@ -18,7 +18,9 @@ export function Experience() {
       // 카메라 위치가 시점의 단일 소스다(CameraRig가 여기서 오프셋·미니맵 각도를 유도한다).
       // 캐릭터를 비스듬히 내려다보는 항공뷰. 정확한 대각선(45°)을 피해 방위각을 살짝 틀었다.
       // y는 내려다보는 고도각을 정한다(약 42°). 높일수록 위에서 내려다보는 시점이 된다.
-      camera={{ position: [-7, 12.5, 12], zoom: 85, near: 0.1, far: 100 }}
+      // xz는 캐릭터 시작 위치(CHARACTER_START)에 오프셋 (-7, +12)를 더한 값이다.
+      // 캐릭터 시작점을 옮기면 여기도 같이 옮겨야 시점이 유지된다.
+      camera={{ position: [-7, 12.5, 17], zoom: 85, near: 0.1, far: 100 }}
       style={{ position: 'fixed', inset: 0 }}
       onContextMenu={(e) => e.preventDefault()}
     >

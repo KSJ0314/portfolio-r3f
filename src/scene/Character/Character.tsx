@@ -8,7 +8,7 @@ import { useCameraStore } from '../../state/useCameraStore'
 import { isMovementLocked, useStationStore } from '../../state/useStationStore'
 
 /** 이동 속도(유닛/초). 거리와 무관하게 항상 일정. */
-const MOVE_SPEED = 8
+const MOVE_SPEED = 4
 
 const _dir = new Vector3()
 const _prev = new Vector3()
@@ -27,9 +27,8 @@ export function Character() {
 
   useFrame((_, delta) => {
     _prev.copy(position)
-    // 스테이션 진입·종료 애니메이션 중에는 이동이 잠긴다.
+    // 스테이션 진입 애니메이션 중에는 이동이 잠긴다.
     // 이동 중 활성화했을 수 있으므로 남은 목표점을 현재 위치로 스냅해 즉시 멈춘다(관성 없이).
-    // 종료 애니메이션이 끝나면 스토어가 우클릭했던 지점을 목표로 다시 설정한다.
     if (isMovementLocked(useStationStore.getState().phase)) target.copy(position)
     const dist = position.distanceTo(target)
     if (dist > 1e-4) {

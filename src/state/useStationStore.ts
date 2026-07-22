@@ -1,6 +1,4 @@
 import { create } from 'zustand'
-import { Vector3 } from 'three'
-import { useCameraStore } from './useCameraStore'
 
 /**
  * 스테이션 활성화 라이프사이클.
@@ -8,16 +6,15 @@ import { useCameraStore } from './useCameraStore'
  * ```
  * idle ──근접 + 좌클릭──> entering ──진입 애니 끝(enterComplete)──> active
  *                        [이동 잠금]                                 │
- *                                          우클릭(이동) · ESC ───────┘
+ *                              근접 이탈 · 나가기 요소 클릭 · ESC ───┘
  *                                                  ↓
  *                        exiting ──종료 애니 끝(exitComplete)──> idle
- *                        [이동 잠금] → 끝나면 우클릭한 지점으로 출발
  * ```
  *
- * - **이동 잠금은 애니메이션 재생 중(entering·exiting)에만 걸린다.**
- *   `active`에서는 이동 입력을 받으며, 그 입력이 곧 종료 트리거다.
- *   우클릭 지점을 기억해뒀다가 종료 애니메이션이 끝난 뒤 그리로 출발한다.
- * - **좌클릭은 상세 내부 요소 상호작용 전용** — 닫기에 쓰지 않는다.
+ * - **이동 잠금은 진입 애니메이션 중에만 걸린다.**
+ *   `active`에서는 평소처럼 이동할 수 있고, **걸어서 근접 범위를 벗어나면 그것이 곧 종료**다.
+ *   종료 애니메이션 중에도 이동은 막지 않는다 — 걸어나가다 멈칫하지 않게.
+ * - **닫기는 근접 이탈 · 스테이션이 제공하는 나가기 요소 · ESC 세 가지**다. 우클릭(이동)은 닫지 않는다.
  * - 진입·종료 애니메이션과 그동안의 카메라 연출은 전적으로 스테이션 구현의 몫이며, 끝났을 때
  *   `enterComplete()`/`exitComplete()`로 공통층에 알린다.
  *   등록된 구현이 없는 스테이션은 알릴 주체가 없으므로 공통층이 즉시 완료 처리한다(StationLifecycle).
@@ -31,51 +28,51 @@ interface StationState {
   /** 활성화된(또는 진입·종료 중인) 스테이션. idle이면 null. */
   activeId: string | null
   phase: StationPhase
-  /** 종료를 부른 우클릭 지점. 종료 애니메이션이 끝나면 이 지점으로 캐릭터가 출발한다. */
-  pendingTarget: Vector3 | null
-  /** 근접 스테이션 갱신. */
+  /** 근접 스테이션 갱신. 활성 스테이션에서 멀어지면 그대로 종료를 건다. */
   setNear: (id: string | null) => void
   /** 근접한 스테이션을 활성화한다(idle에서만). 진입 애니메이션이 시작되고 이동이 잠긴다. */
   activate: (id: string) => void
   /** 스테이션 구현이 진입 애니메이션을 마쳤음을 알린다 → 이동 잠금 해제. */
   enterComplete: () => void
-  /**
-   * 종료를 요청한다(우클릭 이동 · ESC). active에서만 받는다.
-   * @param target 우클릭 이동으로 닫는 경우 그 지점. 종료 애니메이션이 끝난 뒤 캐릭터가 여기로 간다.
-   */
-  requestClose: (target?: Vector3) => void
-  /** 스테이션 구현이 종료 애니메이션을 마쳤음을 알린다 → idle 복귀 + 대기 중이던 이동 시작. */
+  /** 종료를 요청한다(근접 이탈 · 나가기 요소 · ESC). active에서만 받는다. */
+  requestClose: () => void
+  /** 스테이션 구현이 종료 애니메이션을 마쳤음을 알린다 → idle 복귀. */
   exitComplete: () => void
 }
 
 export const useStationStore = create<StationState>((set, get) => ({
   nearId: null,
-  activeId: null,
-  phase: 'idle',
-  pendingTarget: null,
+  // 사이트 첫 화면은 Intro가 활성인 상태다. 진입 애니메이션 없이 처음부터 정면뷰로 시작한다.
+  activeId: 'about-intro',
+  phase: 'active',
   setNear: (id) => {
     if (get().nearId !== id) set({ nearId: id })
+    // 걸어서 멀어지는 것이 곧 닫기다. 값이 바뀌는 순간이 아니라 매번 확인한다 —
+    // 활성 스테이션이 처음부터 근접 밖이면 전환이 일어나지 않아 영영 안 닫힌다.
+    // requestClose는 active에서만 받으므로 반복 호출은 무시된다.
+    const { activeId, phase } = get()
+    if (phase === 'active' && activeId !== null && id !== activeId) get().requestClose()
   },
   activate: (id) => {
     const { phase, nearId } = get()
     if (phase !== 'idle' || nearId !== id) return
-    set({ activeId: id, phase: 'entering', pendingTarget: null })
+    set({ activeId: id, phase: 'entering' })
   },
   enterComplete: () => {
     if (get().phase === 'entering') set({ phase: 'active' })
   },
-  requestClose: (target) => {
+  requestClose: () => {
     if (get().phase !== 'active') return
-    set({ phase: 'exiting', pendingTarget: target ? target.clone() : null })
+    set({ phase: 'exiting' })
   },
   exitComplete: () => {
     if (get().phase !== 'exiting') return
-    const { pendingTarget } = get()
-    set({ activeId: null, phase: 'idle', pendingTarget: null })
-    // 종료 애니메이션이 끝난 뒤에야 캐릭터가 우클릭했던 지점으로 출발한다.
-    if (pendingTarget) useCameraStore.getState().setTarget(pendingTarget)
+    set({ activeId: null, phase: 'idle' })
   },
 }))
 
-/** 애니메이션 재생 중(entering·exiting)에는 캐릭터 이동이 잠긴다. */
-export const isMovementLocked = (phase: StationPhase) => phase === 'entering' || phase === 'exiting'
+/**
+ * 진입 애니메이션 중에만 캐릭터 이동이 잠긴다.
+ * 종료 중에는 잠그지 않는다 — 걸어나가는 것이 종료 트리거라 잠그면 그 자리에서 멈칫한다.
+ */
+export const isMovementLocked = (phase: StationPhase) => phase === 'entering'
