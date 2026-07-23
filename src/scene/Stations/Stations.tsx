@@ -3,12 +3,13 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { Raycaster, Vector2 } from 'three'
 import type { Group } from 'three'
 import { STATIONS } from '../../content/stations'
+import { getStationEntry } from '../../features/stations'
 import { useCameraStore } from '../../state/useCameraStore'
 import { useStationStore } from '../../state/useStationStore'
 import { Station } from './Station'
 
-/** 이 반경 안에 캐릭터가 들어오면 가장 가까운 스테이션을 근접으로 본다. */
-const NEAR_RADIUS = 3
+/** 스테이션에서 이만큼 안으로 들어오면 근접으로 본다. 거리 기준은 스테이션이 정한다(영역 테두리·중심점). */
+const NEAR_RADIUS = 2
 
 const _raycaster = new Raycaster()
 const _pointer = new Vector2()
@@ -27,9 +28,12 @@ export function Stations() {
     let nearest: string | null = null
     let best = NEAR_RADIUS
     for (const station of STATIONS) {
-      const dx = pos.x - station.position[0]
-      const dz = pos.z - station.position[1]
-      const dist = Math.hypot(dx, dz)
+      // 거리 재는 법은 스테이션이 등록한 것을 쓴다(영역이 있으면 그 테두리 기준).
+      // 등록하지 않았으면 배치 좌표까지의 거리로 잰다.
+      const distanceTo = getStationEntry(station.id)?.distanceTo
+      const dist = distanceTo
+        ? distanceTo(pos, station)
+        : Math.hypot(pos.x - station.position[0], pos.z - station.position[1])
       if (dist < best) {
         best = dist
         nearest = station.id

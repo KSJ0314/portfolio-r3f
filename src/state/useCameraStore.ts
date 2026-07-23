@@ -6,6 +6,12 @@ import { Vector3 } from 'three'
  */
 export const CAMERA_BOUNDS = 30
 
+/**
+ * 캐릭터 시작 위치 [x, y, z]. Intro 페이지 바깥 아래쪽이다.
+ * 카메라 초기 위치(Experience)는 여기에 아이소메트릭 오프셋을 더한 값이어야 시점이 유지된다.
+ */
+export const CHARACTER_START: [number, number, number] = [0, 0, 5]
+
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
 
 interface CameraState {
@@ -19,6 +25,12 @@ interface CameraState {
    */
   viewAngle: number
   /**
+   * 팔로우 오프셋(카메라 − 캐릭터). CameraRig가 초기화할 때 한 번 채운다.
+   * 스테이션이 카메라를 넘겨받았을 때 "돌아갈 자세"를 계산하는 데 쓴다 —
+   * 지금 카메라가 어디 있는지 보고 유추하면 팔로우가 아직 안 돈 상황에서 틀린 값을 잡는다.
+   */
+  followOffset: Vector3
+  /**
    * 이동 관련 실시간 값. position처럼 set 없이 in-place로 갱신(구독 알림 없음) — 디버그/튜닝용.
    * `speed`: 이번 프레임 실제 이동 속도(유닛/초). Character가 매 프레임 기록.
    */
@@ -27,12 +39,15 @@ interface CameraState {
   setTarget: (point: Vector3) => void
   /** 뷰 각도를 설정한다(값이 바뀔 때만). */
   setViewAngle: (angle: number) => void
+  /** 팔로우 오프셋을 기록한다(좌표만 갱신). */
+  setFollowOffset: (offset: Vector3) => void
 }
 
 export const useCameraStore = create<CameraState>((set, get) => ({
-  position: new Vector3(0, 0, 0),
-  target: new Vector3(0, 0, 0),
+  position: new Vector3(...CHARACTER_START),
+  target: new Vector3(...CHARACTER_START),
   viewAngle: 0,
+  followOffset: new Vector3(),
   motion: { speed: 0 },
   setTarget: (point) => {
     get().target.set(
@@ -43,5 +58,8 @@ export const useCameraStore = create<CameraState>((set, get) => ({
   },
   setViewAngle: (angle) => {
     if (get().viewAngle !== angle) set({ viewAngle: angle })
+  },
+  setFollowOffset: (offset) => {
+    get().followOffset.copy(offset)
   },
 }))
