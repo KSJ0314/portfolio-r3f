@@ -11,7 +11,7 @@ import { isMovementLocked, useStationStore } from '../state/useStationStore'
  * - view: 미니맵 회전각(도)
  * - near / active: 스테이션 스토어의 근접·활성 상태
  * - phase: 활성화 라이프사이클 (idle → entering → active → exiting)
- * - locked: 애니메이션 재생 중이라 캐릭터 이동이 잠긴 상태인지
+ * - locked: 진입 애니메이션 재생 중이라 캐릭터 이동이 잠긴 상태인지
  * - camera: 카메라 제어권 — follow(공통층이 캐릭터 팔로우) / station(활성 스테이션이 제어)
  */
 export function DebugHUD() {

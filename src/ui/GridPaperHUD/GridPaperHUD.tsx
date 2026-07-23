@@ -46,11 +46,11 @@ function isDefault(params: GridPaperParams): boolean {
   return (Object.keys(b) as (keyof FlatParams)[]).every((key) => a[key] === b[key])
 }
 
-/** 패널을 우하단 구석에 고정. 접힌 상태의 제목 표시줄만 보인다. */
+/** 패널을 좌상단 구석에 고정. 접힌 상태의 제목 표시줄만 보인다. */
 const PANEL_CONTAINER_STYLE: CSSProperties = {
   position: 'fixed',
-  right: 16,
-  bottom: 16,
+  left: 16,
+  top: 16,
   width: 360,
   zIndex: 1000,
 }
@@ -62,6 +62,7 @@ function hint(description: string, value: number | string) {
 
 /**
  * 모눈종이 바닥 텍스처를 마우스로 조절하는 개발용 HUD(dev에서만 렌더된다).
+ * 패널(`<Leva>`) 자체도 여기서 그리며, 다른 개발용 HUD들이 이 패널에 폴더로 얹힌다.
  *
  * 값을 바꾸면 바닥 텍스처가 브라우저에서 즉시 다시 구워진다.
  * 마음에 드는 값이 나오면 "값 복사"로 JSON을 얻어
@@ -88,7 +89,7 @@ export function GridPaperHUD() {
           D.cells,
         ),
       },
-    }),
+    }, { collapsed: true }),
     선: folder({
       lineColor: { value: D.lineColor, label: '선 색', hint: hint('모눈 선의 색.', D.lineColor) },
       lineWidthRatio: {
@@ -118,7 +119,7 @@ export function GridPaperHUD() {
         label: '진하기',
         hint: hint('가장 진하게 그어진 구간의 진하기. 1이면 선 색이 그대로 나온다.', D.lineOpacityMax),
       },
-    }),
+    }, { collapsed: true }),
     손그림: folder({
       wobbleRatio: {
         value: D.wobbleRatio,
@@ -191,7 +192,7 @@ export function GridPaperHUD() {
           D.pressureVariance,
         ),
       },
-    }),
+    }, { collapsed: true }),
     종이: folder({
       paperColor: {
         value: D.paperColor,
@@ -206,8 +207,8 @@ export function GridPaperHUD() {
         label: '종이 결',
         hint: hint('종이 결(얼룩)의 세기. 완전히 균일한 흰 면이 되지 않게 해준다.', D.grainStrength),
       },
-    }),
-  }))
+    }, { collapsed: true }),
+  }), { collapsed: true })
 
   // 버튼은 따로 등록한다. 위 스키마 안에서는 아직 set이 선언되기 전이라 참조할 수 없다.
   useControls(
@@ -250,7 +251,7 @@ export function GridPaperHUD() {
           // 툴팁 기본색은 반투명(그래서 뒤의 3D 씬이 비쳐 글씨가 안 읽힌다) → 불투명하게 덮는다.
           colors: { toolTipBackground: '#12131a', toolTipText: '#f2f2f5' },
         }}
-        titleBar={{ title: '모눈종이 바닥' }}
+        titleBar={{ title: '개발 튜닝' }}
       />
     </div>
   )

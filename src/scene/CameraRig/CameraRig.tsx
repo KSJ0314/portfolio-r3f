@@ -27,8 +27,13 @@ export function CameraRig() {
   // useLayoutEffect는 커밋 직후 동기 실행된다.
   // 그래서 아래 useFrame이 등록되기 전, 첫 rAF 프레임보다 먼저 오프셋을 잡는다.
   useLayoutEffect(() => {
+    // 오프셋은 딱 한 번만 잡는다. 이펙트가 다시 실행될 때(StrictMode의 재실행·HMR) 카메라는
+    // 이미 스테이션이 옮겨놓은 자세일 수 있어서, 그걸 기준으로 다시 잡으면 팔로우가 그 자리에 굳는다.
+    if (ready.current) return
     offset.current.copy(camera.position).sub(position)
     ready.current = true
+    // 스테이션이 카메라를 넘겨받았을 때 돌아갈 자세를 계산할 수 있도록 오프셋을 공유한다.
+    useCameraStore.getState().setFollowOffset(offset.current)
 
     // 미니맵 회전각을 카메라에서 유도한다. 카메라가 캐릭터를 바라보는 방향을 지면에 투영한
     // (fx, fz)가 화면상 "위(멀어지는 방향)"에 해당 → 그 방향이 미니맵의 위(-y)로 가도록 하는

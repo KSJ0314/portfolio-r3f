@@ -8,11 +8,14 @@
 
 스테이션이 활성화되면 그 스테이션에 매핑된 컬렉션을 읽는다(매핑은 `src/content/stations.ts`의 `collections`).
 
-- `about-intro` → profile · skills
+- `about-intro` → profile
+- `about-skills` → skills (스테이션 신설 예정)
 - `about-career` → experiences · education · spec
 - `about-award` → awards
 - `project-*` → projects
 - `guestbook` → guestbook
+
+읽기는 매핑을 참고해 각 스테이션 구현이 필요한 것만 직접 가져온다(예: Intro는 `useDoc('profile', 'main')`).
 
 ## 스키마
 
@@ -92,7 +95,9 @@
 
 Firebase는 다른 프로젝트와도 공유하는 DB라 최소 정보만 둔다. `tech`·`images`·`demoKey` 등 상세 필드는 로컬에 별도 저장하며, 스테이션 상세 구현(Phase 8) 시 확정한다. ([DECISIONS 012])
 
-**guestbook**: 필드 설계는 Phase 8(방명록 구현)에서 정한다.
+**guestbook**: 필드 설계는 Phase 8(방명록 스테이션 구현)에서 정한다.
+
+`profile`의 `intro`는 줄바꿈을 `\n` **두 글자**로 담고 있다. 3D 텍스트에 넘길 때 실제 개행으로 바꿔야 줄이 나뉜다.
 
 ## 데이터 접근 (`src/lib/firebase/`)
 
@@ -109,7 +114,7 @@ Firebase는 다른 프로젝트와도 공유하는 DB라 최소 정보만 둔다
 **콘솔에서 직접 관리한다**(레포에 규칙 파일을 두지 않음).
 
 - **현재(개발 중): 열린 규칙** — 전체 read/write 허용. 콘텐츠 입력·시드를 위해.
-- **배포 전(Phase 8~9): 잠금** — 콘텐츠 7종은 read 공개 / write 차단(관리자는 콘솔·스크립트로만), guestbook은 create만 허용 + 필드 검증.
+- **배포 전(Phase 8~10): 잠금** — 콘텐츠 7종은 read 공개 / write 차단(관리자는 콘솔·스크립트로만), guestbook은 create만 허용 + 필드 검증.
 
 ## App Check / reCAPTCHA
 

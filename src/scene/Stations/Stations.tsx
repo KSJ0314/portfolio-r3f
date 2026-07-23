@@ -2,14 +2,14 @@ import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Raycaster, Vector2 } from 'three'
 import type { Group } from 'three'
-import { STATIONS, getStation } from '../../content/stations'
-import { fetchCollection } from '../../lib/firebase'
+import { STATIONS } from '../../content/stations'
+import { getStationEntry } from '../../features/stations'
 import { useCameraStore } from '../../state/useCameraStore'
 import { useStationStore } from '../../state/useStationStore'
 import { Station } from './Station'
 
-/** 이 반경 안에 캐릭터가 들어오면 가장 가까운 스테이션을 근접으로 본다. */
-const NEAR_RADIUS = 3
+/** 스테이션에서 이만큼 안으로 들어오면 근접으로 본다. 거리 기준은 스테이션이 정한다(영역 테두리·중심점). */
+const NEAR_RADIUS = 2
 
 const _raycaster = new Raycaster()
 const _pointer = new Vector2()
@@ -21,7 +21,6 @@ const _pointer = new Vector2()
 export function Stations() {
   const { camera, gl } = useThree()
   const groupRef = useRef<Group>(null)
-  const activeId = useStationStore((s) => s.activeId)
 
   useFrame(() => {
     // 캐릭터 위치는 좌표만 바뀌므로 구독 없이 getState로 읽는다.
@@ -29,9 +28,12 @@ export function Stations() {
     let nearest: string | null = null
     let best = NEAR_RADIUS
     for (const station of STATIONS) {
-      const dx = pos.x - station.position[0]
-      const dz = pos.z - station.position[1]
-      const dist = Math.hypot(dx, dz)
+      // 거리 재는 법은 스테이션이 등록한 것을 쓴다(영역이 있으면 그 테두리 기준).
+      // 등록하지 않았으면 배치 좌표까지의 거리로 잰다.
+      const distanceTo = getStationEntry(station.id)?.distanceTo
+      const dist = distanceTo
+        ? distanceTo(pos, station)
+        : Math.hypot(pos.x - station.position[0], pos.z - station.position[1])
       if (dist < best) {
         best = dist
         nearest = station.id
@@ -69,19 +71,6 @@ export function Stations() {
     canvas.addEventListener('mousedown', onMouseDown)
     return () => canvas.removeEventListener('mousedown', onMouseDown)
   }, [camera, gl])
-
-  // 스테이션이 활성화되면 그 스테이션에 매핑된 컬렉션을 읽어 콘솔에 찍는다(연결 확인용).
-  // 읽어온 데이터로 무엇을 할지는 각 스테이션 상세 구현에서 정한다.
-  useEffect(() => {
-    if (!activeId) return
-    const station = getStation(activeId)
-    if (!station) return
-    for (const col of station.collections) {
-      fetchCollection(col)
-        .then((data) => console.log('[read]', activeId, col, data))
-        .catch((err) => console.error('[read:error]', activeId, col, err))
-    }
-  }, [activeId])
 
   return (
     <group ref={groupRef}>
