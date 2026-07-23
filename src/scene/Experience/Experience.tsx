@@ -39,11 +39,15 @@ export function Experience() {
         <Suspense fallback={null}>
           <World />
         </Suspense>
-        <Stations />
         <Character />
         <CameraRig />
-        {/* 활성 스테이션의 3D 상세 자리 — 활성화 중 카메라 제어권은 이 안의 구현이 가진다. */}
-        <ActiveStationScene />
+        {/* 스테이션 콘텐츠(비활성 모습·활성 상세)는 Suspense로 감싼다.
+            스테이션 구현이 텍스처를 useLoader로 불러오다 suspend해도, 그 로딩이 씬 전체가 아니라
+            여기까지만 미치게 한다. 활성 스테이션의 카메라 제어권은 ActiveStationScene 안의 구현이 가진다. */}
+        <Suspense fallback={null}>
+          <Stations />
+          <ActiveStationScene />
+        </Suspense>
       </SceneErrorBoundary>
     </Canvas>
   )

@@ -22,6 +22,7 @@
 - **`CanvasTexture`처럼 런타임에 굽는 것도 로더로 감싸 `useLoader`에 태울 수 있다** — 파일이 아니어도 `three.Loader`를 상속해 `load`에서 캔버스를 굽고 `onLoad(texture)`로 넘기면 된다. 입력 문자열이 곧 캐시 키다(굽는 파라미터를 JSON으로 직렬화). 손그림 요소가 이 틀을 공유한다.
 - **`gl.initTexture`는 "GPU 업로드 지연"만 막지, "두 번 렌더"는 못 막는다** — 텍스처를 GPU에 미리 올려주는 API지만, 깜빡임의 원인이 업로드 지연이 아니라 `setState` 두 번 렌더면 이걸 해도 소용없다. `useTexture`(drei)도 내부에서 `initTexture`를 부르지만, 안 깜빡이는 진짜 이유는 그게 아니라 Suspense 방식이다.
 - **`useLoader` 방식의 대가와 예외** — Suspense를 반드시 짝으로 씌워야 하고(`<Suspense fallback={null}>`), 로드 실패가 throw로 나가므로 ErrorBoundary가 받아줘야 한다. 입력이 캐시 키라 자주 바뀌면 매번 새로 굽고 자동 dispose되지 않아 GPU에 쌓인다. 그래서 **매 프레임 바뀌는 텍스처(비디오·실시간 캔버스)는 이 방식이 아니라**, 텍스처 인스턴스를 하나 만들어두고 내용만 `needsUpdate = true`로 갱신한다.
+- **Suspense 경계는 개별 구현이 아니라 공통 마운트 자리에 둔다** — 컴포넌트마다 자기 `Suspense`를 넣게 맡기면 하나만 빠뜨려도 그 suspend가 위로 전파돼 상위(씬 전체)가 fallback으로 사라진다. 여러 구현이 꽂히는 공통 자리(예: 스테이션 마운트 자리)를 하나의 `Suspense`로 감싸면, 각 구현이 최상위에서 suspend해도 그 범위가 거기까지로 묶이고 개별 구현이 안 넣어도 안전하다.
 
 ### 2026-07-22
 
