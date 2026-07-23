@@ -6,6 +6,7 @@ import { CameraRig } from '../CameraRig'
 import { World } from '../World'
 import { Character } from '../Character'
 import { Stations } from '../Stations'
+import { SceneErrorBoundary } from '../SceneErrorBoundary'
 import { ActiveStationScene } from '../../features/stations'
 
 export function Experience() {
@@ -32,15 +33,18 @@ export function Experience() {
         position={[5, 8, 5]}
       />
 
-      {/* 바닥은 모눈 텍스처를 불러오는 동안 잠시 비어 있다(로딩 연출은 폴리싱 단계에서). */}
-      <Suspense fallback={null}>
-        <World />
-      </Suspense>
-      <Stations />
-      <Character />
-      <CameraRig />
-      {/* 활성 스테이션의 3D 상세 자리 — 활성화 중 카메라 제어권은 이 안의 구현이 가진다. */}
-      <ActiveStationScene />
+      {/* 씬 콘텐츠는 안전망으로 감싼다 — 한 곳의 렌더 에러가 앱 전체를 언마운트하지 않게. */}
+      <SceneErrorBoundary>
+        {/* 바닥은 모눈 텍스처를 불러오는 동안 잠시 비어 있다(로딩 연출은 폴리싱 단계에서). */}
+        <Suspense fallback={null}>
+          <World />
+        </Suspense>
+        <Stations />
+        <Character />
+        <CameraRig />
+        {/* 활성 스테이션의 3D 상세 자리 — 활성화 중 카메라 제어권은 이 안의 구현이 가진다. */}
+        <ActiveStationScene />
+      </SceneErrorBoundary>
     </Canvas>
   )
 }
