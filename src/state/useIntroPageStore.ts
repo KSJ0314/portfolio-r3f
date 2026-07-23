@@ -2,8 +2,9 @@ import { create } from 'zustand'
 import {
   DEFAULT_INTRO_PAGE_AREA,
   DEFAULT_INTRO_PAGE_LAYOUT,
-} from '../features/stations/impl/aboutIntro.constants'
-import type { IntroPageLayout, StationArea } from '../features/stations/impl/aboutIntro.constants'
+} from '../stations/sections/about/AboutIntro/AboutIntro.constants'
+import type { IntroPageLayout } from '../stations/sections/about/AboutIntro/AboutIntro.constants'
+import type { StationArea } from '../stations/types'
 
 interface IntroPageState {
   /** Intro 페이지 영역. 클릭 판정 범위이자 근접 판정 기준이다. */

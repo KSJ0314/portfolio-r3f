@@ -1,8 +1,4 @@
-/** 스테이션 영역(가로 × 세로). 바닥에 눕은 사각형이다. */
-export interface StationArea {
-  width: number
-  height: number
-}
+import type { StationArea } from '../../../types'
 
 /**
  * Intro 페이지 안의 배치 값. 눈으로 맞춰야 하는 값이라 개발용 HUD로 조절한다.
@@ -50,6 +46,14 @@ export interface IntroPageLayout {
   /** 획의 진하기(0~1). */
   exitArrowOpacity: number
 }
+
+/** 바닥과 겹쳐 깜빡이지 않도록 살짝 띄운다. 클릭 판정 면 < 테두리 < 내용 순으로 얹는다. */
+export const AREA_Y = 0.005
+export const OUTLINE_Y = 0.01
+export const CONTENT_Y = 0.02
+
+/** 종이에 적힌 글씨 색. */
+export const INK = '#3a3a3a'
 
 /** Intro 페이지 영역. 개발용 HUD(IntroPageHUD)로 정면뷰에서 맞춘 값이다. */
 export const DEFAULT_INTRO_PAGE_AREA: StationArea = { width: 11, height: 6.5 }

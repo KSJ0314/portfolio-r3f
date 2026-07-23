@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useStationStore } from '../../state/useStationStore'
-import { useActiveStation } from './useActiveStation'
+import { useActiveStation } from '../useActiveStation'
 
 /**
  * 스테이션 활성화 라이프사이클의 공통층(Canvas 밖).

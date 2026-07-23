@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { useCameraStore } from '../state/useCameraStore'
-import { isMovementLocked, useStationStore } from '../state/useStationStore'
+import { useCameraStore } from '../../../state/useCameraStore'
+import { isMovementLocked, useStationStore } from '../../../state/useStationStore'
 
 /**
  * 개발용 상태 HUD. 개발 중 확인이 필요한 실시간 값을 좌하단에 표시한다.

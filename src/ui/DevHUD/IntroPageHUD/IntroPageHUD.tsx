@@ -3,8 +3,8 @@ import { button, folder, useControls } from 'leva'
 import {
   DEFAULT_INTRO_PAGE_AREA,
   DEFAULT_INTRO_PAGE_LAYOUT,
-} from '../../features/stations/impl/aboutIntro.constants'
-import { useIntroPageStore } from '../../state/useIntroPageStore'
+} from '../../../stations/sections/about/AboutIntro/AboutIntro.constants'
+import { useIntroPageStore } from '../../../state/useIntroPageStore'
 
 const A = DEFAULT_INTRO_PAGE_AREA
 const L = DEFAULT_INTRO_PAGE_LAYOUT
@@ -19,7 +19,7 @@ function hint(description: string, value: number) {
  *
  * 패널 자체(`<Leva>`)는 GridPaperHUD가 그리고, 여기서는 값만 등록해 같은 패널에 얹는다.
  * 값이 정해지면 "값 복사"로 얻은 JSON을
- * `src/features/stations/impl/aboutIntro.constants.ts`의 기본값에 반영해 확정한다.
+ * `src/stations/sections/about/AboutIntro/AboutIntro.constants.ts`의 기본값에 반영해 확정한다.
  */
 export function IntroPageHUD() {
   const setArea = useIntroPageStore((s) => s.setArea)

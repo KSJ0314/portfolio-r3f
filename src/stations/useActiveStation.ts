@@ -1,5 +1,5 @@
-import { getStation, type Station } from '../../content/stations'
-import { useStationStore } from '../../state/useStationStore'
+import { getStation, type Station } from '../content/stations'
+import { useStationStore } from '../state/useStationStore'
 import { getStationEntry, type StationEntry } from './registry'
 
 /**

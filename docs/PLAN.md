@@ -63,7 +63,7 @@
 - 연결: 로컬에 저장한 프로젝트별 `demoKey` ↔ 로컬 데모 레지스트리 매칭([DECISIONS 012] — `demoKey`는 Firestore가 아니라 로컬 상세 데이터에 둔다).
 
 ```text
-src/features/projects/
+src/stations/sections/projects/
   ProjectGallery/             # Firestore에서 프로젝트 스테이션 배치(Projects 구역)
   demos/
     registry.ts               # demoKey -> 데모 컴포넌트 매핑
@@ -88,11 +88,10 @@ ComponentName/
 ```text
 src/
   main.tsx · App.tsx
-  scene/        # Experience(<Canvas>) · World · CameraRig · stations/
-  features/
-    projects/   # ProjectGallery · demos/
-    guestbook/
-  ui/           # PrintView(Phase 9) · Minimap · ThemeToggle · PaintMode(Phase 11)
+  scene/        # Experience(<Canvas>) · World · CameraRig · Stations(배치·근접·클릭)
+  stations/     # 스테이션 프레임워크(registry·라이프사이클·types) + sections/ 섹션별 구현
+    sections/   # about(AboutIntro …) · projects(+demos) · guestbook
+  ui/           # PrintView(Phase 9) · Minimap · ThemeToggle · DevHUD(dev 전용 HUD 묶음)
   state/        # zustand 스토어
   lib/          # firebase · raycast · storage(localforage)
   content/      # 로컬 콘텐츠/상수

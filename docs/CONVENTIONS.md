@@ -64,6 +64,15 @@ docs: PLAN 로드맵 갱신
 - 문서만 바뀐 PR은 "코드 변경 없음"을 밝힌다.
 - CodeRabbit이 본문 아래 "Summary by CodeRabbit"을 자동으로 붙인다(직접 쓰지 않는다).
 
+### 릴리스 PR 본문 (develop → main)
+
+feature PR과 달리 정해진 틀을 따른다.
+
+- **`## 개요`** — "develop에 통합된 Phase … 작업을 main(프로덕션)으로 승격." 한 줄.
+- **`## 포함 내용`** — Phase별 불릿. 각 Phase 아래 **하위 목록(`  - #PR번호`)** 으로 develop PR 링크를 단다. Phase 항목 끝에 `(#9)`처럼 붙이면 GitHub이 그 PR 제목을 펼쳐 보여 지저분해지므로 하위 목록으로 분리한다.
+- 마지막에 한 줄: "각 단계는 develop 대상 PR로 CodeRabbit 리뷰를 거쳐 머지 완료." (PR 번호 없이)
+- Phase 범위는 직전 릴리스 PR 이후부터다. base=main PR은 CodeRabbit 리뷰 대상이 아니다(`.coderabbit.yaml`이 base=develop만).
+
 ## 배포 — Vercel (Phase 0.5에서 연결)
 
 - **Vercel** Git 연동으로 자동 CI/CD (별도 Actions 워크플로 불필요).

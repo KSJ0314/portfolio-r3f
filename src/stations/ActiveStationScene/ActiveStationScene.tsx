@@ -1,5 +1,5 @@
 import { useStationStore } from '../../state/useStationStore'
-import { useActiveStation } from './useActiveStation'
+import { useActiveStation } from '../useActiveStation'
 
 /**
  * 활성 스테이션의 3D 상세를 마운트하는 자리(Canvas 안).

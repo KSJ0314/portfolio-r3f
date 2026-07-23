@@ -1,9 +1,8 @@
 import type { ComponentType } from 'react'
 import type { Vector3 } from 'three'
-import type { Station } from '../../content/stations'
-import type { StationPhase } from '../../state/useStationStore'
-import { AboutIntroInactive, AboutIntroScene } from './impl/AboutIntro'
-import { aboutIntroDistanceTo } from './impl/aboutIntro.distance'
+import type { Station } from '../content/stations'
+import type { StationPhase } from '../state/useStationStore'
+import { AboutIntroInactive, AboutIntroScene, aboutIntroDistanceTo } from './sections/about/AboutIntro'
 
 /**
  * 스테이션 레지스트리 — `스테이션 id → 전용 구현`.
