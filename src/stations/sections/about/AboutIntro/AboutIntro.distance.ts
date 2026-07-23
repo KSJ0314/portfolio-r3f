@@ -1,6 +1,6 @@
 import type { Vector3 } from 'three'
-import type { Station } from '../../../content/stations'
-import { useIntroPageStore } from '../../../state/useIntroPageStore'
+import type { Station } from '../../../../content/stations'
+import { useIntroPageStore } from '../../../../state/useIntroPageStore'
 
 /**
  * 캐릭터에서 Intro 영역 테두리까지의 최단거리. 영역 안이면 0.

@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import { Html } from '@react-three/drei'
 import { getSection, type Station as StationData } from '../../content/stations'
-import { getStationEntry } from '../../features/stations'
+import { getStationEntry } from '../../stations'
 import { lightTheme } from '../../theme/themes'
 
 /** 임시 라벨 스타일. 라이트/다크 양쪽에서 읽히도록 어두운 알약 배경 + 흰 글자(플레이스홀더). */

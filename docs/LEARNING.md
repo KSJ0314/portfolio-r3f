@@ -103,7 +103,7 @@
 - **원인**: 텍스처를 `useState`로 나중에 주입한 것. 커밋 버전 사진은 `useTexture`(Suspense)라 텍스처가 준비된 뒤 한 번에 그려져 멀쩡했는데, 재시도를 넣으려고 로드 후 `setState`로 주입하는 방식으로 바꾸면서 "null 렌더 → 텍스처 렌더" 두 프레임이 생겼다. 화살표는 처음부터 `CanvasTexture`를 `useMemo`/`setState`로 주입해서 커밋 때부터 같은 이유로 깜빡였다.
 - **해결**: 둘 다 `useLoader`(Suspense) 방식으로. 사진은 `TextureLoader`를 상속한 재시도 로더를, 화살표는 캔버스를 굽는 전용 로더(`CrayonArrowLoader`)를 만들어 `useLoader`에 태웠다. 텍스처가 준비된 뒤 렌더 트리에 직접 주입되어 두 번 렌더가 사라졌다. 호출부는 `<Suspense fallback={null}>`로 감싸고, 최종 실패는 `SceneErrorBoundary`가 받는다.
 - **삽질 기록**: StrictMode 이중 실행, leva의 값 정규화, 반투명 재질 정렬, `gl.initTexture`(GPU 업로드 지연)를 차례로 의심해 전부 헛짚었다. "커밋 사진은 멀쩡한데 지금 사진만 깜빡인다"는 차이 하나가 처음부터 답(내 변경 = `useTexture`→`setState`)을 가리키고 있었다. dev 전용 요인(StrictMode·leva)과 프로덕션 공통 증상을 섞어 본 것이 오판의 시작이었다.
-- **참고**: `src/features/stations/impl/AboutIntro.tsx`
+- **참고**: `src/stations/sections/about/AboutIntro/`
 
 ### [2026-07-22] 스테이션을 닫으면 카메라가 각도만 돌고 위치는 마지막에 순간이동
 
@@ -111,7 +111,7 @@
 - **환경**: React 19 StrictMode, @react-three/fiber v9, Orthographic 카메라.
 - **원인**: 돌아갈 항공뷰 자세를 마운트 시점의 `camera.position`·`camera.quaternion`에서 캡처했다. 그런데 **R3F는 카메라의 위치만 넣고 방향은 돌리지 않고**, 캐릭터를 바라보게 만드는 것은 `CameraRig`가 매 프레임 하는 일이다. 첫 화면은 Intro가 활성이라 팔로우가 **한 번도 돌지 않아서**, 캡처한 회전은 아무것도 바라본 적 없는 초기값이었다. (그 전에는 StrictMode의 이펙트 재실행이 이미 정면뷰로 옮겨둔 자세를 항공뷰로 덮어쓰는 문제도 겹쳐 있었다.)
 - **해결**: 자세를 캡처하지 않고 **팔로우 규칙으로 계산**한다. `CameraRig`가 초기화할 때 오프셋(카메라 − 캐릭터)을 `useCameraStore.followOffset`에 기록하고, 스테이션은 `캐릭터 위치 + 오프셋`에서 `캐릭터를 바라보는` 자세를 매번 구한다. 현재 카메라가 어디에 있든 무관해져 재마운트·HMR에도 안전하다. 걸어나가는 중에도 종료 애니메이션이 도므로 매 프레임 다시 계산한다.
-- **참고**: `src/features/stations/impl/AboutIntro.tsx`, `src/scene/CameraRig/CameraRig.tsx`
+- **참고**: `src/stations/sections/about/AboutIntro/`, `src/scene/CameraRig/CameraRig.tsx`
 
 ### [2026-07-22] 프로필 사진을 교체해도 화면에 반영되지 않음
 

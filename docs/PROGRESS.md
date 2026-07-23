@@ -1,6 +1,6 @@
 # 진행 상황 (PROGRESS)
 
-> 이 문서는 프로젝트의 현재 진행 상황을 추적합니다. 마지막 업데이트: **2026-07-22**
+> 이 문서는 프로젝트의 현재 진행 상황을 추적합니다. 마지막 업데이트: **2026-07-23**
 > 전체 계획은 [PLAN.md](./PLAN.md) 참고.
 
 ## 현재 단계
@@ -172,6 +172,12 @@
   - **배치 값**: `about-intro`를 원점으로 옮기고 나머지 스테이션은 겹치지 않게 임시 이동. 캐릭터 시작 위치를 `[0, 5]`로 상수화(`CHARACTER_START`)하고 카메라 초기 위치도 같은 만큼 옮겨 시점을 유지. 이동 속도 8→4, 근접 반경 3→2.
   - **트러블슈팅**: 비활성화할 때 카메라가 각도만 돌고 위치는 튀는 문제 = 항공뷰 자세를 "지금 카메라"에서 캡처한 탓. R3F는 카메라 위치만 넣고 방향은 돌리지 않으며, 첫 화면은 Intro가 활성이라 팔로우가 한 번도 돌지 않는다. 자세를 계산으로 바꿔 해결.
   - **남긴 한계**: 첫 진입 시 캐릭터를 숨겼다 등장시키는 연출은 실제 캐릭터를 만드는 Phase 11로 미룬다. 밤 테마는 종이만 어두워지고 그 위 요소는 밝게 남는다 — 조명 체계로 되돌릴지 후처리로 덮을지는 스테이션을 다 만든 뒤 정한다. `about-skills` 스테이션은 아직 신설하지 않았다.
+
+- **2026-07-23**
+  - **컨벤션 정비 리팩터**(코드 이동·분리, 동작 변화 없음). 컴포넌트 전용 폴더 + index 배럴 · 타입 파일 분리 규칙에 맞춰 전체를 정돈했다.
+    - **stations 승격**: `src/features/` 제거 → `src/stations/`. 섹션 구현을 `sections/{about,projects,guestbook}/`로 그룹화하고, 프레임워크(registry·ActiveStationScene·StationLifecycle·useActiveStation·공용 `types`)는 `stations/` 바로 밑에 둔다.
+    - **AboutIntro 분해**: 한 파일에 몰려 있던 구현을 `sections/about/AboutIntro/`로 쪼갰다(AboutIntroInactive·AboutIntroScene·ProfilePhoto·ExitArrow·`.types`·`.constants`·`.distance`).
+    - **DevHUD 통합**: 흩어져 있던 개발용 HUD(DebugHUD·GridPaperHUD·IntroPageHUD)를 `ui/DevHUD/` 하위로 모으고 `App`은 `<DevHUD />` 한 줄로 렌더한다. dev 게이트는 App에 남겨 프로덕션 트리셰이킹을 유지한다.
 
 ## 다음 할 일
 
