@@ -1,15 +1,16 @@
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Line, Text } from '@react-three/drei'
+import { useLoader, useThree } from '@react-three/fiber'
 import {
-  Suspense,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
-import { Line, Text, useTexture } from '@react-three/drei'
-import { useThree } from '@react-three/fiber'
-import { CanvasTexture, Matrix4, Quaternion, SRGBColorSpace, Vector3 } from 'three'
+  CanvasTexture,
+  Loader,
+  Matrix4,
+  Quaternion,
+  SRGBColorSpace,
+  type Texture,
+  TextureLoader,
+  Vector3,
+} from 'three'
 import gsap from 'gsap'
 import { BODY_FONT, HAND_FONT } from '../../../content/fonts'
 import { DEFAULT_CRAYON_PARAMS, drawCrayonStroke, type CrayonPoint } from '../../../lib/crayon'
@@ -62,24 +63,61 @@ interface TroikaTextMesh {
 }
 
 /**
+ * 사진 로드 실패 시 재시도 간격(ms). 초기 시도 1회 + 이 배열만큼 재시도한다.
+ * 일시적 실패(네트워크 순단 등)는 이 안에서 대개 회복되고, 경로 오류처럼 영구적인 실패는 소진 후 멈춘다.
+ */
+const PHOTO_RETRY_DELAYS = [500, 1500, 3000]
+
+/**
+ * 실패 시 재시도하는 TextureLoader.
+ *
+ * `useLoader`(Suspense)는 텍스처를 렌더 트리에 직접 주입해, mesh가 처음 마운트될 때부터 텍스처가 붙어 있다.
+ * 상태로 뒤늦게 주입하는 방식은 한 프레임 늦게 반영돼 깜빡이지만, 이 방식은 그렇지 않다.
+ * 재시도만 얹으려고 로더의 `load`를 감싼다 — 최종 실패는 그대로 던져 Suspense 경계(ErrorBoundary)가 받는다.
+ */
+class RetryingTextureLoader extends TextureLoader {
+  load(
+    url: string,
+    onLoad?: (data: Texture<HTMLImageElement>) => void,
+    onProgress?: (event: ProgressEvent) => void,
+    onError?: (err: unknown) => void,
+  ): Texture<HTMLImageElement> {
+    let texture!: Texture<HTMLImageElement>
+    const attempt = (retries: number) => {
+      texture = super.load(url, onLoad, onProgress, (err) => {
+        if (retries < PHOTO_RETRY_DELAYS.length) {
+          setTimeout(() => attempt(retries + 1), PHOTO_RETRY_DELAYS[retries])
+        } else {
+          onError?.(err)
+        }
+      })
+    }
+    attempt(0)
+    return texture
+  }
+}
+
+/**
  * 하단 프로필 사진. 텍스처를 불러오는 동안 서스펜드되므로 호출부에서 Suspense로 감싼다.
  * 가로는 불러온 이미지의 실제 크기에서 계산한다 — 사진을 갈아끼워도 비율이 알아서 맞는다.
  */
 function ProfilePhoto({ bottom, height }: { bottom: number; height: number }) {
-  const texture = useTexture(PROFILE_PHOTO_URL)
+  const gl = useThree((s) => s.gl)
+  const texture = useLoader(RetryingTextureLoader, PROFILE_PHOTO_URL)
+
+  // 텍스처를 GPU에 미리 올린다(drei useTexture와 같은 처리 — 첫 렌더의 업로드 지연 방지).
+  useEffect(() => {
+    gl.initTexture(texture)
+  }, [gl, texture])
+
   const image = texture.image as { width: number; height: number }
   const width = height * (image.width / image.height)
 
   return (
     <mesh position={[0, bottom + height / 2, 0]} raycast={() => null}>
       <planeGeometry args={[width, height]} />
-      {/* 텍스처 색공간은 직접 대입하지 않고 R3F의 하위 프로퍼티 지정으로 넘긴다. */}
-      <meshBasicMaterial
-        map={texture}
-        map-colorSpace={SRGBColorSpace}
-        transparent
-        toneMapped={false}
-      />
+      {/* 텍스처 색공간은 훅 반환값에 직접 대입하지 않고 하위 프로퍼티로 넘긴다. */}
+      <meshBasicMaterial map={texture} map-colorSpace={SRGBColorSpace} transparent toneMapped={false} />
     </mesh>
   )
 }
@@ -126,37 +164,68 @@ function drawArrow(
   drawCrayonStroke(ctx, [at(0.58, 0.76), at(0.88, 0.5)], { ...base, seed: 47 })
 }
 
+/** 크레파스 화살표를 굽는 파라미터. useLoader의 캐시 키로 쓰려고 JSON으로 직렬화한다. */
+interface ArrowTextureParams {
+  color: string
+  strokePixels: number
+  roughness: number
+  opacity: number
+}
+
+/**
+ * 크레파스 화살표 텍스처를 캔버스에 구워 내주는 로더.
+ *
+ * 크레파스는 파일이 아니라 그때그때 굽는 것이지만, `useLoader`(Suspense)에 태우려고 로더로 감싼다.
+ * 그래야 사진과 똑같이 **텍스처가 준비된 뒤 렌더 트리에 직접 주입**돼 깜빡이지 않는다.
+ * 앞으로 다른 손그림 요소도 같은 틀(전용 로더 + useLoader)을 쓸 수 있다.
+ * 입력(`key`)은 굽는 파라미터를 직렬화한 문자열이고, 이게 곧 useLoader의 캐시 키다.
+ */
+class CrayonArrowLoader extends Loader<CanvasTexture> {
+  load(
+    key: string,
+    onLoad?: (data: CanvasTexture) => void,
+    _onProgress?: (event: ProgressEvent) => void,
+    onError?: (err: unknown) => void,
+  ): void {
+    try {
+      const params = JSON.parse(key) as ArrowTextureParams
+      const canvas = document.createElement('canvas')
+      canvas.width = ARROW_TEXTURE_PIXELS
+      canvas.height = ARROW_TEXTURE_PIXELS
+      const ctx = canvas.getContext('2d')
+      if (ctx) drawArrow(ctx, ARROW_TEXTURE_PIXELS, params)
+      const texture = new CanvasTexture(canvas)
+      texture.colorSpace = SRGBColorSpace
+      onLoad?.(texture)
+    } catch (err) {
+      onError?.(err)
+    }
+  }
+}
+
 /**
  * 활성 상태에서 페이지 우측 아래에 놓이는 나가기 화살표.
  *
  * 크레파스는 매끈한 선이 아니라 종이 결에 걸린 왁스 알갱이라, 벡터 선 대신 캔버스에 구운 텍스처를 쓴다.
- * 누르면 스테이션을 닫는다.
+ * 누르면 스테이션을 닫는다. 텍스처를 불러오는 동안 서스펜드되므로 호출부에서 Suspense로 감싼다.
  */
 function ExitArrow({ x, y, size, color, stroke, roughness, opacity }: ExitArrowProps) {
+  const gl = useThree((s) => s.gl)
   const plane = size * ARROW_TEXTURE_MARGIN
 
-  const texture = useMemo(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = ARROW_TEXTURE_PIXELS
-    canvas.height = ARROW_TEXTURE_PIXELS
-    const ctx = canvas.getContext('2d')
-    if (ctx) {
-      drawArrow(ctx, ARROW_TEXTURE_PIXELS, {
-        color,
-        // 월드 단위 굵기를 텍스처 픽셀로 환산한다.
-        strokePixels: (stroke / plane) * ARROW_TEXTURE_PIXELS,
-        roughness,
-        opacity,
-      })
-    }
-    const created = new CanvasTexture(canvas)
-    created.colorSpace = SRGBColorSpace
-    return created
-  }, [color, stroke, roughness, opacity, plane])
+  // 월드 단위 굵기를 텍스처 픽셀로 환산한 뒤, 굽는 파라미터를 캐시 키로 직렬화한다.
+  const key = JSON.stringify({
+    color,
+    strokePixels: (stroke / plane) * ARROW_TEXTURE_PIXELS,
+    roughness,
+    opacity,
+  } satisfies ArrowTextureParams)
+  const texture = useLoader(CrayonArrowLoader, key)
 
+  // 텍스처를 GPU에 미리 올린다(사진과 같은 처리).
   useEffect(() => {
-    return () => texture.dispose()
-  }, [texture])
+    gl.initTexture(texture)
+  }, [gl, texture])
 
   // 클릭하면 이 컴포넌트가 곧 사라지므로 커서를 되돌릴 기회가 없다. 언마운트될 때 되돌린다.
   useEffect(() => {
@@ -406,15 +475,17 @@ export function AboutIntroScene({ station, phase }: StationDetailProps) {
   const [x, z] = station.position
   return (
     <group position={[x, CONTENT_Y, z]} rotation={[-Math.PI / 2, 0, 0]}>
-      <ExitArrow
-        x={width / 2 - exitArrowRight - exitArrowSize / 2}
-        y={-height / 2 + exitArrowBottom}
-        size={exitArrowSize}
-        color={exitArrowColor}
-        stroke={exitArrowStroke}
-        roughness={exitArrowRoughness}
-        opacity={exitArrowOpacity}
-      />
+      <Suspense fallback={null}>
+        <ExitArrow
+          x={width / 2 - exitArrowRight - exitArrowSize / 2}
+          y={-height / 2 + exitArrowBottom}
+          size={exitArrowSize}
+          color={exitArrowColor}
+          stroke={exitArrowStroke}
+          roughness={exitArrowRoughness}
+          opacity={exitArrowOpacity}
+        />
+      </Suspense>
     </group>
   )
 }
