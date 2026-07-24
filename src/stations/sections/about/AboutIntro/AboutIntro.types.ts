@@ -21,11 +21,3 @@ export interface ExitArrowProps {
   roughness: number
   opacity: number
 }
-
-/** 크레파스 화살표를 굽는 파라미터. useLoader의 캐시 키로 쓰려고 JSON으로 직렬화한다. */
-export interface ArrowTextureParams {
-  color: string
-  strokePixels: number
-  roughness: number
-  opacity: number
-}
