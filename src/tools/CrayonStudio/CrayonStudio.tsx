@@ -111,7 +111,8 @@ function formatAll(drawing: CrayonDrawing, params: CrayonStudioParams): string {
 }
 
 function copy(text: string) {
-  void navigator.clipboard?.writeText(text)
+  // 권한 거부 등으로 거절될 수 있다. 콘솔 출력이 있으니 조용히 넘긴다.
+  navigator.clipboard?.writeText(text).catch(() => {})
   console.log(text)
 }
 

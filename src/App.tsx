@@ -4,7 +4,7 @@ import { DevHUD } from './ui/DevHUD'
 import { CrayonStudio } from './tools/CrayonStudio'
 import { StationLifecycle } from './stations'
 
-/** 메인 페이지(`/`) — 3D 포트폴리오. 테마·전역 스타일은 `main.tsx`가 감싼다. */
+/** 메인 페이지(`/`) — 3D 포트폴리오. 테마·전역 스타일은 `Root`가 감싼다. */
 function App() {
   return (
     <>
