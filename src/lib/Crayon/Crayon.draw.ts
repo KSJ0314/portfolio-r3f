@@ -1,5 +1,5 @@
-import { GRAIN_SIZE, GRAIN_STEP } from './crayon.constants'
-import type { CrayonPoint, CrayonStrokeParams } from './crayon.types'
+import { DEFAULT_CRAYON_PARAMS, GRAIN_SIZE, GRAIN_STEP } from './Crayon.constants'
+import type { CrayonDrawing, CrayonPoint, CrayonStrokeParams } from './Crayon.types'
 
 /**
  * 크레파스 획 그리기.
@@ -86,6 +86,7 @@ function withRoundCaps(
   return capped
 }
 
+/** 크레파스 획 하나를 캔버스에 그린다(점은 픽셀 좌표). */
 export function drawCrayonStroke(
   ctx: CanvasRenderingContext2D,
   points: readonly CrayonPoint[],
@@ -157,4 +158,22 @@ export function drawCrayonStroke(
   }
 
   ctx.restore()
+}
+
+/**
+ * 크레파스 그림(획 여러 개)을 캔버스에 굽는다.
+ * 각 획의 0~1 정규화 좌표를 `pixels`로 스케일해, 획별 씨앗으로 `drawCrayonStroke`를 부른다.
+ * `params`는 획들이 공유하는 값이며 `DEFAULT_CRAYON_PARAMS`에 병합된다(seed는 획이 정한다).
+ */
+export function drawCrayonDrawing(
+  ctx: CanvasRenderingContext2D,
+  pixels: number,
+  drawing: CrayonDrawing,
+  params?: Partial<Omit<CrayonStrokeParams, 'seed'>>,
+): void {
+  const shared = { ...DEFAULT_CRAYON_PARAMS, ...params }
+  for (const stroke of drawing) {
+    const points = stroke.points.map(([u, v]): CrayonPoint => [u * pixels, v * pixels])
+    drawCrayonStroke(ctx, points, { ...shared, seed: stroke.seed })
+  }
 }
