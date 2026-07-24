@@ -19,10 +19,15 @@ export interface CrayonStrokeParams {
   seed: number
 }
 
+/** 한 그림의 획들이 함께 쓰는 값. 씨앗만 획마다 다르다. */
+export type CrayonSharedParams = Partial<Omit<CrayonStrokeParams, 'seed'>>
+
 /** 크레파스 획 하나 = 0~1 정규화 경로 + 그 획만의 씨앗(획마다 달라야 서로 다른 손놀림처럼 보인다). */
 export interface CrayonStroke {
   points: readonly CrayonPoint[]
   seed: number
+  /** 이 획만의 색. 없으면 그림이 공유하는 색을 쓴다 — 단색 그림은 적지 않아도 된다. */
+  color?: string
 }
 
 /** 크레파스 그림 = 여러 획. 에셋 한 단위다(크기·해상도와 무관한 정규화 좌표). */

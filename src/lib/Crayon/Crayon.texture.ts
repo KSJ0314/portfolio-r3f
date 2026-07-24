@@ -3,12 +3,12 @@ import { useLoader, useThree } from '@react-three/fiber'
 import { CanvasTexture, Loader, SRGBColorSpace } from 'three'
 import { CRAYON_TEXTURE_PIXELS } from './Crayon.constants'
 import { drawCrayonDrawing } from './Crayon.draw'
-import type { CrayonDrawing, CrayonStrokeParams } from './Crayon.types'
+import type { CrayonDrawing, CrayonSharedParams } from './Crayon.types'
 
 /** 크레파스 텍스처를 굽는 입력. 로더의 캐시 키로 직렬화한다. */
 interface CrayonBakeInput {
   drawing: CrayonDrawing
-  params: Partial<Omit<CrayonStrokeParams, 'seed'>>
+  params: CrayonSharedParams
   pixels: number
 }
 
@@ -32,7 +32,7 @@ class CrayonTextureLoader extends Loader<CanvasTexture> {
       canvas.width = pixels
       canvas.height = pixels
       const ctx = canvas.getContext('2d')
-      if (ctx) drawCrayonDrawing(ctx, pixels, drawing, params)
+      if (ctx) drawCrayonDrawing(ctx, pixels, pixels, drawing, params)
       const texture = new CanvasTexture(canvas)
       texture.colorSpace = SRGBColorSpace
       onLoad?.(texture)
@@ -48,7 +48,7 @@ class CrayonTextureLoader extends Loader<CanvasTexture> {
  */
 export function useCrayonTexture(
   drawing: CrayonDrawing,
-  params: Partial<Omit<CrayonStrokeParams, 'seed'>>,
+  params: CrayonSharedParams,
   pixels: number = CRAYON_TEXTURE_PIXELS,
 ): CanvasTexture {
   const gl = useThree((s) => s.gl)

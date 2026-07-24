@@ -3,7 +3,7 @@ import { CRAYON_TEXTURE_MARGIN, CRAYON_TEXTURE_PIXELS } from './Crayon.constants
 import { useCrayonTexture } from './Crayon.texture'
 import type { CrayonDrawing } from './Crayon.types'
 
-/** 획 굵기(월드) 대비 손떨림 폭 비율. 굵을수록 더 흔들리게. */
+/** 획 굵기 대비 손떨림 폭의 기본 비율. 굵을수록 더 흔들리게. */
 const WOBBLE_RATIO = 0.18
 
 type CrayonProps = {
@@ -17,6 +17,8 @@ type CrayonProps = {
   roughness?: number
   opacity?: number
   patchiness?: number
+  /** 획 굵기 대비 손떨림 폭의 비율. 크기를 바꿔도 손맛이 유지되도록 비율로 받는다. */
+  wobbleRatio?: number
   /** plane이 그림보다 넓은 배율(획 잘림 방지). */
   margin?: number
   /** 텍스처 해상도(px). */
@@ -38,6 +40,7 @@ export function Crayon({
   roughness,
   opacity,
   patchiness,
+  wobbleRatio = WOBBLE_RATIO,
   margin = CRAYON_TEXTURE_MARGIN,
   pixels = CRAYON_TEXTURE_PIXELS,
   ...mesh
@@ -47,7 +50,14 @@ export function Crayon({
   const strokePixels = (strokeWidth / plane) * pixels
   const texture = useCrayonTexture(
     drawing,
-    { color, width: strokePixels, wobble: strokePixels * WOBBLE_RATIO, roughness, opacity, patchiness },
+    {
+      color,
+      width: strokePixels,
+      wobble: strokePixels * wobbleRatio,
+      roughness,
+      opacity,
+      patchiness,
+    },
     pixels,
   )
 
