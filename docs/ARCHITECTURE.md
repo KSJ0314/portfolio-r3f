@@ -6,6 +6,15 @@
 
 _작성 예정_
 
+## 라우팅
+
+`main.tsx` → `BrowserRouter` → `Root`(테마·전역 스타일 공유) → 라우트 두 개.
+
+- `/` — 3D 포트폴리오(`App`). 아래 씬 그래프가 여기다.
+- `/crayon` — 크레파스 스튜디오 단독 페이지(`tools/CrayonStudio`). 맵 없이 그림판만 띄운다. 배포본에도 포함돼 방문자가 크레파스로 그려 PNG로 저장할 수 있다.
+
+`BrowserRouter`라 배포 후 `/crayon` 직접 접속이 404가 나지 않도록 `vercel.json`이 전 경로를 `index.html`로 rewrite한다. (DECISIONS 017)
+
 ## 씬 그래프 (3D)
 
 현재(Phase 8 진행 중):
@@ -20,7 +29,7 @@ _작성 예정_
         - `Station` — 레지스트리에 비활성 구현(`Inactive`)이 있으면 그것을 그리고, 없으면 임시 박스 + 이름 라벨을 그린다. 클릭 판정 대상은 `userData.stationId`를 실은 오브젝트다(판정은 `Stations`가 함).
       - `ActiveStationScene` — 활성 스테이션의 3D 상세 마운트 자리(레지스트리에 등록된 `Scene`).
 
-Canvas 밖(`App`): `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) + ESC 종료 + 미구현 스테이션 fallback. `Minimap` · `DebugHUD`(dev 전용) · `GridPaperHUD`·`IntroPageHUD`(dev 전용 leva 튜닝 패널, 패널 자체는 `GridPaperHUD`가 그리고 나머지는 폴더로 얹힌다).
+Canvas 밖(`App`): `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) + ESC 종료 + 미구현 스테이션 fallback. `Minimap`(프로덕션에도 노출) · `CrayonStudio`(오른쪽 아래 크레파스 버튼 → 모달 그리기 도구, 프로덕션에도 노출. 단 코드 좌표 복사만 dev로 가려진다) · `DevHUD`(dev 전용 HUD 묶음 — `DebugHUD` 상태 표시 + `GridPaperHUD`·`IntroPageHUD` leva 튜닝 패널. 패널 자체는 `GridPaperHUD`가 그리고 나머지는 폴더로 얹힌다). `DevHUD`만 App이 `import.meta.env.DEV`로 감싸 프로덕션 번들에서 빠진다. 크레파스 스튜디오는 `/crayon`에서 단독 페이지로도 뜬다.
 
 테마 토글은 밤 테마를 제대로 구현할 때(Phase 10) 다시 단다. 컴포넌트(`ui/ThemeToggle`)와 스토어는 그대로 있다.
 
@@ -55,7 +64,7 @@ idle ──근접 + 좌클릭──> entering ──enterComplete()──> activ
 - 나가기 UI(버튼·화살표 등)는 스테이션 구현이 각자 제공한다. 공통층은 자리도 모양도 정해주지 않는다.
 - 우클릭은 순수하게 이동이다. 좌클릭은 idle 상태에서 근접한 스테이션을 활성화하고(`Stations`가 캔버스 `mousedown`을 레이캐스트), 활성 상태에서는 상세 내부 요소 상호작용에 쓴다.
 
-**레지스트리** (`src/features/stations/registry.ts`)
+**레지스트리** (`src/stations/registry.ts`)
 
 `스테이션 id → { Inactive?, distanceTo?, Scene?, Overlay? }`.
 

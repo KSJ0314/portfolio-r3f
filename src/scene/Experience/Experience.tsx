@@ -7,7 +7,7 @@ import { World } from '../World'
 import { Character } from '../Character'
 import { Stations } from '../Stations'
 import { SceneErrorBoundary } from '../SceneErrorBoundary'
-import { ActiveStationScene } from '../../features/stations'
+import { ActiveStationScene } from '../../stations'
 
 export function Experience() {
   const mode = useThemeStore((s) => s.mode)
