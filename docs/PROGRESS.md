@@ -1,6 +1,6 @@
 # 진행 상황 (PROGRESS)
 
-> 이 문서는 프로젝트의 현재 진행 상황을 추적합니다. 마지막 업데이트: **2026-07-23**
+> 이 문서는 프로젝트의 현재 진행 상황을 추적합니다. 마지막 업데이트: **2026-07-24**
 > 전체 계획은 [PLAN.md](./PLAN.md) 참고.
 
 ## 현재 단계
@@ -178,6 +178,14 @@
     - **stations 승격**: `src/features/` 제거 → `src/stations/`. 섹션 구현을 `sections/{about,projects,guestbook}/`로 그룹화하고, 프레임워크(registry·ActiveStationScene·StationLifecycle·useActiveStation·공용 `types`)는 `stations/` 바로 밑에 둔다.
     - **AboutIntro 분해**: 한 파일에 몰려 있던 구현을 `sections/about/AboutIntro/`로 쪼갰다(AboutIntroInactive·AboutIntroScene·ProfilePhoto·ExitArrow·`.types`·`.constants`·`.distance`).
     - **DevHUD 통합**: 흩어져 있던 개발용 HUD(DebugHUD·GridPaperHUD·IntroPageHUD)를 `ui/DevHUD/` 하위로 모으고 `App`은 `<DevHUD />` 한 줄로 렌더한다. dev 게이트는 App에 남겨 프로덕션 트리셰이킹을 유지한다.
+
+- **2026-07-24**
+  - **크레파스 스튜디오**(개발용 저작 도구, `src/tools/CrayonStudio/`) 구현. 손그림 요소의 획 좌표를 코드에 손으로 박던 것을 마우스로 그려 뽑도록 바꾼다 (DECISIONS 017). 스테이션 진행이 아니라 도구라 체크리스트·다음 할 일은 건드리지 않는다.
+  - **증분 렌더 전환**(`lib/Crayon/Crayon.draw`): 마우스로 긋는 동안 실시간으로 보이도록 늘어난 구간만 덧그린다. 무늬 진행도를 획 전체 대비 비율에서 **따라간 거리** 기준으로 바꿔, 획이 길어져도 앞부분 무늬가 변하지 않게 했다. 난수 스트림을 획 단위로 이어 소비해 나눠 그린 결과가 한 번에 그린 것과 동일함을 확인(알갱이 좌표·알파까지 일치). 나가기 화살표 무늬가 미세하게 달라졌으나 눈에 띄지 않아 그대로 둔다.
+  - **공유 두 겹 분리**(`lib/Crayon/freehand/`): 획을 쌓아 두는 캔버스(`Crayon.canvas`)와 포인터 궤적 수집(`Crayon.input`). 좌표 변환을 주입받아, 훗날 방문자가 바닥에 낙서하는 재미 요소로 확장할 때 좌표 변환만 갈아끼우면 되게 했다.
+  - **획별 색**: `CrayonStroke`에 선택적 `color` 추가. 한 그림에 여러 색을 섞을 수 있고, 없으면 공유 색을 쓴다(단색 데이터 그대로 유효). `<Crayon>`도 여러 색 그림을 그대로 받는다.
+  - **도구 UI**: 색·굵기·손떨림·진하기·거칠기·끊김 조절(굵기·손떨림은 비율이라 크기 무관), 획 단위 지우개, 실행 취소·전체 지우기·질감 다시 그리기, PNG 저장(모눈종이는 판의 CSS 배경이라 획만 투명 배경으로 남음), `CrayonDrawing`·`<Crayon>` props 복사(개발 모드 전용). 크레파스·지우개 커서(크레파스는 고른 색을 따라감), 속성 값은 localStorage에 보관·복원(필드별 검증).
+  - **라우터 도입**: `react-router-dom`으로 `/`(3D 포트폴리오)와 `/crayon`(스튜디오 단독) 분리. 테마·전역 스타일을 `Root`로 올려 공유. 단독 페이지는 모달 껍데기를 벗고 화면을 채우며 배포본에도 포함된다. `vercel.json`으로 SPA rewrite(직접 접속 404 방지).
 
 ## 다음 할 일
 
