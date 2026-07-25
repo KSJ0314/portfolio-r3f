@@ -126,15 +126,39 @@ export const IconButton = styled.button<{ $active?: boolean }>`
 `
 
 /**
- * 이 안쪽에 그려야 알갱이가 잘리지 않는다는 표시. 여백은 지금 굵기·손떨림에서 계산해 받는다.
- * 판이 정사각이 아닐 수 있어 가로세로를 따로 받는다 — 같은 픽셀 여백이라도 축마다 비율이 다르다.
+ * 내보내기 프레임 오버레이. 판 위에 얹히되 기본은 그리기를 막지 않도록 이벤트를 흘려보낸다.
+ * 실제로 잡는 건 안쪽 테두리(이동)와 모서리(크기 조절) grip뿐이다.
  */
-export const SafeGuide = styled.div<{ $insetX: number; $insetY: number }>`
+export const FrameLayer = styled.div`
   position: absolute;
-  inset: ${({ $insetY }) => $insetY * 100}% ${({ $insetX }) => $insetX * 100}%;
+  inset: 0;
   pointer-events: none;
-  border: 1px dashed ${({ theme }) => theme.colors.border};
+`
+
+/** 내보내기 범위를 나타내는 점선 테두리. 표시만 하고, 안쪽은 그리기가 통과하도록 이벤트를 받지 않는다. */
+export const FrameBox = styled.div`
+  position: absolute;
+  pointer-events: none;
+  border: 1px dashed color-mix(in srgb, ${({ theme }) => theme.colors.text} 55%, transparent);
   border-radius: 4px;
+`
+
+/** 변 위에 얹는 얇은 크기 조절 grip. 보이지 않고 hover 커서만 바뀐다. */
+export const EdgeGrip = styled.div<{ $dir: 'ns' | 'ew' }>`
+  position: absolute;
+  z-index: 1;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: ${({ $dir }) => ($dir === 'ns' ? 'ns-resize' : 'ew-resize')};
+`
+
+/** 모서리 크기 조절 grip. 보이지 않고 hover 커서만 바뀐다(변보다 위에 얹혀 대각 커서가 이긴다). */
+export const CornerGrip = styled.div<{ $corner: 'tl' | 'tr' | 'br' | 'bl' }>`
+  position: absolute;
+  z-index: 2;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: ${({ $corner }) => ($corner === 'tl' || $corner === 'br' ? 'nwse-resize' : 'nesw-resize')};
 `
 
 export const Sidebar = styled.div`
@@ -219,6 +243,18 @@ export const ResetButton = styled.button`
     opacity: 0.3;
     cursor: default;
   }
+`
+
+/** 섹션 하단의 짧은 사용 설명. */
+export const Hint = styled.p`
+  margin: 4px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  font-size: 11px;
+  line-height: 1.6;
+  opacity: 0.6;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 `
 
 export const Field = styled.label`

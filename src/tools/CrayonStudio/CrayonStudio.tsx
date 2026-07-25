@@ -7,10 +7,16 @@ import {
   type CrayonPoint,
   type CrayonSharedParams,
 } from '../../lib/Crayon'
-import { BOARD_WORLD_SIZE, DEFAULT_STUDIO_PARAMS, STUDIO_PIXELS } from './CrayonStudio.constants'
+import {
+  BOARD_WORLD_SIZE,
+  DEFAULT_STUDIO_PARAMS,
+  FRAME_MARGIN,
+  MIN_FRAME_SIDE,
+  STUDIO_PIXELS,
+} from './CrayonStudio.constants'
 import { crayonCursor, ERASER_CURSOR } from './CrayonStudio.cursors'
 import { loadStudioParams, saveStudioParams } from './CrayonStudio.storage'
-import type { CrayonStudioParams } from './CrayonStudio.types'
+import type { CrayonFrame, CrayonStudioParams } from './CrayonStudio.types'
 import {
   Backdrop,
   Board,
@@ -20,13 +26,17 @@ import {
   CloseButton,
   ColorInput,
   ColorRow,
+  CornerGrip,
+  EdgeGrip,
   Field,
   FieldHead,
+  FrameBox,
+  FrameLayer,
+  Hint,
   IconButton,
   LaunchButton,
   Panel,
   ResetButton,
-  SafeGuide,
   Section,
   SectionHead,
   Sidebar,
@@ -45,6 +55,44 @@ const ERASE_RADIUS_MIN = 10
 /** 좌표를 소수 셋째 자리까지만 남긴다. 그 아래는 알갱이 크기보다 작아 눈에 띄지 않는다. */
 function round(value: number): number {
   return Math.round(value * 1000) / 1000
+}
+
+/** 값을 범위 안으로 자른다. */
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+/** 프레임 grip — 변 넷과 모서리 넷. 문자에 든 방향(t·b·l·r)이 곧 움직이는 변이다. */
+type FrameHandle = 't' | 'b' | 'l' | 'r' | 'tl' | 'tr' | 'br' | 'bl'
+
+/**
+ * 판 비율에 맞춘 기본 프레임. 여백을 **짧은 변** 기준으로 잡아, 직사각형이어도 사방 픽셀 여백이 같다.
+ * (짧은 변 기준 여백을 각 축의 비율로 환산: 긴 축은 그만큼 여백 비율이 작아진다.)
+ */
+function defaultFrame(width: number, height: number): CrayonFrame {
+  const short = Math.min(width, height)
+  const mx = (FRAME_MARGIN * short) / width
+  const my = (FRAME_MARGIN * short) / height
+  return { x: mx, y: my, w: 1 - 2 * mx, h: 1 - 2 * my }
+}
+
+/** 프레임의 픽셀 사각형(주어진 폭·높이 기준). 정규화 사각형을 그 크기에 맞춰 편다. */
+function frameRect(frame: CrayonFrame, width: number, height: number) {
+  return { left: frame.x * width, top: frame.y * height, w: frame.w * width, h: frame.h * height }
+}
+
+/**
+ * 판 전체(0~1) 좌표를 프레임 기준 0~1로 옮긴다.
+ * 프레임을 그림보다 크게 잡은 만큼 좌표가 안쪽으로 모여 여백이 된다. 획 자체는 건드리지 않는다.
+ */
+function remapDrawing(drawing: CrayonDrawing, frame: CrayonFrame): CrayonDrawing {
+  return drawing.map((stroke) => ({
+    ...stroke,
+    points: stroke.points.map(([u, v]): CrayonPoint => [
+      (u - frame.x) / frame.w,
+      (v - frame.y) / frame.h,
+    ]),
+  }))
 }
 
 /**
@@ -83,14 +131,24 @@ function formatDrawing(drawing: CrayonDrawing): string {
   return `[\n${lines.join('\n')}\n]`
 }
 
-/** 값을 `<Crayon>` props에 그대로 넣을 수 있는 형태로 적는다. */
-function formatParams(params: CrayonStudioParams): string {
+/**
+ * 값을 `<Crayon>` props에 그대로 넣을 수 있는 형태로 적는다.
+ * 굵기는 판이 아니라 **프레임** 기준이라 프레임 가로 대비로 환산한다 — 프레임이 커지면 획이 상대적으로 얇아진다.
+ * (‹Crayon›의 plane은 정사각이므로, 프레임을 정사각으로 두어야 세로도 그대로 재현된다.)
+ */
+function formatParams(
+  params: CrayonStudioParams,
+  frame: CrayonFrame,
+  size: { width: number; height: number },
+): string {
+  const strokeWidth =
+    (params.widthRatio * Math.min(size.width, size.height)) / (frame.w * size.width)
   return [
     '{',
     `  size: ${BOARD_WORLD_SIZE},`,
     '  margin: 1,',
     `  color: '${params.color}',`,
-    `  strokeWidth: ${round(params.widthRatio * BOARD_WORLD_SIZE)},`,
+    `  strokeWidth: ${round(strokeWidth * BOARD_WORLD_SIZE)},`,
     `  wobbleRatio: ${params.wobbleRatio},`,
     `  opacity: ${params.opacity},`,
     `  roughness: ${params.roughness},`,
@@ -100,13 +158,18 @@ function formatParams(params: CrayonStudioParams): string {
 }
 
 /** 그림과 값을 한 덩어리로 적는다. 붙여 넣을 자리는 다르지만 늘 함께 옮기게 된다. */
-function formatAll(drawing: CrayonDrawing, params: CrayonStudioParams): string {
+function formatAll(
+  drawing: CrayonDrawing,
+  params: CrayonStudioParams,
+  frame: CrayonFrame,
+  size: { width: number; height: number },
+): string {
   return [
     '// 그림 — CrayonDrawing',
     formatDrawing(drawing),
     '',
     '// 값 — <Crayon> props (크기를 바꾸려면 size와 strokeWidth를 같은 배로)',
-    formatParams(params),
+    formatParams(params, frame, size),
   ].join('\n')
 }
 
@@ -117,11 +180,18 @@ function copy(text: string) {
 }
 
 /**
- * 그린 것을 PNG로 내려받는다.
+ * 그린 것을 PNG로 내려받는다. 프레임 영역만 잘라 내보내므로 프레임 여백이 그대로 사진 여백이 된다.
  * 모눈종이는 판의 CSS 배경이라 캔버스에 없다 — 획만 투명 배경에 남는다.
  */
-function savePng(canvas: HTMLCanvasElement) {
-  canvas.toBlob((blob) => {
+function savePng(canvas: HTMLCanvasElement, frame: CrayonFrame) {
+  const fr = frameRect(frame, canvas.width, canvas.height)
+  const out = document.createElement('canvas')
+  out.width = Math.max(1, Math.round(fr.w))
+  out.height = Math.max(1, Math.round(fr.h))
+  const octx = out.getContext('2d')
+  if (octx) octx.drawImage(canvas, fr.left, fr.top, fr.w, fr.h, 0, 0, out.width, out.height)
+
+  out.toBlob((blob) => {
     if (!blob) return
 
     const url = URL.createObjectURL(blob)
@@ -209,6 +279,16 @@ export function StudioModal({ onClose }: StudioModalProps) {
   const [strokeCount, setStrokeCount] = useState(0)
   const [size, setSize] = useState({ width: STUDIO_PIXELS, height: STUDIO_PIXELS })
   const [erasing, setErasing] = useState(false)
+  // 영역(프레임)은 저장하지 않는다 — 새로고침하면 기본값으로 돌아간다.
+  const [frame, setFrame] = useState<CrayonFrame>(() => defaultFrame(STUDIO_PIXELS, STUDIO_PIXELS))
+  // 사용자가 프레임을 직접 건드렸는지. 건드리기 전까진 판 비율에 맞춰 기본값을 다시 잡는다.
+  const adjustedRef = useRef(false)
+  const dragRef = useRef<{
+    handle: FrameHandle
+    pointerId: number
+    rect: DOMRect
+    startFrame: CrayonFrame
+  } | null>(null)
 
   // 캔버스는 한 번만 만든다. 크기·값은 아래 이펙트들이 곧바로 채우므로 여기서 넘기지 않는다.
   useLayoutEffect(() => {
@@ -236,6 +316,12 @@ export function StudioModal({ onClose }: StudioModalProps) {
 
   useEffect(() => {
     studio.current?.resize(size.width, size.height)
+  }, [size])
+
+  // 판 비율이 정해지면 기본 프레임을 그 비율로 다시 잡아 사방 여백을 같게 한다(사용자가 손대기 전까지만).
+  useEffect(() => {
+    if (adjustedRef.current) return
+    setFrame(defaultFrame(size.width, size.height))
   }, [size])
 
   useEffect(() => {
@@ -300,15 +386,76 @@ export function StudioModal({ onClose }: StudioModalProps) {
     [],
   )
 
+  // 프레임 grip을 잡는다. 어느 grip인지는 요소의 data-handle로 읽는다(렌더에서 클로저를 새로 만들지 않게).
+  const onGripDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return
+    const el = boardRef.current
+    if (!el) return
+    e.stopPropagation()
+    // 한 번이라도 직접 조절하면, 이후 판 크기가 바뀌어도 기본값으로 되돌리지 않는다.
+    adjustedRef.current = true
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragRef.current = {
+      handle: e.currentTarget.dataset.handle as FrameHandle,
+      pointerId: e.pointerId,
+      rect: el.getBoundingClientRect(),
+      startFrame: frame,
+    }
+  }
+
+  // 잡은 변(들)을 커서로 따라 옮긴다. 반대쪽 변은 그대로라 가로·세로를 따로 늘일 수 있다.
+  // 프레임만 바뀌고 그림 좌표엔 손대지 않는다.
+  const onGripMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== e.pointerId) return
+    const { rect, handle } = drag
+    if (rect.width <= 0 || rect.height <= 0) return
+
+    const nx = clamp((e.clientX - rect.left) / rect.width, 0, 1)
+    const ny = clamp((e.clientY - rect.top) / rect.height, 0, 1)
+    let { x, y, w, h } = drag.startFrame
+    const right = x + w
+    const bottom = y + h
+
+    if (handle.includes('l')) {
+      x = clamp(nx, 0, right - MIN_FRAME_SIDE)
+      w = right - x
+    }
+    if (handle.includes('r')) {
+      w = clamp(nx, x + MIN_FRAME_SIDE, 1) - x
+    }
+    if (handle.includes('t')) {
+      y = clamp(ny, 0, bottom - MIN_FRAME_SIDE)
+      h = bottom - y
+    }
+    if (handle.includes('b')) {
+      h = clamp(ny, y + MIN_FRAME_SIDE, 1) - y
+    }
+    setFrame({ x, y, w, h })
+  }
+
+  const onGripUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== e.pointerId) return
+    e.currentTarget.releasePointerCapture(e.pointerId)
+    dragRef.current = null
+  }
+
+  const gripEvents = {
+    onPointerDown: onGripDown,
+    onPointerMove: onGripMove,
+    onPointerUp: onGripUp,
+    onPointerCancel: onGripUp,
+  }
+
   const set = <K extends keyof CrayonStudioParams>(key: K, value: CrayonStudioParams[K]) =>
     setParams((prev) => ({ ...prev, [key]: value }))
 
   const keys = Object.keys(DEFAULT_STUDIO_PARAMS) as (keyof CrayonStudioParams)[]
   const untouched = keys.every((key) => params[key] === DEFAULT_STUDIO_PARAMS[key])
 
-  // 알갱이는 중심선에서 굵기의 절반만큼 퍼지고 손떨림이 거기서 더 밀어낸다. 그만큼이 가장자리 여백이다.
-  // 픽셀로는 사방이 같지만 축마다 캔버스 길이가 달라 비율은 갈린다.
-  const safeMargin = params.widthRatio * Math.min(size.width, size.height) * (0.5 + params.wobbleRatio)
+  // 오버레이는 판(0~1)에 대한 백분율로 얹는다. grip은 안 보이고 hover 커서만 바뀐다.
+  const pct = (v: number) => `${v * 100}%`
 
   // 닫을 데가 없다는 건 곧 단독 페이지라는 뜻이다. 모달 껍데기를 벗고 화면을 꽉 채운다.
   const fullPage = !onClose
@@ -338,7 +485,61 @@ export function StudioModal({ onClose }: StudioModalProps) {
             }}
             onPointerCancel={() => input.stop()}
           />
-          <SafeGuide $insetX={safeMargin / size.width} $insetY={safeMargin / size.height} />
+          <FrameLayer>
+            <FrameBox
+              style={{ left: pct(frame.x), top: pct(frame.y), width: pct(frame.w), height: pct(frame.h) }}
+            />
+            {/* 변 4개 — 한 방향만 늘인다. */}
+            <EdgeGrip
+              $dir="ns"
+              data-handle="t"
+              style={{ left: pct(frame.x), top: `calc(${pct(frame.y)} - 5px)`, width: pct(frame.w), height: 11 }}
+              {...gripEvents}
+            />
+            <EdgeGrip
+              $dir="ns"
+              data-handle="b"
+              style={{ left: pct(frame.x), top: `calc(${pct(frame.y + frame.h)} - 5px)`, width: pct(frame.w), height: 11 }}
+              {...gripEvents}
+            />
+            <EdgeGrip
+              $dir="ew"
+              data-handle="l"
+              style={{ left: `calc(${pct(frame.x)} - 5px)`, top: pct(frame.y), width: 11, height: pct(frame.h) }}
+              {...gripEvents}
+            />
+            <EdgeGrip
+              $dir="ew"
+              data-handle="r"
+              style={{ left: `calc(${pct(frame.x + frame.w)} - 5px)`, top: pct(frame.y), width: 11, height: pct(frame.h) }}
+              {...gripEvents}
+            />
+            {/* 모서리 4개 — 가로·세로를 함께 늘인다. */}
+            <CornerGrip
+              $corner="tl"
+              data-handle="tl"
+              style={{ left: `calc(${pct(frame.x)} - 8px)`, top: `calc(${pct(frame.y)} - 8px)`, width: 16, height: 16 }}
+              {...gripEvents}
+            />
+            <CornerGrip
+              $corner="tr"
+              data-handle="tr"
+              style={{ left: `calc(${pct(frame.x + frame.w)} - 8px)`, top: `calc(${pct(frame.y)} - 8px)`, width: 16, height: 16 }}
+              {...gripEvents}
+            />
+            <CornerGrip
+              $corner="br"
+              data-handle="br"
+              style={{ left: `calc(${pct(frame.x + frame.w)} - 8px)`, top: `calc(${pct(frame.y + frame.h)} - 8px)`, width: 16, height: 16 }}
+              {...gripEvents}
+            />
+            <CornerGrip
+              $corner="bl"
+              data-handle="bl"
+              style={{ left: `calc(${pct(frame.x)} - 8px)`, top: `calc(${pct(frame.y + frame.h)} - 8px)`, width: 16, height: 16 }}
+              {...gripEvents}
+            />
+          </FrameLayer>
         </Board>
 
         <Sidebar>
@@ -445,6 +646,8 @@ export function StudioModal({ onClose }: StudioModalProps) {
                 onChange={(e) => set('patchiness', Number(e.target.value))}
               />
             </Field>
+
+            <Hint>점선은 그림이 저장될 영역을 나타내며 크기를 변경할 수 있습니다.</Hint>
           </Section>
 
           <ToolRow>
@@ -506,7 +709,7 @@ export function StudioModal({ onClose }: StudioModalProps) {
               $primary
               onClick={() => {
                 const canvas = boardRef.current
-                if (canvas) savePng(canvas)
+                if (canvas) savePng(canvas, frame)
               }}
               disabled={strokeCount === 0}
             >
@@ -517,7 +720,16 @@ export function StudioModal({ onClose }: StudioModalProps) {
               <Button
                 $wide
                 $primary
-                onClick={() => copy(formatAll(studio.current?.getDrawing() ?? [], params))}
+                onClick={() =>
+                  copy(
+                    formatAll(
+                      remapDrawing(studio.current?.getDrawing() ?? [], frame),
+                      params,
+                      frame,
+                      size,
+                    ),
+                  )
+                }
               >
                 그림 · 값 복사
               </Button>
