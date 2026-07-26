@@ -16,9 +16,6 @@ import type { CrayonDrawing, CrayonPoint, CrayonSharedParams, CrayonStroke } fro
  * 좌표는 밖에서 안까지 0~1 정규화로 다룬다. 그대로 `CrayonDrawing`이 되어 코드에 붙여 쓸 수 있다.
  */
 
-/** 획으로 인정할 최소 길이(정규화 좌표). 누르기만 하고 뗀 것을 걸러낸다. */
-const MIN_STROKE_LENGTH = 0.01
-
 export interface CrayonCanvasOptions {
   /** 캔버스 가로 픽셀 수. */
   width?: number
@@ -66,15 +63,6 @@ function distanceToSegment(point: CrayonPoint, from: CrayonPoint, to: CrayonPoin
     Math.min(1, ((point[0] - from[0]) * dx + (point[1] - from[1]) * dy) / lengthSq),
   )
   return Math.hypot(point[0] - (from[0] + dx * t), point[1] - (from[1] + dy * t))
-}
-
-/** 정규화 경로의 전체 길이. */
-function pathLength(points: readonly CrayonPoint[]): number {
-  let total = 0
-  for (let i = 1; i < points.length; i += 1) {
-    total += Math.hypot(points[i][0] - points[i - 1][0], points[i][1] - points[i - 1][1])
-  }
-  return total
 }
 
 export function createCrayonCanvas(
@@ -135,8 +123,8 @@ export function createCrayonCanvas(
       active = null
       painter.finish()
 
-      // 너무 짧은 획은 버린다. 이미 찍힌 자국이 있으므로 다시 그려 지운다.
-      if (points.length < 2 || pathLength(points) < MIN_STROKE_LENGTH) {
+      // 점 하나(클릭)도 원형 점으로 남긴다. 아무 점도 없을 때만 버린다.
+      if (points.length === 0) {
         redraw()
         return null
       }
@@ -159,6 +147,9 @@ export function createCrayonCanvas(
       for (let i = strokes.length - 1; i >= 0; i -= 1) {
         const path = strokes[i].points.map(toPixels)
         let nearest = Infinity
+        if (path.length === 1) {
+          nearest = Math.hypot(target[0] - path[0][0], target[1] - path[0][1])
+        }
         for (let k = 1; k < path.length; k += 1) {
           nearest = Math.min(nearest, distanceToSegment(target, path[k - 1], path[k]))
         }

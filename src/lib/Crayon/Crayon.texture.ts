@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { useLoader, useThree } from '@react-three/fiber'
 import { CanvasTexture, Loader, SRGBColorSpace } from 'three'
-import { CRAYON_TEXTURE_PIXELS } from './Crayon.constants'
 import { drawCrayonDrawing } from './Crayon.draw'
 import type { CrayonDrawing, CrayonSharedParams } from './Crayon.types'
 
@@ -9,7 +8,10 @@ import type { CrayonDrawing, CrayonSharedParams } from './Crayon.types'
 interface CrayonBakeInput {
   drawing: CrayonDrawing
   params: CrayonSharedParams
-  pixels: number
+  /** 텍스처 가로 픽셀. plane 비율에 맞춘 값이라 정사각이 아닐 수 있다. */
+  width: number
+  /** 텍스처 세로 픽셀. */
+  height: number
 }
 
 /**
@@ -27,12 +29,12 @@ class CrayonTextureLoader extends Loader<CanvasTexture> {
     onError?: (err: unknown) => void,
   ): void {
     try {
-      const { drawing, params, pixels } = JSON.parse(key) as CrayonBakeInput
+      const { drawing, params, width, height } = JSON.parse(key) as CrayonBakeInput
       const canvas = document.createElement('canvas')
-      canvas.width = pixels
-      canvas.height = pixels
+      canvas.width = width
+      canvas.height = height
       const ctx = canvas.getContext('2d')
-      if (ctx) drawCrayonDrawing(ctx, pixels, pixels, drawing, params)
+      if (ctx) drawCrayonDrawing(ctx, width, height, drawing, params)
       const texture = new CanvasTexture(canvas)
       texture.colorSpace = SRGBColorSpace
       onLoad?.(texture)
@@ -49,10 +51,11 @@ class CrayonTextureLoader extends Loader<CanvasTexture> {
 export function useCrayonTexture(
   drawing: CrayonDrawing,
   params: CrayonSharedParams,
-  pixels: number = CRAYON_TEXTURE_PIXELS,
+  width: number,
+  height: number,
 ): CanvasTexture {
   const gl = useThree((s) => s.gl)
-  const key = JSON.stringify({ drawing, params, pixels } satisfies CrayonBakeInput)
+  const key = JSON.stringify({ drawing, params, width, height } satisfies CrayonBakeInput)
   const texture = useLoader(CrayonTextureLoader, key)
 
   // 텍스처를 GPU에 미리 올린다(drei useTexture와 같은 처리 — 첫 렌더의 업로드 지연 방지).

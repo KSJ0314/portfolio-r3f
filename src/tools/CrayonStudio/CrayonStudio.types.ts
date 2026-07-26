@@ -18,3 +18,20 @@ export interface CrayonStudioParams {
   /** 왁스가 끊기는 정도(0~1). */
   patchiness: number
 }
+
+/**
+ * 내보내기 프레임 — 판 안의 사각 영역(판 0~1 기준).
+ *
+ * 여기가 곧 좌표 0~1의 기준이자 PNG 크롭 범위다. 그림과 분리돼 있어 옮기거나 키워도 그린 획은 그대로다.
+ * 프레임을 그림보다 크게 잡으면 그만큼 좌표·사진에 여백이 생긴다. 가로·세로를 따로 늘일 수 있다.
+ */
+export interface CrayonFrame {
+  /** 왼쪽 — 판 가로의 0~1. */
+  x: number
+  /** 위 — 판 세로의 0~1. */
+  y: number
+  /** 가로 — 판 가로의 0~1. */
+  w: number
+  /** 세로 — 판 세로의 0~1. */
+  h: number
+}

@@ -14,6 +14,15 @@ export const BOARD_WORLD_SIZE = 1
 /** 바닥에 깔리는 모눈종이 한 칸이 화면에서 차지하는 크기(px). 눈에 익은 밀도로 잡은 값이다. */
 export const PAPER_TILE_PX = 320
 
+/** 내보내기 프레임 변의 최소 길이 — 판 대비. */
+export const MIN_FRAME_SIDE = 0.1
+
+/**
+ * 프레임 기본 여백 — 판 **짧은 변** 대비.
+ * 짧은 변 기준으로 잡아 판이 직사각형이어도 가로·세로 픽셀 여백이 같게 나온다.
+ */
+export const FRAME_MARGIN = 0.025
+
 /** 시작 값. 색·질감은 나가기 화살표(하늘색 크레파스)를 기준으로 잡았다. */
 export const DEFAULT_STUDIO_PARAMS: CrayonStudioParams = {
   color: '#55bcf0',
