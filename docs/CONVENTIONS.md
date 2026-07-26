@@ -104,6 +104,8 @@ ComponentName/
   (필요 시) .hooks.ts / .constants.ts
 ```
 
+부품(하위 컴포넌트)도 같은 규칙을 따른다. 그 컴포넌트만의 값(획 좌표·크기·색 등)은 부모의 `.constants.ts`가 아니라 자기 폴더의 `.constants.ts`에 둔다. 컴포넌트 파일 안에 두면 스토어·HUD가 기본값을 읽을 때 순환 import가 된다.
+
 ### import 순서
 _작성 예정_
 
