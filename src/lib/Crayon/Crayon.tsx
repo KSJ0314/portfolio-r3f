@@ -9,8 +9,10 @@ const WOBBLE_RATIO = 0.18
 type CrayonProps = {
   /** 그릴 크레파스 그림(0~1 정규화 획들). */
   drawing: CrayonDrawing
-  /** plane 한 변의 월드 크기(margin 적용 전). */
+  /** plane 가로의 월드 크기(margin 적용 전). */
   size: number
+  /** plane 세로의 월드 크기(margin 적용 전). 없으면 정사각(= size). */
+  height?: number
   /** 획 굵기(월드 단위). 내부에서 텍스처 픽셀로 환산된다. */
   strokeWidth: number
   color: string
@@ -35,6 +37,7 @@ type CrayonProps = {
 export function Crayon({
   drawing,
   size,
+  height = size,
   strokeWidth,
   color,
   roughness,
@@ -45,9 +48,14 @@ export function Crayon({
   pixels = CRAYON_TEXTURE_PIXELS,
   ...mesh
 }: CrayonProps) {
-  const plane = size * margin
-  // 월드 굵기를 텍스처 픽셀로 환산한다(plane 전체가 pixels에 대응).
-  const strokePixels = (strokeWidth / plane) * pixels
+  const planeW = size * margin
+  const planeH = height * margin
+  // 텍스처는 plane 비율에 맞춘 직사각으로 굽는다. 짧은 변을 기준 해상도(pixels)로 둔다.
+  const shorter = Math.min(planeW, planeH)
+  const texWidth = Math.round((planeW / shorter) * pixels)
+  const texHeight = Math.round((planeH / shorter) * pixels)
+  // 월드 굵기를 텍스처 픽셀로 환산한다. 짧은 변 기준이라 가로·세로 어느 획이든 둥글게 유지된다.
+  const strokePixels = (strokeWidth / shorter) * pixels
   const texture = useCrayonTexture(
     drawing,
     {
@@ -58,12 +66,13 @@ export function Crayon({
       opacity,
       patchiness,
     },
-    pixels,
+    texWidth,
+    texHeight,
   )
 
   return (
     <mesh {...mesh}>
-      <planeGeometry args={[plane, plane]} />
+      <planeGeometry args={[planeW, planeH]} />
       <meshBasicMaterial map={texture} transparent toneMapped={false} />
     </mesh>
   )

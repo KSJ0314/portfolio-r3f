@@ -260,8 +260,18 @@ export function createCrayonStrokePainter(
         if (gap > 1e-6) samples.push({ point: tail, distance: last.distance + gap, widthScale: 1 })
       }
 
-      // 점 하나로는 획이 되지 않는다.
-      if (samples.length < 2) return
+      // 점 하나(클릭)면 진행 방향이 없으니, 둥근 마무리를 좌·우로 붙여 원형 점을 찍는다.
+      if (samples.length < 2) {
+        if (samples.length === 1 && half > 0) {
+          const [px, py] = samples[0].point
+          const right = buildCap(samples[0], [px - half, py], true)
+          const left = buildCap(samples[0], [px + half, py], true)
+          samples.unshift(...left.reverse())
+          samples.push(...right)
+          flush(samples.length)
+        }
+        return
+      }
 
       capStart()
       if (half > 0) {
@@ -274,13 +284,13 @@ export function createCrayonStrokePainter(
   }
 }
 
-/** 크레파스 획 하나를 캔버스에 그린다(점은 픽셀 좌표). */
+/** 크레파스 획 하나를 캔버스에 그린다(점은 픽셀 좌표). 점 하나면 원형 점으로 찍힌다. */
 export function drawCrayonStroke(
   ctx: CanvasRenderingContext2D,
   points: readonly CrayonPoint[],
   params: CrayonStrokeParams,
 ): void {
-  if (points.length < 2) return
+  if (points.length < 1) return
 
   const painter = createCrayonStrokePainter(ctx, params)
   painter.extend(points)
