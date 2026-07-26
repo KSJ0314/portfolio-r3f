@@ -7,6 +7,7 @@ import { World } from '../World'
 import { Character } from '../Character'
 import { Stations } from '../Stations'
 import { SceneErrorBoundary } from '../SceneErrorBoundary'
+import { MapDecorations } from '../MapDecorations'
 import { ActiveStationScene } from '../../stations'
 
 export function Experience() {
@@ -48,6 +49,7 @@ export function Experience() {
           <Stations />
           <ActiveStationScene />
         </Suspense>
+        <MapDecorations />
       </SceneErrorBoundary>
     </Canvas>
   )
