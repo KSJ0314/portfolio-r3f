@@ -133,8 +133,8 @@ function formatDrawing(drawing: CrayonDrawing): string {
 
 /**
  * 값을 `<Crayon>` props에 그대로 넣을 수 있는 형태로 적는다.
- * 굵기는 판이 아니라 **프레임** 기준이라 프레임 가로 대비로 환산한다 — 프레임이 커지면 획이 상대적으로 얇아진다.
- * (‹Crayon›의 plane은 정사각이므로, 프레임을 정사각으로 두어야 세로도 그대로 재현된다.)
+ * size는 가로, height는 세로 월드 크기다. 프레임 픽셀 비율을 height로 실어 직사각형도 그대로 재현된다.
+ * 굵기는 프레임 짧은 변 기준으로 환산해, 프레임을 키우면 획이 상대적으로 얇아진다.
  */
 function formatParams(
   params: CrayonStudioParams,
@@ -143,9 +143,11 @@ function formatParams(
 ): string {
   const strokeWidth =
     (params.widthRatio * Math.min(size.width, size.height)) / (frame.w * size.width)
+  const height = (frame.h * size.height) / (frame.w * size.width)
   return [
     '{',
     `  size: ${BOARD_WORLD_SIZE},`,
+    `  height: ${round(height * BOARD_WORLD_SIZE)},`,
     '  margin: 1,',
     `  color: '${params.color}',`,
     `  strokeWidth: ${round(strokeWidth * BOARD_WORLD_SIZE)},`,
@@ -168,7 +170,7 @@ function formatAll(
     '// 그림 — CrayonDrawing',
     formatDrawing(drawing),
     '',
-    '// 값 — <Crayon> props (크기를 바꾸려면 size와 strokeWidth를 같은 배로)',
+    '// 값 — <Crayon> props (크기를 바꾸려면 size·height·strokeWidth를 같은 배로)',
     formatParams(params, frame, size),
   ].join('\n')
 }
