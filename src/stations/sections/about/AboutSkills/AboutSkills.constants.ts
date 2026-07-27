@@ -10,7 +10,17 @@ import type { StationArea } from '../../../types'
 export const SKILLS_AREA: StationArea = { width: 10, height: 8 }
 
 /** Skills 영역의 좌상단 꼭지점(월드 x, z). 이 점을 기준으로 영역이 +x·+z로 펼쳐진다. */
-export const SKILLS_TOP_LEFT = { x: 6, z: 6 } as const
+export const SKILLS_TOP_LEFT = { x: 6, z: 3 } as const
+
+/**
+ * 활성 전환 시간·이징. 카메라 각도 전환과 공구상자 이동이 **겹치지 않고 차례로** 돈다 —
+ * 들어갈 때는 카메라가 먼저 돌고 그 뒤에 공구상자가 로고 자리로 물러나며,
+ * 나올 때는 공구상자가 제자리로 돌아온 뒤에 카메라가 항공뷰로 돌아간다.
+ * 두 연출이 순서를 맞춰야 하므로 값을 여기서 함께 들고 있는다.
+ */
+export const SKILLS_TURN_SECONDS = 1.5
+export const SKILLS_LOGO_SECONDS = 1
+export const SKILLS_TURN_EASE = 'power2.inOut'
 
 /** Skills 영역의 중심(월드 x, z). 좌상단 + 반크기. stations.ts의 배치 좌표로 쓴다. */
 export const SKILLS_CENTER: readonly [number, number] = [
