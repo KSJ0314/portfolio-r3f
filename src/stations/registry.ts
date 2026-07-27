@@ -3,6 +3,11 @@ import type { Vector3 } from 'three'
 import type { Station } from '../content/stations'
 import type { StationPhase } from '../state/useStationStore'
 import { AboutIntroInactive, AboutIntroScene, aboutIntroDistanceTo } from './sections/about/AboutIntro'
+import {
+  AboutSkillsInactive,
+  AboutSkillsScene,
+  aboutSkillsDistanceTo,
+} from './sections/about/AboutSkills'
 
 /**
  * 스테이션 레지스트리 — `스테이션 id → 전용 구현`.
@@ -62,6 +67,11 @@ export const STATION_REGISTRY: Record<string, StationEntry> = {
     Inactive: AboutIntroInactive,
     distanceTo: aboutIntroDistanceTo,
     Scene: AboutIntroScene,
+  },
+  'about-skills': {
+    Inactive: AboutSkillsInactive,
+    distanceTo: aboutSkillsDistanceTo,
+    Scene: AboutSkillsScene,
   },
 }
 

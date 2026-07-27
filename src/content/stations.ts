@@ -10,6 +10,7 @@
  * 스테이션 최종 배치·스케일은 각 스테이션 상세 구현(Phase 8)에서 정한다.
  */
 
+import { SKILLS_CENTER } from '../stations/sections/about/AboutSkills/AboutSkills.constants'
 import type { CollectionName } from '../lib/firebase/firestore'
 
 /** 섹션 식별자. */
@@ -48,8 +49,9 @@ export const SECTIONS: Section[] = [
 // about-intro는 사이트 첫 화면을 겸하므로 원점에 둔다.
 // 나머지는 여전히 임시 배치이고, Intro 페이지 영역과 겹치지 않게 물려둔 것뿐이다.
 export const STATIONS: Station[] = [
-  // About — 3개
+  // About — 4개
   { id: 'about-intro', sectionId: 'about', label: 'Intro', short: 'Intro', position: [0, 0], collections: ['profile'] },
+  { id: 'about-skills', sectionId: 'about', label: 'Skills', short: 'Skills', position: SKILLS_CENTER, collections: ['skills'] },
   { id: 'about-career', sectionId: 'about', label: 'Experience & Education', short: 'Career', position: [20, 0], collections: ['experiences', 'education', 'spec'] },
   { id: 'about-award', sectionId: 'about', label: 'Awards & Certifications', short: 'Award', position: [27, 0], collections: ['awards'] },
 

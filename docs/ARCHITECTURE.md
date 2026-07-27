@@ -27,7 +27,11 @@ _작성 예정_
     - **스테이션 콘텐츠(`Suspense`로 묶음)** — 스테이션 구현이 텍스처를 `useLoader`로 불러오다 suspend해도 그 로딩이 씬 전체가 아니라 여기까지만 미치게 한다.
       - `Stations` — 스테이션 배치 + 매 프레임 근접 판정(`nearId`) + 좌클릭 활성화(캔버스 `mousedown`을 직접 듣고 레이캐스트). 거리 재는 법은 스테이션이 등록한 `distanceTo`를 쓰고, 없으면 배치 좌표까지의 거리로 잰다.
         - `Station` — 레지스트리에 비활성 구현(`Inactive`)이 있으면 그것을 그리고, 없으면 임시 박스 + 이름 라벨을 그린다. 클릭 판정 대상은 `userData.stationId`를 실은 오브젝트다(판정은 `Stations`가 함).
+          - `AboutSkillsInactive` — 클릭 판정 판 + 공구함 스티커(`SkillsBox`). 스티커는 활성화되면 스스로 줄어들어 영역 좌상단으로 물러나 로고가 된다. 전환을 활성 구현에 두지 않는 이유는 같은 오브젝트가 이어서 변형돼야 하기 때문이다. (DECISIONS 020)
       - `ActiveStationScene` — 활성 스테이션의 3D 상세 마운트 자리(레지스트리에 등록된 `Scene`).
+        - `AboutSkillsScene` — 카메라 각도 전환. 공구함 이동과 **겹치지 않고 차례로** 돌며, 라이프사이클 완료 신호를 낸다.
+    - `MapDecorations`(자체 `Suspense`) — 스테이션에 속하지 않는 맵 장식(길안내 화살표·표지판)의 마운트 자리. 영역·근접 판정·라이프사이클이 없어 마운트만 하고, 무엇을 언제 어떻게 그릴지는 요소가 각자 정한다. Suspense를 요소마다 두지 않는 이유는 하나만 빠뜨려도 그 suspend가 씬 전체로 번지기 때문이다. (DECISIONS 018)
+      - `SkillsGuideArrow` — 캐릭터 시작 자리에서 Skills 쪽을 가리키는 바닥 화살표. 라이프사이클이 처음 `idle`이 될 때(= Intro가 닫혀 카메라 전환이 끝난 뒤) 나타나며 크레파스로 긋듯 그어진다.
 
 Canvas 밖(`App`): `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) + ESC 종료 + 미구현 스테이션 fallback. `Minimap`(프로덕션에도 노출) · `CrayonStudio`(오른쪽 아래 크레파스 버튼 → 모달 그리기 도구, 프로덕션에도 노출. 단 코드 좌표 복사만 dev로 가려진다) · `DevHUD`(dev 전용 HUD 묶음 — `DebugHUD` 상태 표시 + `GridPaperHUD`·`IntroPageHUD` leva 튜닝 패널. 패널 자체는 `GridPaperHUD`가 그리고 나머지는 폴더로 얹힌다). `DevHUD`만 App이 `import.meta.env.DEV`로 감싸 프로덕션 번들에서 빠진다. 크레파스 스튜디오는 `/crayon`에서 단독 페이지로도 뜬다.
 
@@ -41,6 +45,7 @@ Canvas 밖(`App`): `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) 
 - `useCameraStore` — 이동 상태: `position`(현재 위치, 좌표만 변경) · `target`(목표점, 경계 clamp) · `setTarget(point)` · `viewAngle`(CameraRig가 유도, 미니맵이 사용) · `followOffset`(카메라 − 캐릭터, CameraRig가 기록) · `motion.speed`(디버그용) · 상수 `CAMERA_BOUNDS` · `CHARACTER_START`.
 - `useStationStore` — 스테이션 상호작용: `nearId`(근접) · `activeId` · `phase`(`idle`/`entering`/`active`/`exiting`) · `setNear` · `activate` · `enterComplete` · `requestClose` · `exitComplete`. 초기값은 `about-intro`가 `active`인 상태다(사이트 첫 화면). `setNear`는 활성 스테이션에서 멀어지면 그대로 종료를 건다. 이동 잠금 여부는 `isMovementLocked(phase)`로 판단(진입 애니메이션 중에만 잠김).
 - `useIntroPageStore` — Intro 페이지의 개발용 튜닝 상태(영역·배치·테두리 표시). 프로덕션에는 HUD가 없어 항상 기본값이다.
+- `useSkillsPageStore` — Skills 영역·공구함 스티커·안내 화살표의 개발용 튜닝 상태(영역·좌상단·테두리 표시 · 스티커 배치와 테두리·그림자 · 로고 자세 · 화살표 배치·연출). 마찬가지로 프로덕션에서는 항상 기본값이다.
 
 ## 데이터 흐름 (Firestore → UI)
 
@@ -78,7 +83,8 @@ idle ──근접 + 좌클릭──> entering ──enterComplete()──> activ
 - 활성화되는 동안 **카메라 제어권은 스테이션 구현에 있다**(`CameraRig`가 팔로우를 멈춘다). gsap 트윈이든 `useFrame`이든 자유롭게 쓰되 언마운트 시 자기 트윈을 정리해야 한다.
 - **복귀는 공통층이 보장한다.** 카메라를 어디에 두고 끝내도 팔로우가 재개되며 원래 오프셋·zoom으로 돌아온다. 스테이션이 스스로 부드럽게 되돌리려면 `useCameraStore.followOffset`으로 복귀 자세(캐릭터 + 오프셋, 캐릭터를 바라봄)를 계산한다 — **현재 카메라 자세를 보고 유추하면 안 된다.** 팔로우가 아직 한 번도 돌지 않았거나(첫 화면) 이미 스테이션이 카메라를 옮겨둔 뒤라면 그 자세는 항공뷰가 아니다.
 - 등록된 구현이 없는 스테이션은 알릴 주체가 없으므로 `StationLifecycle`이 진입·종료를 즉시 완료 처리한다.
-- **텍스처는 `setState`로 나중에 주입하지 말고 `useLoader`(Suspense)로 준비 후 주입한다.** 상태로 주입하면 "빈 렌더 → 텍스처 렌더" 한 프레임이 생겨 깜빡인다(LEARNING 2026-07-23). `Stations`·`ActiveStationScene`가 공통 `Suspense` 안에 있어 스테이션이 최상위에서 suspend해도 씬 전체가 아니라 스테이션 콘텐츠까지만 미친다. `CanvasTexture`처럼 런타임에 굽는 것도 `three.Loader`를 상속한 전용 로더로 감싸 `useLoader`에 태운다.
+- **텍스처는 `setState`로 나중에 주입하지 말고 `useLoader`(Suspense)로 준비 후 주입한다.** 상태로 주입하면 "빈 렌더 → 텍스처 렌더" 한 프레임이 생겨 깜빡인다(LEARNING 2026-07-23). `Stations`·`ActiveStationScene`가 공통 `Suspense` 안에 있어 스테이션이 최상위에서 suspend해도 씬 전체가 아니라 스테이션 콘텐츠까지만 미친다. `CanvasTexture`처럼 런타임에 굽는 것도 `three.Loader`를 상속한 전용 로더로 감싸 `useLoader`에 태운다(크레파스 획·종이 스티커가 같은 틀을 쓴다).
+  **매 프레임 내용이 바뀌는 텍스처는 예외다** — 그려지는 연출(`<Crayon reveal>`)처럼 계속 다시 그리는 것은 캐시·Suspense가 맞지 않으므로, 텍스처 인스턴스를 하나 만들어 `needsUpdate`로 갱신하고 끝나면 갱신을 멈춘다.
 
 ## 렌더링 / 후처리 파이프라인
 
