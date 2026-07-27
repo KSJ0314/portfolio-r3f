@@ -167,7 +167,8 @@ export function useCrayonRevealTexture(
 
   useFrame((_, delta) => {
     if (reveal.isDone()) return
-    if (seconds > 0) drawn.current += (reveal.total / seconds) * delta
+    // 0초는 "즉시 완성"이다. 진행도를 올리지 않으면 0에 멈춰 그림이 영영 나타나지 않는다.
+    drawn.current += seconds > 0 ? (reveal.total / seconds) * delta : reveal.total
     reveal.drawTo(drawn.current)
   })
 

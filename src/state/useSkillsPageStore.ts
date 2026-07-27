@@ -87,7 +87,7 @@ interface SkillsPageState {
  * 여기서 맞춘 값을 AboutSkills.constants.ts에 반영하면 확정된다.
  */
 export const useSkillsPageStore = create<SkillsPageState>((set) => ({
-  area: SKILLS_AREA,
+  area: { ...SKILLS_AREA },
   topLeft: { ...SKILLS_TOP_LEFT },
   showOutline: false,
   box: { ...SKILLS_BOX_PLACEMENT },

@@ -65,7 +65,7 @@ export function SkillsBox({ stationId }: SkillsBoxProps) {
     let tween: gsap.core.Tween | null = null
     let target = pose.current.progress
 
-    return useStationStore.subscribe((state) => {
+    const unsubscribe = useStationStore.subscribe((state) => {
       const next = logoTarget(state.activeId, state.phase, stationId)
       if (next === target) return
       target = next
@@ -80,6 +80,12 @@ export function SkillsBox({ stationId }: SkillsBoxProps) {
         onUpdate: () => applyPose(pose.current.progress),
       })
     })
+
+    // 트윈도 함께 정리한다. 남겨두면 낡은 applyPose를 계속 부르며 새 트윈과 같은 값을 두고 다툰다.
+    return () => {
+      tween?.kill()
+      unsubscribe()
+    }
   }, [applyPose, stationId])
 
   return (
