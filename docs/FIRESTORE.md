@@ -9,7 +9,7 @@
 스테이션이 활성화되면 그 스테이션에 매핑된 컬렉션을 읽는다(매핑은 `src/content/stations.ts`의 `collections`).
 
 - `about-intro` → profile
-- `about-skills` → skills (스테이션 신설 예정)
+- `about-skills` → skills
 - `about-career` → experiences · education · spec
 - `about-award` → awards
 - `project-*` → projects
