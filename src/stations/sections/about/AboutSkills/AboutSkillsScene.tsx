@@ -7,6 +7,9 @@ import { useSkillsPageStore } from '../../../../state/useSkillsPageStore'
 import { useStationStore } from '../../../../state/useStationStore'
 import type { StationDetailProps } from '../../../registry'
 import { SKILLS_LOGO_SECONDS, SKILLS_TURN_EASE, SKILLS_TURN_SECONDS } from './AboutSkills.constants'
+import { SkillsExit } from './SkillsExit'
+import { SkillsPages } from './SkillsPages'
+import { SkillsTitle } from './SkillsTitle'
 
 /** 정면뷰 카메라 높이. Orthographic이라 배율과는 무관하고 near/far 안에만 있으면 된다. */
 const FOCUS_HEIGHT = 20
@@ -113,5 +116,15 @@ export function AboutSkillsScene({ phase }: StationDetailProps) {
     }
   }, [phase, applyPose])
 
-  return null
+  // 페이지 내용은 완전히 활성인 동안에만 둔다(진입·종료 애니메이션 중에는 안 보인다).
+  if (phase !== 'active') return null
+
+  // 제목은 고정이고, 그 아래 목록만 페이지 단위로 갈린다.
+  return (
+    <>
+      <SkillsTitle />
+      <SkillsPages />
+      <SkillsExit />
+    </>
+  )
 }

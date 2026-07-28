@@ -1,6 +1,5 @@
 export { PaperSticker } from './PaperSticker'
-export { bakePaperSticker } from './PaperSticker.bake'
 export { usePaperStickerTexture } from './PaperSticker.texture'
-export { DEFAULT_PAPER_STICKER_PARAMS, DILATE_STEPS } from './PaperSticker.constants'
+export { DEFAULT_PAPER_STICKER_PARAMS } from './PaperSticker.constants'
 export type { PaperStickerTexture } from './PaperSticker.texture'
-export type { PaperStickerBake, PaperStickerParams } from './PaperSticker.types'
+export type { PaperStickerParams } from './PaperSticker.types'

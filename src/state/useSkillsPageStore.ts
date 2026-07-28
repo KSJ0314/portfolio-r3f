@@ -8,6 +8,11 @@ import {
   SKILLS_BOX_PLACEMENT,
 } from '../stations/sections/about/AboutSkills/SkillsBox/SkillsBox.constants'
 import { GUIDE_ARROW_PLACEMENT } from '../stations/sections/about/AboutSkills/SkillsGuideArrow/SkillsGuideArrow.constants'
+import { SKILLS_EXIT } from '../stations/sections/about/AboutSkills/SkillsExit/SkillsExit.constants'
+import { SKILLS_PAGER } from '../stations/sections/about/AboutSkills/SkillsPager/SkillsPager.constants'
+import { SKILLS_LEVEL } from '../stations/sections/about/AboutSkills/SkillsPages/SkillItem/SkillLevel/SkillLevel.constants'
+import { SKILLS_LIST_LAYOUT } from '../stations/sections/about/AboutSkills/SkillsPages/SkillsPages.constants'
+import { SKILLS_TITLE } from '../stations/sections/about/AboutSkills/SkillsTitle/SkillsTitle.constants'
 import type { StationArea } from '../stations/types'
 
 /** 영역 좌상단 꼭지점(월드 x, z). */
@@ -57,6 +62,76 @@ export interface SkillsBoxLogo {
   rotation: number
 }
 
+/** 로고 옆 손글씨 제목의 배치. */
+export interface SkillsTitlePlacement {
+  /** 글자 크기. */
+  size: number
+  /** 로고 중심에서 오른쪽으로 띄우는 거리. */
+  gap: number
+  /** 세로 보정. 양수면 위로 올라간다. */
+  offsetY: number
+}
+
+/** 기술 목록의 배치. */
+export interface SkillsListLayout {
+  /** 영역 위 테두리에서 목록이 시작하는 곳까지의 거리. */
+  top: number
+  /** 좌우 여백. */
+  paddingX: number
+  /** 두 열 사이 간격. */
+  columnGap: number
+  /** 항목 사이 세로 간격. */
+  itemGap: number
+  /** 기술 이름 글자 크기. */
+  nameSize: number
+  /** 이름과 설명 사이 간격. */
+  nameGap: number
+  /** 설명 글자 크기. */
+  bodySize: number
+  /** 설명 줄 간격(글자 크기 배수). */
+  bodyLineHeight: number
+}
+
+/** 기술 이름 오른쪽에 붙는 레벨 별의 배치. */
+export interface SkillsLevelPlacement {
+  /** 별 하나의 세로 크기. */
+  size: number
+  /** 이름과 첫 별 사이 간격. */
+  gap: number
+  /** 별 사이 간격. */
+  starGap: number
+  /** 세로 보정. 양수면 위로 올라간다. */
+  offsetY: number
+  /** 종이 테두리 폭 — 그림 짧은 변 대비 비율. */
+  border: number
+  /** 그림자 흐림 폭(같은 비율 기준). */
+  shadowBlur: number
+  /** 그림자가 밀리는 거리(같은 비율 기준). */
+  shadowDistance: number
+  /** 그림자 진하기(0~1). */
+  shadowOpacity: number
+}
+
+/** 우상단 나가기 X의 배치. */
+export interface SkillsExitPlacement {
+  /** 아이콘 한 변의 크기. */
+  size: number
+  /** 오른쪽 끝에서 들이는 거리. */
+  right: number
+  /** 위 끝에서 내리는 거리. */
+  top: number
+}
+
+/** 페이지 넘김 글씨의 배치. */
+export interface SkillsPagerPlacement {
+  /** 글자 크기. */
+  size: number
+  /** 오른쪽 끝에서 들이는 거리. */
+  right: number
+  /** 아래 끝에서 올리는 거리. */
+  bottom: number
+}
+
 interface SkillsPageState {
   /** Skills 영역. 클릭 판정 범위이자 근접 판정 기준이다. */
   area: StationArea
@@ -68,6 +143,16 @@ interface SkillsPageState {
   box: SkillsBoxPlacement
   /** 활성 상태에서 로고처럼 놓이는 자세. */
   logo: SkillsBoxLogo
+  /** 로고 옆 제목의 배치. */
+  title: SkillsTitlePlacement
+  /** 기술 목록의 배치. */
+  list: SkillsListLayout
+  /** 레벨 별의 배치. */
+  level: SkillsLevelPlacement
+  /** 페이지 넘김 글씨의 배치. */
+  pager: SkillsPagerPlacement
+  /** 나가기 X의 배치. */
+  exit: SkillsExitPlacement
   /** 바닥 화살표의 배치·연출. */
   guide: GuideArrowPlacement
   /** 값이 바뀌면 화살표를 새로 마운트해 그리는 연출을 다시 재생한다(HUD 버튼). */
@@ -77,6 +162,11 @@ interface SkillsPageState {
   setShowOutline: (show: boolean) => void
   setBox: (box: SkillsBoxPlacement) => void
   setLogo: (logo: SkillsBoxLogo) => void
+  setTitle: (title: SkillsTitlePlacement) => void
+  setList: (list: SkillsListLayout) => void
+  setLevel: (level: SkillsLevelPlacement) => void
+  setPager: (pager: SkillsPagerPlacement) => void
+  setExit: (exit: SkillsExitPlacement) => void
   setGuide: (guide: GuideArrowPlacement) => void
   redrawGuide: () => void
 }
@@ -92,6 +182,11 @@ export const useSkillsPageStore = create<SkillsPageState>((set) => ({
   showOutline: false,
   box: { ...SKILLS_BOX_PLACEMENT },
   logo: { ...SKILLS_BOX_LOGO },
+  title: { ...SKILLS_TITLE },
+  list: { ...SKILLS_LIST_LAYOUT },
+  level: { ...SKILLS_LEVEL },
+  pager: { ...SKILLS_PAGER },
+  exit: { ...SKILLS_EXIT },
   guide: { ...GUIDE_ARROW_PLACEMENT },
   guideRedraw: 0,
   setArea: (area) => set({ area }),
@@ -99,6 +194,11 @@ export const useSkillsPageStore = create<SkillsPageState>((set) => ({
   setShowOutline: (showOutline) => set({ showOutline }),
   setBox: (box) => set({ box }),
   setLogo: (logo) => set({ logo }),
+  setTitle: (title) => set({ title }),
+  setList: (list) => set({ list }),
+  setLevel: (level) => set({ level }),
+  setPager: (pager) => set({ pager }),
+  setExit: (exit) => set({ exit }),
   setGuide: (guide) => set({ guide }),
   redrawGuide: () => set((s) => ({ guideRedraw: s.guideRedraw + 1 })),
 }))

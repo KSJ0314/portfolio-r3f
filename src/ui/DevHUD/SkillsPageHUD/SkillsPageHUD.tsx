@@ -9,12 +9,22 @@ import {
   SKILLS_BOX_PLACEMENT,
 } from '../../../stations/sections/about/AboutSkills/SkillsBox/SkillsBox.constants'
 import { GUIDE_ARROW_PLACEMENT } from '../../../stations/sections/about/AboutSkills/SkillsGuideArrow/SkillsGuideArrow.constants'
+import { SKILLS_EXIT } from '../../../stations/sections/about/AboutSkills/SkillsExit/SkillsExit.constants'
+import { SKILLS_PAGER } from '../../../stations/sections/about/AboutSkills/SkillsPager/SkillsPager.constants'
+import { SKILLS_LEVEL } from '../../../stations/sections/about/AboutSkills/SkillsPages/SkillItem/SkillLevel/SkillLevel.constants'
+import { SKILLS_LIST_LAYOUT } from '../../../stations/sections/about/AboutSkills/SkillsPages/SkillsPages.constants'
+import { SKILLS_TITLE } from '../../../stations/sections/about/AboutSkills/SkillsTitle/SkillsTitle.constants'
 import { useSkillsPageStore } from '../../../state/useSkillsPageStore'
 
 const A = SKILLS_AREA
 const T = SKILLS_TOP_LEFT
 const B = SKILLS_BOX_PLACEMENT
 const L = SKILLS_BOX_LOGO
+const TI = SKILLS_TITLE
+const LI = SKILLS_LIST_LAYOUT
+const LV = SKILLS_LEVEL
+const P = SKILLS_PAGER
+const E = SKILLS_EXIT
 const G = GUIDE_ARROW_PLACEMENT
 
 /** 툴팁 문구 — 설명 뒤에 기본값을 붙인다. */
@@ -35,6 +45,11 @@ export function SkillsPageHUD() {
   const setShowOutline = useSkillsPageStore((s) => s.setShowOutline)
   const setBox = useSkillsPageStore((s) => s.setBox)
   const setLogo = useSkillsPageStore((s) => s.setLogo)
+  const setTitle = useSkillsPageStore((s) => s.setTitle)
+  const setList = useSkillsPageStore((s) => s.setList)
+  const setLevel = useSkillsPageStore((s) => s.setLevel)
+  const setPager = useSkillsPageStore((s) => s.setPager)
+  const setExit = useSkillsPageStore((s) => s.setExit)
   const setGuide = useSkillsPageStore((s) => s.setGuide)
   const redrawGuide = useSkillsPageStore((s) => s.redrawGuide)
 
@@ -145,6 +160,216 @@ export function SkillsPageHUD() {
           hint: hint('y축 회전(도). 양수가 반시계다.', L.rotation),
         },
       }, { collapsed: true }),
+      제목: folder({
+        titleSize: {
+          value: TI.size,
+          min: 0.1,
+          max: 3,
+          step: 0.05,
+          label: '글자 크기',
+          hint: hint('로고 옆 손글씨 제목의 글자 크기(월드 유닛).', TI.size),
+        },
+        titleGap: {
+          value: TI.gap,
+          min: 0,
+          max: 6,
+          step: 0.1,
+          label: '간격',
+          hint: hint('로고 중심에서 오른쪽으로 띄우는 거리.', TI.gap),
+        },
+        titleOffsetY: {
+          value: TI.offsetY,
+          min: -4,
+          max: 4,
+          step: 0.1,
+          label: '세로 보정',
+          hint: hint('양수면 위로 올라간다.', TI.offsetY),
+        },
+      }, { collapsed: true }),
+      목록: folder({
+        listTop: {
+          value: LI.top,
+          min: 0,
+          max: 8,
+          step: 0.1,
+          label: '시작 높이',
+          hint: hint('영역 위 테두리에서 목록이 시작하는 곳까지의 거리.', LI.top),
+        },
+        listPaddingX: {
+          value: LI.paddingX,
+          min: 0,
+          max: 5,
+          step: 0.1,
+          label: '좌우 여백',
+          hint: hint('영역 좌우에서 들이는 거리. 열 너비가 여기서 나온다.', LI.paddingX),
+        },
+        listColumnGap: {
+          value: LI.columnGap,
+          min: 0,
+          max: 4,
+          step: 0.1,
+          label: '열 간격',
+          hint: hint('두 열 사이 간격.', LI.columnGap),
+        },
+        listItemGap: {
+          value: LI.itemGap,
+          min: 0,
+          max: 3,
+          step: 0.05,
+          label: '항목 간격',
+          hint: hint('항목 사이 세로 간격.', LI.itemGap),
+        },
+        listNameSize: {
+          value: LI.nameSize,
+          min: 0.1,
+          max: 1.5,
+          step: 0.05,
+          label: '이름 크기',
+          hint: hint('기술 이름 글자 크기(손글씨).', LI.nameSize),
+        },
+        listNameGap: {
+          value: LI.nameGap,
+          min: 0,
+          max: 1.5,
+          step: 0.05,
+          label: '이름-설명 간격',
+          hint: hint('이름과 설명 사이 간격.', LI.nameGap),
+        },
+        listBodySize: {
+          value: LI.bodySize,
+          min: 0.08,
+          max: 0.8,
+          step: 0.01,
+          label: '설명 크기',
+          hint: hint('설명 글자 크기(본문체).', LI.bodySize),
+        },
+        listBodyLineHeight: {
+          value: LI.bodyLineHeight,
+          min: 1,
+          max: 3,
+          step: 0.05,
+          label: '설명 줄 간격',
+          hint: hint('설명 줄 간격(글자 크기 배수).', LI.bodyLineHeight),
+        },
+      }, { collapsed: true }),
+      '레벨 별': folder({
+        levelSize: {
+          value: LV.size,
+          min: 0.05,
+          max: 1.5,
+          step: 0.01,
+          label: '별 크기',
+          hint: hint('별 하나의 세로 크기. 가로는 그림 비율에서 나온다.', LV.size),
+        },
+        levelGap: {
+          value: LV.gap,
+          min: 0,
+          max: 2,
+          step: 0.05,
+          label: '이름과의 간격',
+          hint: hint('기술 이름 오른쪽 끝에서 첫 별까지의 거리.', LV.gap),
+        },
+        levelStarGap: {
+          value: LV.starGap,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          label: '별 간격',
+          hint: hint('별 사이 간격.', LV.starGap),
+        },
+        levelOffsetY: {
+          value: LV.offsetY,
+          min: -1,
+          max: 1,
+          step: 0.01,
+          label: '세로 보정',
+          hint: hint('양수면 위로 올라간다.', LV.offsetY),
+        },
+        levelBorder: {
+          value: LV.border,
+          min: 0,
+          max: 0.2,
+          step: 0.005,
+          label: '테두리 폭',
+          hint: hint('오려낸 종이 여백의 폭. 그림 짧은 변 대비 비율이다.', LV.border),
+        },
+        levelShadowBlur: {
+          value: LV.shadowBlur,
+          min: 0,
+          max: 0.1,
+          step: 0.005,
+          label: '그림자 흐림',
+          hint: hint('그림자가 번지는 폭(같은 비율 기준).', LV.shadowBlur),
+        },
+        levelShadowDistance: {
+          value: LV.shadowDistance,
+          min: 0,
+          max: 0.08,
+          step: 0.002,
+          label: '그림자 거리',
+          hint: hint('그림자가 오른쪽·아래로 밀리는 거리(같은 비율 기준).', LV.shadowDistance),
+        },
+        levelShadowOpacity: {
+          value: LV.shadowOpacity,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          label: '그림자 진하기',
+          hint: hint('그림자 색의 불투명도.', LV.shadowOpacity),
+        },
+      }, { collapsed: true }),
+      '페이지 넘김': folder({
+        pagerSize: {
+          value: P.size,
+          min: 0.1,
+          max: 1.5,
+          step: 0.05,
+          label: '글자 크기',
+          hint: hint('페이지 넘김 글씨의 크기.', P.size),
+        },
+        pagerRight: {
+          value: P.right,
+          min: 0,
+          max: 5,
+          step: 0.1,
+          label: '오른쪽 여백',
+          hint: hint('오른쪽 끝에서 들이는 거리.', P.right),
+        },
+        pagerBottom: {
+          value: P.bottom,
+          min: 0,
+          max: 5,
+          step: 0.1,
+          label: '아래 여백',
+          hint: hint('아래 끝에서 올리는 거리.', P.bottom),
+        },
+      }, { collapsed: true }),
+      나가기: folder({
+        exitSize: {
+          value: E.size,
+          min: 0.1,
+          max: 2,
+          step: 0.05,
+          label: '아이콘 크기',
+          hint: hint('X 한 변의 크기. 획 굵기도 같이 커져 그림째 확대된다.', E.size),
+        },
+        exitRight: {
+          value: E.right,
+          min: 0,
+          max: 5,
+          step: 0.1,
+          label: '오른쪽 여백',
+          hint: hint('오른쪽 끝에서 들이는 거리.', E.right),
+        },
+        exitTop: {
+          value: E.top,
+          min: 0,
+          max: 5,
+          step: 0.1,
+          label: '위 여백',
+          hint: hint('위 끝에서 내리는 거리.', E.top),
+        },
+      }, { collapsed: true }),
       '안내 화살표': folder({
         arrowScale: {
           value: G.scale,
@@ -188,8 +413,13 @@ export function SkillsPageHUD() {
     {
       '화살표 다시 그리기': button(() => redrawGuide()),
       '값 복사(JSON)': button(() => {
-        const { area, topLeft, box, logo, guide } = useSkillsPageStore.getState()
-        const json = JSON.stringify({ area, topLeft, box, logo, guide }, null, 2)
+        const state = useSkillsPageStore.getState()
+        const { area, topLeft, box, logo, title, list, level, pager, exit, guide } = state
+        const json = JSON.stringify(
+          { area, topLeft, box, logo, title, list, level, pager, exit, guide },
+          null,
+          2,
+        )
         void navigator.clipboard?.writeText(json)
         console.log(json)
       }),
@@ -208,6 +438,31 @@ export function SkillsPageHUD() {
           logoScale: L.scale,
           logoPosition: { x: L.x, z: L.z },
           logoRotation: L.rotation,
+          titleSize: TI.size,
+          titleGap: TI.gap,
+          titleOffsetY: TI.offsetY,
+          listTop: LI.top,
+          listPaddingX: LI.paddingX,
+          listColumnGap: LI.columnGap,
+          listItemGap: LI.itemGap,
+          listNameSize: LI.nameSize,
+          listNameGap: LI.nameGap,
+          listBodySize: LI.bodySize,
+          listBodyLineHeight: LI.bodyLineHeight,
+          levelSize: LV.size,
+          levelGap: LV.gap,
+          levelStarGap: LV.starGap,
+          levelOffsetY: LV.offsetY,
+          levelBorder: LV.border,
+          levelShadowBlur: LV.shadowBlur,
+          levelShadowDistance: LV.shadowDistance,
+          levelShadowOpacity: LV.shadowOpacity,
+          pagerSize: P.size,
+          pagerRight: P.right,
+          pagerBottom: P.bottom,
+          exitSize: E.size,
+          exitRight: E.right,
+          exitTop: E.top,
           arrowScale: G.scale,
           arrowPosition: { x: G.x, z: G.z },
           arrowRotation: G.rotation,
@@ -243,6 +498,51 @@ export function SkillsPageHUD() {
     const { logoScale, logoPosition, logoRotation } = values
     setLogo({ scale: logoScale, x: logoPosition.x, z: logoPosition.z, rotation: logoRotation })
   }, [values, setLogo])
+
+  useEffect(() => {
+    const { titleSize, titleGap, titleOffsetY } = values
+    setTitle({ size: titleSize, gap: titleGap, offsetY: titleOffsetY })
+  }, [values, setTitle])
+
+  useEffect(() => {
+    const { listTop, listPaddingX, listColumnGap, listItemGap } = values
+    const { listNameSize, listNameGap, listBodySize, listBodyLineHeight } = values
+    setList({
+      top: listTop,
+      paddingX: listPaddingX,
+      columnGap: listColumnGap,
+      itemGap: listItemGap,
+      nameSize: listNameSize,
+      nameGap: listNameGap,
+      bodySize: listBodySize,
+      bodyLineHeight: listBodyLineHeight,
+    })
+  }, [values, setList])
+
+  useEffect(() => {
+    const { levelSize, levelGap, levelStarGap, levelOffsetY } = values
+    const { levelBorder, levelShadowBlur, levelShadowDistance, levelShadowOpacity } = values
+    setLevel({
+      size: levelSize,
+      gap: levelGap,
+      starGap: levelStarGap,
+      offsetY: levelOffsetY,
+      border: levelBorder,
+      shadowBlur: levelShadowBlur,
+      shadowDistance: levelShadowDistance,
+      shadowOpacity: levelShadowOpacity,
+    })
+  }, [values, setLevel])
+
+  useEffect(() => {
+    const { pagerSize, pagerRight, pagerBottom } = values
+    setPager({ size: pagerSize, right: pagerRight, bottom: pagerBottom })
+  }, [values, setPager])
+
+  useEffect(() => {
+    const { exitSize, exitRight, exitTop } = values
+    setExit({ size: exitSize, right: exitRight, top: exitTop })
+  }, [values, setExit])
 
   useEffect(() => {
     const { arrowScale, arrowPosition, arrowRotation, arrowSeconds } = values

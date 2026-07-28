@@ -4,8 +4,9 @@ import { BODY_FONT, HAND_FONT } from '../../../../content/fonts'
 import { useDoc } from '../../../../lib/firebase'
 import { useIntroPageStore } from '../../../../state/useIntroPageStore'
 import type { StationInactiveProps } from '../../../registry'
+import type { TroikaTextMesh } from '../../../types'
 import { AREA_Y, CONTENT_Y, INK, OUTLINE_Y } from './AboutIntro.constants'
-import type { ProfileDoc, TroikaTextMesh } from './AboutIntro.types'
+import type { ProfileDoc } from './AboutIntro.types'
 import { ProfilePhoto } from './ProfilePhoto'
 
 /** Firestore에는 줄바꿈이 `\n` 두 글자로 들어 있다. 실제 개행으로 바꿔야 3D 텍스트가 줄을 나눈다. */

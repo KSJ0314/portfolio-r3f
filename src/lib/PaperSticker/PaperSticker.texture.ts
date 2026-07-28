@@ -10,10 +10,13 @@ interface PaperStickerInput {
   params: PaperStickerParams
 }
 
-/** 구운 스티커 — 텍스처와 판 크기(그림 세로 = 1 기준). */
+/** 구운 스티커 — 텍스처와 크기들(그림 세로 = 1 기준). */
 export interface PaperStickerTexture {
   texture: CanvasTexture
+  /** 여백을 포함한 판 크기. */
   plane: { width: number; height: number }
+  /** 여백을 뺀 그림 자체의 크기. */
+  artwork: { width: number; height: number }
 }
 
 /**
@@ -33,10 +36,10 @@ class PaperStickerLoader extends Loader<PaperStickerTexture> {
     const image = new Image()
     image.onload = () => {
       try {
-        const { canvas, plane } = bakePaperSticker(image, params)
+        const { canvas, plane, artwork } = bakePaperSticker(image, params)
         const texture = new CanvasTexture(canvas)
         texture.colorSpace = SRGBColorSpace
-        onLoad?.({ texture, plane })
+        onLoad?.({ texture, plane, artwork })
       } catch (err) {
         onError?.(err)
       }

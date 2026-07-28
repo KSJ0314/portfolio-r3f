@@ -8,3 +8,8 @@ export interface StationArea {
   width: number
   height: number
 }
+
+/** troika가 글자 배치를 끝내고 넘겨주는 정보 중 쓰는 것 — 글 덩어리의 경계 `[minX, minY, maxX, maxY]`. */
+export interface TroikaTextMesh {
+  textRenderInfo?: { blockBounds?: ArrayLike<number> }
+}

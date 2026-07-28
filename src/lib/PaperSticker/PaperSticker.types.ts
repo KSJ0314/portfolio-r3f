@@ -24,9 +24,11 @@ export interface PaperStickerParams {
   shadowColor: string
 }
 
-/** 구운 결과 — 텍스처가 될 캔버스와 판 크기. */
+/** 구운 결과 — 텍스처가 될 캔버스와 크기들. */
 export interface PaperStickerBake {
   canvas: HTMLCanvasElement
   /** 판 크기(그림 세로 = 1 기준). 테두리·그림자 여백이 포함된 값이다. */
   plane: { width: number; height: number }
+  /** 여백을 뺀 그림 자체의 크기(같은 기준). 스티커를 여러 개 늘어놓을 때 간격 계산에 쓴다. */
+  artwork: { width: number; height: number }
 }
