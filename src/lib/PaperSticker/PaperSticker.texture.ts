@@ -10,10 +10,13 @@ interface PaperStickerInput {
   params: PaperStickerParams
 }
 
-/** 구운 스티커 — 텍스처와 판 크기(그림 세로 = 1 기준). */
+/** 구운 스티커 — 텍스처와 크기들(그림 세로 = 1 기준). */
 export interface PaperStickerTexture {
   texture: CanvasTexture
+  /** 여백을 포함한 판 크기. */
   plane: { width: number; height: number }
+  /** 여백을 뺀 그림 자체의 크기. */
+  artwork: { width: number; height: number }
 }
 
 /**
@@ -33,10 +36,10 @@ class PaperStickerLoader extends Loader<PaperStickerTexture> {
     const image = new Image()
     image.onload = () => {
       try {
-        const { canvas, plane } = bakePaperSticker(image, params)
+        const { canvas, plane, artwork } = bakePaperSticker(image, params)
         const texture = new CanvasTexture(canvas)
         texture.colorSpace = SRGBColorSpace
-        onLoad?.({ texture, plane })
+        onLoad?.({ texture, plane, artwork })
       } catch (err) {
         onError?.(err)
       }
@@ -44,6 +47,20 @@ class PaperStickerLoader extends Loader<PaperStickerTexture> {
     image.onerror = (err) => onError?.(err)
     image.src = url
   }
+}
+
+/** 캐시 키. 훅과 미리 굽기가 같은 문자열을 써야 다시 굽지 않는다. */
+const stickerKey = (url: string, params: PaperStickerParams) =>
+  JSON.stringify({ url, params } satisfies PaperStickerInput)
+
+/**
+ * 화면에 붙기 전에 미리 구워 캐시에 넣는다.
+ *
+ * 나중에 필요해진 시점에 굽기 시작하면 그때 서스펜드가 걸려, 이미 떠 있던 것들이 사라졌다 돌아온다.
+ * 앱이 뜰 때 한 번 훑어두면 실제로 붙을 때는 캐시에서 나오므로 그런 일이 없다.
+ */
+export function preloadPaperSticker(url: string, params: PaperStickerParams) {
+  useLoader.preload(PaperStickerLoader, stickerKey(url, params))
 }
 
 /**
@@ -55,8 +72,7 @@ export function usePaperStickerTexture(
   params: PaperStickerParams,
 ): PaperStickerTexture {
   const gl = useThree((s) => s.gl)
-  const key = JSON.stringify({ url, params } satisfies PaperStickerInput)
-  const sticker = useLoader(PaperStickerLoader, key)
+  const sticker = useLoader(PaperStickerLoader, stickerKey(url, params))
 
   // 텍스처를 GPU에 미리 올린다(drei useTexture와 같은 처리 — 첫 렌더의 업로드 지연 방지).
   useEffect(() => {

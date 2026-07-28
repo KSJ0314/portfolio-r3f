@@ -4,8 +4,9 @@ import { BODY_FONT, HAND_FONT } from '../../../../content/fonts'
 import { useDoc } from '../../../../lib/firebase'
 import { useIntroPageStore } from '../../../../state/useIntroPageStore'
 import type { StationInactiveProps } from '../../../registry'
+import type { TroikaTextMesh } from '../../../types'
 import { AREA_Y, CONTENT_Y, INK, OUTLINE_Y } from './AboutIntro.constants'
-import type { ProfileDoc, TroikaTextMesh } from './AboutIntro.types'
+import type { ProfileDoc } from './AboutIntro.types'
 import { ProfilePhoto } from './ProfilePhoto'
 
 /** Firestore에는 줄바꿈이 `\n` 두 글자로 들어 있다. 실제 개행으로 바꿔야 3D 텍스트가 줄을 나눈다. */
@@ -135,6 +136,9 @@ export function AboutIntroInactive({ station }: StationInactiveProps) {
           </Text>
         )}
 
+        {/* 사진은 자기 경계를 갖는다. 글씨는 Firestore 데이터를 기다리고 사진은 텍스처를 기다려
+            준비되는 시점이 다른데, 한 경계에 묶으면 사진이 뜰 때까지 페이지 전체가 버려졌다
+            다시 그려진다(LEARNING 2026-07-23). 이 경계를 없애지 말 것. */}
         <Suspense fallback={null}>
           <ProfilePhoto bottom={photoY} height={photoHeight} />
         </Suspense>

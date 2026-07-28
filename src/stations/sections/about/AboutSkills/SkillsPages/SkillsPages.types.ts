@@ -1,0 +1,20 @@
+import type { DocBase } from '../../../../../lib/firebase'
+
+/** Firestore `skills` 문서. `level`은 화면에 쓰지 않지만 스키마에는 있다. */
+export interface SkillDoc extends DocBase {
+  name: string
+  category: string
+  order: number
+  level: number
+  description: string[]
+  /** 화면에 낼지. 없으면 낸다 — 문서를 추가하며 빠뜨려도 조용히 사라지지 않게. */
+  active?: boolean
+}
+
+/**
+ * 한 페이지의 열 구성 — 열마다 담을 분류를 적는다.
+ * 열을 하나만 주면 그 분류의 기술을 개수로 반 나눠 두 열에 늘어놓는다.
+ */
+export interface SkillPage {
+  columns: readonly (readonly string[])[]
+}

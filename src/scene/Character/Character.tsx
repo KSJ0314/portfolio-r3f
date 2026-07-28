@@ -1,7 +1,8 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Vector3 } from 'three'
 import type { Mesh } from 'three'
+import { useSceneReadyStore } from '../../state/useSceneReadyStore'
 import { useThemeStore } from '../../state/useThemeStore'
 import { themes } from '../../theme/themes'
 import { useCameraStore } from '../../state/useCameraStore'
@@ -24,6 +25,12 @@ export function Character() {
   const theme = themes[mode]
   const position = useCameraStore((s) => s.position)
   const target = useCameraStore((s) => s.target)
+
+  // 지금은 불러오는 것이 없어 즉시 준비된다. 나중에 텍스처·모델이 붙으면 그때부터 실제로 기다린다.
+  const markReady = useSceneReadyStore((s) => s.markReady)
+  useEffect(() => {
+    markReady('character')
+  }, [markReady])
 
   useFrame((_, delta) => {
     _prev.copy(position)

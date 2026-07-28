@@ -1,4 +1,5 @@
 import { Experience } from './scene/Experience'
+import { SceneGate } from './ui/SceneGate'
 import { Minimap } from './ui/Minimap'
 import { DevHUD } from './ui/DevHUD'
 import { CrayonStudio } from './tools/CrayonStudio'
@@ -9,6 +10,8 @@ function App() {
   return (
     <>
       <Experience />
+      {/* 바닥·캐릭터·Intro가 다 준비될 때까지 첫 화면을 덮는다(로딩 연출은 폴리싱 단계에서). */}
+      <SceneGate />
       {/* 활성 스테이션의 2D 상세 자리 + ESC 종료 + 미구현 스테이션 fallback */}
       <StationLifecycle />
       {/* 테마 토글은 밤 테마를 제대로 구현할 때 다시 단다(지금은 종이만 어두워진다). */}

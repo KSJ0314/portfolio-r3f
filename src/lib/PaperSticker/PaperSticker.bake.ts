@@ -142,5 +142,9 @@ export function bakePaperSticker(
   ctx.shadowOffsetY = 0
   ctx.drawImage(image, pad, pad)
 
-  return { canvas, plane: { width: width / imageHeight, height: height / imageHeight } }
+  return {
+    canvas,
+    plane: { width: width / imageHeight, height: height / imageHeight },
+    artwork: { width: imageWidth / imageHeight, height: 1 },
+  }
 }

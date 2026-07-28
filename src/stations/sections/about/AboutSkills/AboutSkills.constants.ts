@@ -7,10 +7,13 @@ import type { StationArea } from '../../../types'
  * 좌상단 꼭지점(min x, min z)이 월드 (6, 6)에 오도록 배치 좌표(중심)를 맞춰 둔다.
  * 크기를 바꾸면 중심(`SKILLS_CENTER`)도 같이 옮겨져 꼭지점이 유지된다.
  */
-export const SKILLS_AREA: StationArea = { width: 10, height: 8 }
+export const SKILLS_AREA: StationArea = { width: 13, height: 8 }
+
+/** 종이에 적힌 글씨·선 색(AboutIntro와 같은 잉크색). */
+export const INK = '#3a3a3a'
 
 /** Skills 영역의 좌상단 꼭지점(월드 x, z). 이 점을 기준으로 영역이 +x·+z로 펼쳐진다. */
-export const SKILLS_TOP_LEFT = { x: 6, z: 3 } as const
+export const SKILLS_TOP_LEFT = { x: 5, z: 3 } as const
 
 /**
  * 활성 전환 시간·이징. 카메라 각도 전환과 공구상자 이동이 **겹치지 않고 차례로** 돈다 —

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useLoader, useThree } from '@react-three/fiber'
 import { SRGBColorSpace, type Texture, TextureLoader } from 'three'
+import { useSceneReadyStore } from '../../../../state/useSceneReadyStore'
 import { PROFILE_PHOTO_URL } from './AboutIntro.constants'
 
 /**
@@ -50,6 +51,12 @@ export function ProfilePhoto({ bottom, height }: { bottom: number; height: numbe
   useEffect(() => {
     gl.initTexture(texture)
   }, [gl, texture])
+
+  // 사진은 자기 경계 안에서 늦게 붙으므로, 첫 화면 가림막이 기다릴 수 있게 스스로 알린다.
+  const markReady = useSceneReadyStore((s) => s.markReady)
+  useEffect(() => {
+    markReady('intro-photo')
+  }, [markReady])
 
   const image = texture.image as { width: number; height: number }
   const width = height * (image.width / image.height)

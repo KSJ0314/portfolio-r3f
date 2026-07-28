@@ -2,14 +2,12 @@ import { useMemo } from 'react'
 import { Line } from '@react-three/drei'
 import { useSkillsPageStore } from '../../../../state/useSkillsPageStore'
 import type { StationInactiveProps } from '../../../registry'
+import { INK } from './AboutSkills.constants'
 import { SkillsBox } from './SkillsBox'
 
 /** 바닥과 겹쳐 깜빡이지 않도록 살짝 띄운다. 클릭 판정 면 < 테두리 순으로 얹는다. */
 const AREA_Y = 0.005
 const OUTLINE_Y = 0.01
-
-/** 종이에 적힌 선 색(AboutIntro와 같은 잉크색). */
-const INK = '#3a3a3a'
 
 /**
  * `about-skills` 비활성 상태 — 종이 위 Skills 영역.
