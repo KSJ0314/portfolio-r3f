@@ -36,7 +36,7 @@ _작성 예정_
     - `MapDecorations`(자체 `Suspense`) — 스테이션에 속하지 않는 맵 장식(길안내 화살표·표지판)의 마운트 자리. 영역·근접 판정·라이프사이클이 없어 마운트만 하고, 무엇을 언제 어떻게 그릴지는 요소가 각자 정한다. Suspense를 요소마다 두지 않는 이유는 하나만 빠뜨려도 그 suspend가 씬 전체로 번지기 때문이다. (DECISIONS 018)
       - `SkillsGuideArrow` — 캐릭터 시작 자리에서 Skills 쪽을 가리키는 바닥 화살표. 라이프사이클이 처음 `idle`이 될 때(= Intro가 닫혀 카메라 전환이 끝난 뒤) 나타나며 크레파스로 긋듯 그어진다.
 
-Canvas 밖(`App`): `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) + ESC 종료 + 미구현 스테이션 fallback. `Minimap`(프로덕션에도 노출) · `CrayonStudio`(오른쪽 아래 크레파스 버튼 → 모달 그리기 도구, 프로덕션에도 노출. 단 코드 좌표 복사만 dev로 가려진다) · `DevHUD`(dev 전용 HUD 묶음 — `DebugHUD` 상태 표시 + `GridPaperHUD`·`IntroPageHUD` leva 튜닝 패널. 패널 자체는 `GridPaperHUD`가 그리고 나머지는 폴더로 얹힌다). `DevHUD`만 App이 `import.meta.env.DEV`로 감싸 프로덕션 번들에서 빠진다. 크레파스 스튜디오는 `/crayon`에서 단독 페이지로도 뜬다.
+Canvas 밖(`App`): `SceneGate` — 첫 화면 가림막. 바닥·캐릭터·Intro(글씨·사진)가 모두 준비될 때까지 덮었다가 페이드로 걷는다. 경계가 나뉘어 있어 준비되는 대로 하나씩 나타나면 순서가 뒤집혀 보이므로, 함께 보여야 하는 것만 골라 기다린다. 한 번 걷으면 다시 덮지 않고, 제 시간에 준비되지 않으면 새로고침으로 재시도하다 횟수를 넘기면 그냥 걷는다. `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) + ESC 종료 + 미구현 스테이션 fallback. `Minimap`(프로덕션에도 노출) · `CrayonStudio`(오른쪽 아래 크레파스 버튼 → 모달 그리기 도구, 프로덕션에도 노출. 단 코드 좌표 복사만 dev로 가려진다) · `DevHUD`(dev 전용 HUD 묶음 — `DebugHUD` 상태 표시 + `GridPaperHUD`·`IntroPageHUD` leva 튜닝 패널. 패널 자체는 `GridPaperHUD`가 그리고 나머지는 폴더로 얹힌다). `DevHUD`만 App이 `import.meta.env.DEV`로 감싸 프로덕션 번들에서 빠진다. 크레파스 스튜디오는 `/crayon`에서 단독 페이지로도 뜬다.
 
 테마 토글은 밤 테마를 제대로 구현할 때(Phase 10) 다시 단다. 컴포넌트(`ui/ThemeToggle`)와 스토어는 그대로 있다.
 
@@ -47,6 +47,7 @@ Canvas 밖(`App`): `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) 
 - `useThemeStore` — 테마 모드(light/dark) + toggle, 2D·3D 동시 전환.
 - `useCameraStore` — 이동 상태: `position`(현재 위치, 좌표만 변경) · `target`(목표점, 경계 clamp) · `setTarget(point)` · `viewAngle`(CameraRig가 유도, 미니맵이 사용) · `followOffset`(카메라 − 캐릭터, CameraRig가 기록) · `motion.speed`(디버그용) · 상수 `CAMERA_BOUNDS` · `CHARACTER_START`.
 - `useStationStore` — 스테이션 상호작용: `nearId`(근접) · `activeId` · `phase`(`idle`/`entering`/`active`/`exiting`) · `setNear` · `activate` · `enterComplete` · `requestClose` · `exitComplete`. 초기값은 `about-intro`가 `active`인 상태다(사이트 첫 화면). `setNear`는 활성 스테이션에서 멀어지면 그대로 종료를 건다. 이동 잠금 여부는 `isMovementLocked(phase)`로 판단(진입 애니메이션 중에만 잠김).
+- `useSceneReadyStore` — 첫 화면에 필요한 것들의 준비 여부(`markReady(key)`). 바닥·캐릭터·스테이션·Intro 사진이 마운트되며 자기 이름을 올리고, `SceneGate`가 이를 보고 가림막을 걷는다.
 - `useIntroPageStore` — Intro 페이지의 개발용 튜닝 상태(영역·배치·테두리 표시). 프로덕션에는 HUD가 없어 항상 기본값이다.
 - `useSkillsPageStore` — Skills 페이지 전체의 개발용 튜닝 상태(영역·좌상단·테두리 표시 · 공구함 배치와 테두리·그림자 · 로고 자세 · 제목 · 목록 · 레벨 별 · 페이지 넘김 · 나가기 · 안내 화살표). 마찬가지로 프로덕션에서는 항상 기본값이다.
 
@@ -90,7 +91,7 @@ idle ──근접 + 좌클릭──> entering ──enterComplete()──> activ
 - 활성화되는 동안 **카메라 제어권은 스테이션 구현에 있다**(`CameraRig`가 팔로우를 멈춘다). gsap 트윈이든 `useFrame`이든 자유롭게 쓰되 언마운트 시 자기 트윈을 정리해야 한다.
 - **복귀는 공통층이 보장한다.** 카메라를 어디에 두고 끝내도 팔로우가 재개되며 원래 오프셋·zoom으로 돌아온다. 스테이션이 스스로 부드럽게 되돌리려면 `useCameraStore.followOffset`으로 복귀 자세(캐릭터 + 오프셋, 캐릭터를 바라봄)를 계산한다 — **현재 카메라 자세를 보고 유추하면 안 된다.** 팔로우가 아직 한 번도 돌지 않았거나(첫 화면) 이미 스테이션이 카메라를 옮겨둔 뒤라면 그 자세는 항공뷰가 아니다.
 - 등록된 구현이 없는 스테이션은 알릴 주체가 없으므로 `StationLifecycle`이 진입·종료를 즉시 완료 처리한다.
-- **텍스처는 `setState`로 나중에 주입하지 말고 `useLoader`(Suspense)로 준비 후 주입한다.** 상태로 주입하면 "빈 렌더 → 텍스처 렌더" 한 프레임이 생겨 깜빡인다(LEARNING 2026-07-23). 경계는 공통 마운트 자리마다 하나씩 둔다(`Station` 각각 · `ActiveStationScene`). 한 경계에 여럿을 묶으면 **가장 느린 리소스가 나머지를 붙잡아** 다 같이 늦게 나타나고, 카메라 자세처럼 로딩과 무관한 일까지 밀린다. `CanvasTexture`처럼 런타임에 굽는 것도 `three.Loader`를 상속한 전용 로더로 감싸 `useLoader`에 태운다(크레파스 획·종이 스티커가 같은 틀을 쓴다).
+- **텍스처는 `setState`로 나중에 주입하지 말고 `useLoader`(Suspense)로 준비 후 주입한다.** 상태로 주입하면 "빈 렌더 → 텍스처 렌더" 한 프레임이 생겨 깜빡인다(LEARNING 2026-07-23). 경계는 공통 마운트 자리마다 하나씩 둔다(`Station` 각각 · `ActiveStationScene`). 한 경계에 여럿을 묶으면 **가장 느린 리소스가 나머지를 붙잡아** 다 같이 늦게 나타나고, 카메라 자세처럼 로딩과 무관한 일까지 밀린다. **준비 시점이 다른 것도 같은 경계에 두지 않는다** — Intro의 글씨는 Firestore 데이터를, 사진은 텍스처를 기다리므로 사진은 자기 경계를 갖는다(묶으면 사진이 뜰 때까지 페이지 전체가 버려졌다 다시 그려진다. LEARNING 2026-07-28). `CanvasTexture`처럼 런타임에 굽는 것도 `three.Loader`를 상속한 전용 로더로 감싸 `useLoader`에 태운다(크레파스 획·종이 스티커가 같은 틀을 쓴다).
   **매 프레임 내용이 바뀌는 텍스처는 예외다** — 그려지는 연출(`<Crayon reveal>`)처럼 계속 다시 그리는 것은 캐시·Suspense가 맞지 않으므로, 텍스처 인스턴스를 하나 만들어 `needsUpdate`로 갱신하고 끝나면 갱신을 멈춘다.
 
 ## 렌더링 / 후처리 파이프라인
