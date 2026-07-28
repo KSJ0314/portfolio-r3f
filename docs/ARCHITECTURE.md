@@ -29,7 +29,10 @@ _작성 예정_
         - `Station` — 레지스트리에 비활성 구현(`Inactive`)이 있으면 그것을 그리고, 없으면 임시 박스 + 이름 라벨을 그린다. 클릭 판정 대상은 `userData.stationId`를 실은 오브젝트다(판정은 `Stations`가 함).
           - `AboutSkillsInactive` — 클릭 판정 판 + 공구함 스티커(`SkillsBox`). 스티커는 활성화되면 스스로 줄어들어 영역 좌상단으로 물러나 로고가 된다. 전환을 활성 구현에 두지 않는 이유는 같은 오브젝트가 이어서 변형돼야 하기 때문이다. (DECISIONS 020)
       - `ActiveStationScene` — 활성 스테이션의 3D 상세 마운트 자리(레지스트리에 등록된 `Scene`).
-        - `AboutSkillsScene` — 카메라 각도 전환. 공구함 이동과 **겹치지 않고 차례로** 돌며, 라이프사이클 완료 신호를 낸다.
+        - `AboutSkillsScene` — 카메라 각도 전환. 공구함 이동과 **겹치지 않고 차례로** 돌며, 라이프사이클 완료 신호를 낸다. 완전히 활성인 동안에는 페이지 내용을 함께 그린다.
+          - `SkillsTitle` — 로고 옆 손글씨 제목. 고정이다.
+          - `SkillsPages` — Firestore `skills`를 분류별 페이지로 나눠 그린다(`SkillItem` + 레벨 별 `SkillLevel`). 페이지를 넘기면 이 영역만 갈리고, 우측 하단 `SkillsPager`가 한 번에 하나(다음 또는 이전)만 낸다. (DECISIONS 021)
+          - `SkillsExit` — 우상단 나가기 자리. 아이콘은 공용 `ExitSticker`다.
     - `MapDecorations`(자체 `Suspense`) — 스테이션에 속하지 않는 맵 장식(길안내 화살표·표지판)의 마운트 자리. 영역·근접 판정·라이프사이클이 없어 마운트만 하고, 무엇을 언제 어떻게 그릴지는 요소가 각자 정한다. Suspense를 요소마다 두지 않는 이유는 하나만 빠뜨려도 그 suspend가 씬 전체로 번지기 때문이다. (DECISIONS 018)
       - `SkillsGuideArrow` — 캐릭터 시작 자리에서 Skills 쪽을 가리키는 바닥 화살표. 라이프사이클이 처음 `idle`이 될 때(= Intro가 닫혀 카메라 전환이 끝난 뒤) 나타나며 크레파스로 긋듯 그어진다.
 
@@ -45,7 +48,7 @@ Canvas 밖(`App`): `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) 
 - `useCameraStore` — 이동 상태: `position`(현재 위치, 좌표만 변경) · `target`(목표점, 경계 clamp) · `setTarget(point)` · `viewAngle`(CameraRig가 유도, 미니맵이 사용) · `followOffset`(카메라 − 캐릭터, CameraRig가 기록) · `motion.speed`(디버그용) · 상수 `CAMERA_BOUNDS` · `CHARACTER_START`.
 - `useStationStore` — 스테이션 상호작용: `nearId`(근접) · `activeId` · `phase`(`idle`/`entering`/`active`/`exiting`) · `setNear` · `activate` · `enterComplete` · `requestClose` · `exitComplete`. 초기값은 `about-intro`가 `active`인 상태다(사이트 첫 화면). `setNear`는 활성 스테이션에서 멀어지면 그대로 종료를 건다. 이동 잠금 여부는 `isMovementLocked(phase)`로 판단(진입 애니메이션 중에만 잠김).
 - `useIntroPageStore` — Intro 페이지의 개발용 튜닝 상태(영역·배치·테두리 표시). 프로덕션에는 HUD가 없어 항상 기본값이다.
-- `useSkillsPageStore` — Skills 영역·공구함 스티커·안내 화살표의 개발용 튜닝 상태(영역·좌상단·테두리 표시 · 스티커 배치와 테두리·그림자 · 로고 자세 · 화살표 배치·연출). 마찬가지로 프로덕션에서는 항상 기본값이다.
+- `useSkillsPageStore` — Skills 페이지 전체의 개발용 튜닝 상태(영역·좌상단·테두리 표시 · 공구함 배치와 테두리·그림자 · 로고 자세 · 제목 · 목록 · 레벨 별 · 페이지 넘김 · 나가기 · 안내 화살표). 마찬가지로 프로덕션에서는 항상 기본값이다.
 
 ## 데이터 흐름 (Firestore → UI)
 
@@ -68,6 +71,10 @@ idle ──근접 + 좌클릭──> entering ──enterComplete()──> activ
 - 이동 잠금은 `entering`에만 걸린다. `active`에서는 평소처럼 이동할 수 있고, **걸어서 근접 범위를 벗어나는 것이 곧 닫기**다. 종료 중에도 이동을 막지 않는다 — 걸어나가다 멈칫하지 않게.
 - 나가기 UI(버튼·화살표 등)는 스테이션 구현이 각자 제공한다. 공통층은 자리도 모양도 정해주지 않는다.
 - 우클릭은 순수하게 이동이다. 좌클릭은 idle 상태에서 근접한 스테이션을 활성화하고(`Stations`가 캔버스 `mousedown`을 레이캐스트), 활성 상태에서는 상세 내부 요소 상호작용에 쓴다.
+
+**공용 부품** (`src/stations/`)
+
+레지스트리에 등록하는 구현들이 함께 쓰는 것만 둔다. `ExitSticker`(나가기 아이콘 — 동작은 `requestClose()`, 놓을 자리는 스테이션이 정한다. DECISIONS 022) · `usePointerCursor`(누를 수 있는 씬 요소의 손가락 커서) · `types`(영역·troika 측정 타입).
 
 **레지스트리** (`src/stations/registry.ts`)
 

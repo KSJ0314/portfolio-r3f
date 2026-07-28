@@ -40,8 +40,9 @@
 | `name` | string | 기술명 |
 | `category` | string | 분류 |
 | `order` | number | 전체 순위(작을수록 상위, 카테고리 필터 후 정렬해도 순서 유지) |
-| `level` | number (1~5) | 숙련도 |
+| `level` | number (1~5) | 숙련도(이름 옆 별 개수) |
 | `description` | string[] | 상세 설명(줄 단위 배열) |
+| `active` | boolean | 화면에 낼지. 없으면 낸다 — 문서를 추가하며 빠뜨려도 조용히 사라지지 않게 ([DECISIONS 021]) |
 
 **experiences** (경력 1건 = 문서 1개, `order` 없음 — `startDate` 기준 최신순 정렬)
 
