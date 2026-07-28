@@ -42,11 +42,14 @@ export function Experience() {
         </Suspense>
         <Character />
         <CameraRig />
-        {/* 스테이션 콘텐츠(비활성 모습·활성 상세)는 Suspense로 감싼다.
-            스테이션 구현이 텍스처를 useLoader로 불러오다 suspend해도, 그 로딩이 씬 전체가 아니라
-            여기까지만 미치게 한다. 활성 스테이션의 카메라 제어권은 ActiveStationScene 안의 구현이 가진다. */}
+        {/* 스테이션 콘텐츠는 텍스처를 useLoader로 불러오다 suspend하므로 Suspense로 감싼다.
+            비활성 모습과 활성 상세는 경계를 따로 둔다 — 한 경계로 묶으면 비활성 텍스처가 준비될
+            때까지 활성 구현이 커밋되지 못해, 첫 화면의 카메라 자세를 잡는 일이 그만큼 늦어진다
+            (그동안 CameraRig의 항공뷰가 보이다가 튄다). */}
         <Suspense fallback={null}>
           <Stations />
+        </Suspense>
+        <Suspense fallback={null}>
           <ActiveStationScene />
         </Suspense>
         <MapDecorations />
