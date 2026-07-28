@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useCollection } from '../../../../../lib/firebase'
 import { useSkillsPageStore } from '../../../../../state/useSkillsPageStore'
+import { useStationGate } from '../../../../useStationGate'
 import { SkillsPager } from '../SkillsPager'
 import { SkillItem } from './SkillItem'
 import { SKILL_PAGES, SKILLS_CONTENT_Y } from './SkillsPages.constants'
@@ -19,7 +20,9 @@ export function SkillsPages() {
   const list = useSkillsPageStore((s) => s.list)
   const level = useSkillsPageStore((s) => s.level)
   const pager = useSkillsPageStore((s) => s.pager)
-  const { data: skills } = useCollection<SkillDoc>('skills')
+  const { data: skills, loading } = useCollection<SkillDoc>('skills')
+  // 목록은 Firestore를 기다린다. 그동안 나가기·페이지 넘김만 먼저 뜨지 않도록 상세 전체를 잡아둔다.
+  useStationGate('skills:data', loading)
   const [page, setPage] = useState(0)
   const [heights, setHeights] = useState<Record<string, number>>({})
 
@@ -59,14 +62,16 @@ export function SkillsPages() {
     })
   }, [columns, heights, area, list, columnWidth])
 
-  const ready = items.length > 0 && items.every((skill) => heights[skill.id] !== undefined)
+  // 항목 높이가 다 모여야 자리가 잡힌다. 그전에는 겹쳐 보이므로 상세 전체를 마저 잡아둔다.
+  const measured = items.length > 0 && items.every((skill) => heights[skill.id] !== undefined)
+  useStationGate('skills:layout', !measured)
 
   return (
     <group
       position={[topLeft.x + area.width / 2, SKILLS_CONTENT_Y, topLeft.z + area.height / 2]}
       rotation={[-Math.PI / 2, 0, 0]}
     >
-      <group visible={ready}>
+      <group>
         {placed.map(({ skill, x, y }) => (
           <SkillItem
             key={skill.id}

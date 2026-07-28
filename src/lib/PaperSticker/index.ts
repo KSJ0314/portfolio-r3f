@@ -1,5 +1,5 @@
 export { PaperSticker } from './PaperSticker'
-export { usePaperStickerTexture } from './PaperSticker.texture'
+export { preloadPaperSticker, usePaperStickerTexture } from './PaperSticker.texture'
 export { DEFAULT_PAPER_STICKER_PARAMS } from './PaperSticker.constants'
 export type { PaperStickerTexture } from './PaperSticker.texture'
 export type { PaperStickerParams } from './PaperSticker.types'

@@ -8,6 +8,7 @@ import { Character } from '../Character'
 import { Stations } from '../Stations'
 import { SceneErrorBoundary } from '../SceneErrorBoundary'
 import { MapDecorations } from '../MapDecorations'
+import { AssetPreload } from '../AssetPreload'
 import { ActiveStationScene } from '../../stations'
 
 export function Experience() {
@@ -53,6 +54,8 @@ export function Experience() {
           <ActiveStationScene />
         </Suspense>
         <MapDecorations />
+        {/* 스테이션을 열 때 굽기 시작하지 않도록 에셋을 미리 굽는다(그리는 것은 없다). */}
+        <AssetPreload />
       </SceneErrorBoundary>
     </Canvas>
   )
