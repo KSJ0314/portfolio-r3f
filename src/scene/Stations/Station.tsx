@@ -1,7 +1,8 @@
-import type { CSSProperties } from 'react'
+import { useEffect, type CSSProperties } from 'react'
 import { Html } from '@react-three/drei'
 import { getSection, type Station as StationData } from '../../content/stations'
 import { getStationEntry } from '../../stations'
+import { useSceneReadyStore } from '../../state/useSceneReadyStore'
 import { lightTheme } from '../../theme/themes'
 
 /** 임시 라벨 스타일. 라이트/다크 양쪽에서 읽히도록 어두운 알약 배경 + 흰 글자(플레이스홀더). */
@@ -29,6 +30,13 @@ export function Station({ data }: { data: StationData }) {
   const [x, z] = data.position
   const color = getSection(data.sectionId).color
   const Inactive = getStationEntry(data.id)?.Inactive
+
+  // 경계가 스테이션마다 있으므로 여기까지 왔으면 이 스테이션의 텍스처는 다 준비된 것이다.
+  // 첫 화면 가림막이 어느 스테이션을 기다릴지 정하므로, 공통층은 자기 id만 알린다.
+  const markReady = useSceneReadyStore((s) => s.markReady)
+  useEffect(() => {
+    markReady(`station:${data.id}`)
+  }, [markReady, data.id])
 
   return (
     <group position={[x, 0, z]}>

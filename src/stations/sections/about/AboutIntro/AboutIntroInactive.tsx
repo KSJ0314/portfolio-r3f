@@ -136,6 +136,9 @@ export function AboutIntroInactive({ station }: StationInactiveProps) {
           </Text>
         )}
 
+        {/* 사진은 자기 경계를 갖는다. 글씨는 Firestore 데이터를 기다리고 사진은 텍스처를 기다려
+            준비되는 시점이 다른데, 한 경계에 묶으면 사진이 뜰 때까지 페이지 전체가 버려졌다
+            다시 그려진다(LEARNING 2026-07-23). 이 경계를 없애지 말 것. */}
         <Suspense fallback={null}>
           <ProfilePhoto bottom={photoY} height={photoHeight} />
         </Suspense>
