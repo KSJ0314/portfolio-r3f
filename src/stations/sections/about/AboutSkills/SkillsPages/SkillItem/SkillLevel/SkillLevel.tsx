@@ -35,7 +35,9 @@ export function SkillLevel({ count, x, y, level }: SkillLevelProps) {
           raycast={() => null}
         >
           <planeGeometry args={[plane.width * level.size, plane.height * level.size]} />
-          <meshBasicMaterial map={texture} transparent toneMapped={false} />
+          {/* 판은 여백을 포함하는데 간격은 그림 폭 기준이라 이웃끼리 겹친다.
+              깊이를 쓰면 투명한 여백이 옆 별을 잘라내므로 끈다. */}
+          <meshBasicMaterial map={texture} transparent depthWrite={false} toneMapped={false} />
         </mesh>
       ))}
     </group>

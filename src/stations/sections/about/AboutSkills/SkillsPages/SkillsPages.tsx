@@ -63,7 +63,8 @@ export function SkillsPages() {
   }, [columns, heights, area, list, columnWidth])
 
   // 항목 높이가 다 모여야 자리가 잡힌다. 그전에는 겹쳐 보이므로 상세 전체를 마저 잡아둔다.
-  const measured = items.length > 0 && items.every((skill) => heights[skill.id] !== undefined)
+  // 빈 페이지(전부 비활성 등)는 잴 것이 없으므로 측정이 끝난 것으로 본다 — 아니면 영영 감춰진다.
+  const measured = items.every((skill) => heights[skill.id] !== undefined)
   useStationGate('skills:layout', !measured)
 
   return (

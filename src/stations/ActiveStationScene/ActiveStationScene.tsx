@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useLayoutEffect } from 'react'
 import { useStationStore } from '../../state/useStationStore'
 import { useActiveStation } from '../useActiveStation'
 import { clearStationGate, useStationGateOpen } from '../useStationGate'
@@ -19,7 +19,9 @@ export function ActiveStationScene() {
   const stationId = active?.station.id
 
   // 스테이션이 바뀌거나 닫히면 남은 열쇠를 비운다 — 이전 스테이션의 것이 다음을 막지 않게.
-  useEffect(() => {
+  // 열쇠를 거는 쪽과 같은 시점(첫 페인트 전)에 둬야 "비우기 → 걸기" 순서가 보장된다.
+  // 비우기가 뒤로 밀리면 새 스테이션이 막 건 열쇠까지 지워져 준비 전 상세가 드러난다.
+  useLayoutEffect(() => {
     return () => clearStationGate()
   }, [stationId])
 

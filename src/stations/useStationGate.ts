@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useLayoutEffect } from 'react'
 import { create } from 'zustand'
 
 interface StationGateState {
@@ -43,9 +43,11 @@ export function clearStationGate() {
  * 텍스처를 굽고 글자 크기를 재는 일은 계속된다 — 그래서 열쇠가 풀리면 완성된 화면이 한 번에 뜬다.
  *
  * 기다릴 것이 없는 스테이션은 이 훅을 쓰지 않으면 되고, 그러면 곧바로 보인다.
+ *
+ * 열쇠는 **첫 페인트 전에** 걸어야 한다. 그리고 나서 걸면 그 한 프레임 동안 준비되지 않은 상세가 보인다.
  */
 export function useStationGate(key: string, waiting: boolean) {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const { hold, release } = useStationGateStore.getState()
     if (!waiting) {
       release(key)

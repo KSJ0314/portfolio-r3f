@@ -19,11 +19,13 @@ function readReloadCount(): number {
   }
 }
 
-function writeReloadCount(count: number) {
+/** 저장에 성공했는지 돌려준다. 실패하면 횟수를 셀 수 없으므로 새로고침해서는 안 된다. */
+function writeReloadCount(count: number): boolean {
   try {
     sessionStorage.setItem(RELOAD_COUNT_KEY, String(count))
+    return true
   } catch {
-    // 저장이 막혀 있으면 재시도 횟수를 세지 못한다. 아래에서 새로고침을 건너뛴다.
+    return false
   }
 }
 
@@ -47,32 +49,28 @@ function clearReloadCount() {
 const allReady = (ready: Record<string, boolean>) => REQUIRED_KEYS.every((key) => ready[key])
 
 export function SceneGate() {
-  // 한 번 걷히면 되돌리지 않으므로 준비 상태를 구독해 리렌더하지 않고, 다 찼을 때만 스토어에서 받는다.
-  const [uncovered, setUncovered] = useState(() => allReady(useSceneReadyStore.getState().ready))
+  // 준비 상태를 그대로 구독한다. 이름은 올라가기만 하고 내려가지 않으므로 한 번 참이 되면 그대로다 —
+  // 따로 잠글 필요가 없고, 구독을 거는 사이에 마지막 신호를 놓치는 일도 없다.
+  const ready = useSceneReadyStore((s) => allReady(s.ready))
+  const [forced, setForced] = useState(false)
   const [visible, setVisible] = useState(true)
+  const uncovered = ready || forced
 
   useEffect(() => {
-    if (uncovered) {
-      clearReloadCount()
-      return
-    }
-    return useSceneReadyStore.subscribe((state) => {
-      if (!allReady(state.ready)) return
-      clearReloadCount()
-      setUncovered(true)
-    })
-  }, [uncovered])
+    if (ready) clearReloadCount()
+  }, [ready])
 
   useEffect(() => {
     if (uncovered) return
     const timer = setTimeout(() => {
       const count = readReloadCount()
-      if (count < MAX_RELOADS) {
-        writeReloadCount(count + 1)
+      // 저장이 막힌 환경(시크릿 모드 등)에서는 횟수가 늘 0이라 상한에 닿지 못한다.
+      // 그대로 새로고침하면 무한히 되풀이하므로, 셀 수 없으면 재시도하지 않는다.
+      if (count < MAX_RELOADS && writeReloadCount(count + 1)) {
         window.location.reload()
       } else {
         // 새로고침을 되풀이해도 안 되는 상황이다. 흰 화면에 갇히느니 그냥 걷는다.
-        setUncovered(true)
+        setForced(true)
       }
     }, READY_TIMEOUT)
     return () => clearTimeout(timer)
