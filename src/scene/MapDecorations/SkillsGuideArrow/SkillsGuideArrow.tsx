@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
 import { MathUtils } from 'three'
-import { Crayon } from '../../../../../lib/Crayon'
-import { useSkillsPageStore } from '../../../../../state/useSkillsPageStore'
-import { useStationStore } from '../../../../../state/useStationStore'
+import { Crayon } from '../../../lib/Crayon'
+import { useMapDecorationsStore } from '../../../state/useMapDecorationsStore'
+import { useAfterIntro } from '../MapDecorations.hooks'
 import { GUIDE_ARROW, GUIDE_ARROW_STROKES, GUIDE_ARROW_Y } from './SkillsGuideArrow.constants'
 
 /**
@@ -15,18 +14,9 @@ import { GUIDE_ARROW, GUIDE_ARROW_STROKES, GUIDE_ARROW_Y } from './SkillsGuideAr
  * 그림을 대각선으로 확대한 것과 같은 결과가 된다.
  */
 export function SkillsGuideArrow() {
-  const { scale, x, z, rotation, seconds } = useSkillsPageStore((s) => s.guide)
-  const redraw = useSkillsPageStore((s) => s.guideRedraw)
-  const [revealed, setRevealed] = useState(() => useStationStore.getState().phase === 'idle')
-
-  // Intro 종료 애니메이션이 끝나면 라이프사이클이 idle이 된다. 한 번 나오면 되돌리지 않으므로
-  // phase를 구독해 리렌더하지 않고, idle이 되는 순간만 스토어에서 직접 받는다.
-  useEffect(() => {
-    if (revealed) return
-    return useStationStore.subscribe((state) => {
-      if (state.phase === 'idle') setRevealed(true)
-    })
-  }, [revealed])
+  const { scale, x, z, rotation, seconds } = useMapDecorationsStore((s) => s.guide)
+  const redraw = useMapDecorationsStore((s) => s.guideRedraw)
+  const revealed = useAfterIntro()
 
   if (!revealed) return null
 

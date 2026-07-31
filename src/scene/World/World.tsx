@@ -22,6 +22,7 @@ const _hit = new Vector3()
 export function World() {
   const { camera } = useThree()
   const setTarget = useCameraStore((s) => s.setTarget)
+  const markMoved = useCameraStore((s) => s.markMoved)
   const holding = useRef(false)
   const pointer = useRef(new Vector2())
   const pressTime = useRef(0)
@@ -66,8 +67,10 @@ export function World() {
       pressTime.current = performance.now()
       // 클릭 즉시 정확한 클릭 지점을 목표로 고정 → 짧은 클릭 정확도 보장
       setTarget(e.point)
+      // 잠금을 지나 실제로 받아들인 입력만 센다 — 조작을 익혔다는 신호로 안내가 걷힌다.
+      markMoved()
     },
-    [setTarget],
+    [setTarget, markMoved],
   )
 
   const handlePointerMove = useCallback((e: ThreeEvent<PointerEvent>) => {

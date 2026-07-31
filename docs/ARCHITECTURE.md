@@ -26,7 +26,7 @@ _작성 예정_
     - `CameraRig` — 캐릭터와의 고정 오프셋 유지하며 매 프레임 따라가 화면 중앙에 둠. 오프셋은 한 번만 잡아 `useCameraStore.followOffset`에 기록한다(스테이션이 복귀 자세를 계산할 때 쓴다). 스테이션이 활성화되면 팔로우를 멈춰 카메라 제어권을 넘기고, 닫히면 복귀시킨다.
     - **스테이션 콘텐츠** — 텍스처를 `useLoader`로 불러오다 suspend하므로 `Suspense`로 감싼다. 비활성 모습과 활성 상세는 **경계를 따로** 둔다 — 묶으면 비활성 텍스처가 준비될 때까지 활성 구현이 커밋되지 못해 첫 화면의 카메라 자세가 늦게 잡힌다(LEARNING 2026-07-28).
       - `Stations` — 스테이션 배치 + 매 프레임 근접 판정(`nearId`) + 좌클릭 활성화(캔버스 `mousedown`을 직접 듣고 레이캐스트). 거리 재는 법은 스테이션이 등록한 `distanceTo`를 쓰고, 없으면 배치 좌표까지의 거리로 잰다.
-        - `Station` — 레지스트리에 비활성 구현(`Inactive`)이 있으면 그것을 그리고, 없으면 임시 박스 + 이름 라벨을 그린다. 클릭 판정 대상은 `userData.stationId`를 실은 오브젝트다(판정은 `Stations`가 함). **경계는 스테이션마다 하나씩** 둬, 한 스테이션의 텍스처가 다른 스테이션을 붙잡지 않게 한다.
+        - `Station` — 레지스트리에 비활성 구현(`Inactive`)이 있으면 그것을 그리고, **없으면 아무것도 그리지 않는다**(종이 위에 놓을 그림이 정해지기 전이다). 클릭 판정 대상은 `userData.stationId`를 실은 오브젝트이고 그것을 두는 것도 구현이다(판정은 `Stations`가 함). **경계는 스테이션마다 하나씩** 둬, 한 스테이션의 텍스처가 다른 스테이션을 붙잡지 않게 한다.
           - `AboutSkillsInactive` — 클릭 판정 판 + 공구함 스티커(`SkillsBox`). 스티커는 활성화되면 스스로 줄어들어 영역 좌상단으로 물러나 로고가 된다. 전환을 활성 구현에 두지 않는 이유는 같은 오브젝트가 이어서 변형돼야 하기 때문이다. (DECISIONS 020)
       - `ActiveStationScene` — 활성 스테이션의 3D 상세 마운트 자리(레지스트리에 등록된 `Scene`). 상세는 **다 준비된 뒤 한 번에** 보여준다 — 스테이션이 `useStationGate`로 건 열쇠가 남아 있으면 마운트한 채 감춰, 그동안 텍스처를 굽고 글자 크기를 재는 일이 끝난다.
         - `AboutSkillsScene` — 카메라 각도 전환. 공구함 이동과 **겹치지 않고 차례로** 돌며, 라이프사이클 완료 신호를 낸다. 완전히 활성인 동안에는 페이지 내용을 함께 그린다.
@@ -34,10 +34,12 @@ _작성 예정_
           - `SkillsPages` — Firestore `skills`를 분류별 페이지로 나눠 그린다(`SkillItem` + 레벨 별 `SkillLevel`). 페이지를 넘기면 이 영역만 갈리고, 우측 하단 `SkillsPager`가 한 번에 하나(다음 또는 이전)만 낸다. (DECISIONS 021)
           - `SkillsExit` — 우상단 나가기 자리. 아이콘은 공용 `ExitSticker`다.
     - `AssetPreload` — 앱이 뜰 때 종이 스티커를 미리 구워 캐시에 넣는다(그리는 것 없음). 필요해진 순간에 굽기 시작하면 그때 서스펜드가 걸려 이미 떠 있던 것들이 사라졌다 돌아온다. 목록은 `content/assets.ts`이고, 에셋을 추가하면 거기 한 줄 넣는다.
-    - `MapDecorations`(자체 `Suspense`) — 스테이션에 속하지 않는 맵 장식(길안내 화살표·표지판)의 마운트 자리. 영역·근접 판정·라이프사이클이 없어 마운트만 하고, 무엇을 언제 어떻게 그릴지는 요소가 각자 정한다. Suspense를 요소마다 두지 않는 이유는 하나만 빠뜨려도 그 suspend가 씬 전체로 번지기 때문이다. (DECISIONS 018)
-      - `SkillsGuideArrow` — 캐릭터 시작 자리에서 Skills 쪽을 가리키는 바닥 화살표. 라이프사이클이 처음 `idle`이 될 때(= Intro가 닫혀 카메라 전환이 끝난 뒤) 나타나며 크레파스로 긋듯 그어진다.
+    - `MapDecorations`(자체 `Suspense`) — 스테이션에 속하지 않는 맵 장식(길안내 화살표·조작 안내·표지판)의 마운트 자리. 영역·근접 판정·라이프사이클이 없어 마운트만 하고, 무엇을 언제 어떻게 그릴지는 요소가 각자 정한다. 특정 스테이션으로 유도하는 요소도 그 스테이션이 아니라 여기 속한다. Suspense를 요소마다 두지 않는 이유는 하나만 빠뜨려도 그 suspend가 씬 전체로 번지기 때문이다. (DECISIONS 018)
+      - `useAfterIntro`(`MapDecorations.hooks`) — 장식이 공유하는 등장 조건. 라이프사이클이 처음 `idle`이 되는 시점(= Intro가 닫혀 카메라 전환이 끝난 뒤)이고, 지연 초를 주면 그만큼 더 기다린다. 첫 화면은 Intro가 활성이라 그 위에 장식을 얹으면 페이지를 가린다.
+      - `SkillsGuideArrow` — 캐릭터 시작 자리에서 Skills 쪽을 가리키는 바닥 화살표. 등장하며 크레파스로 긋듯 그어진다.
+      - `RightClickHint` — 화살표 곁의 우클릭 안내 아이콘(오른쪽 버튼을 칠한 마우스 그림, 종이 스티커). 화살표를 다 그은 뒤에 나타나고, `useCameraStore.hasMoved`가 켜지면(= 우클릭으로 이동하면) 사라진다.
 
-Canvas 밖(`App`): `SceneGate` — 첫 화면 가림막. 바닥·캐릭터·Intro(글씨·사진)가 모두 준비될 때까지 덮었다가 페이드로 걷는다. 경계가 나뉘어 있어 준비되는 대로 하나씩 나타나면 순서가 뒤집혀 보이므로, 함께 보여야 하는 것만 골라 기다린다. 한 번 걷으면 다시 덮지 않고, 제 시간에 준비되지 않으면 새로고침으로 재시도하다 횟수를 넘기면 그냥 걷는다. `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) + ESC 종료 + 미구현 스테이션 fallback. `Minimap`(프로덕션에도 노출) · `CrayonStudio`(오른쪽 아래 크레파스 버튼 → 모달 그리기 도구, 프로덕션에도 노출. 단 코드 좌표 복사만 dev로 가려진다) · `DevHUD`(dev 전용 HUD 묶음 — `DebugHUD` 상태 표시 + `GridPaperHUD`·`IntroPageHUD` leva 튜닝 패널. 패널 자체는 `GridPaperHUD`가 그리고 나머지는 폴더로 얹힌다). `DevHUD`만 App이 `import.meta.env.DEV`로 감싸 프로덕션 번들에서 빠진다. 크레파스 스튜디오는 `/crayon`에서 단독 페이지로도 뜬다.
+Canvas 밖(`App`): `SceneGate` — 첫 화면 가림막. 바닥·캐릭터·Intro(글씨·사진)가 모두 준비될 때까지 덮었다가 페이드로 걷는다. 경계가 나뉘어 있어 준비되는 대로 하나씩 나타나면 순서가 뒤집혀 보이므로, 함께 보여야 하는 것만 골라 기다린다. 한 번 걷으면 다시 덮지 않고, 제 시간에 준비되지 않으면 새로고침으로 재시도하다 횟수를 넘기면 그냥 걷는다. `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) + ESC 종료 + 미구현 스테이션 fallback. `Minimap`(프로덕션에도 노출) · `CrayonStudio`(오른쪽 아래 크레파스 버튼 → 모달 그리기 도구, 프로덕션에도 노출. 단 코드 좌표 복사만 dev로 가려진다) · `DevHUD`(dev 전용 HUD 묶음 — `DebugHUD` 상태 표시 + `GridPaperHUD`·`IntroPageHUD`·`SkillsPageHUD`·`MapDecorationsHUD` leva 튜닝 패널. 패널 자체는 `GridPaperHUD`가 그리고 나머지는 폴더로 얹힌다). `DevHUD`만 App이 `import.meta.env.DEV`로 감싸 프로덕션 번들에서 빠진다. 크레파스 스튜디오는 `/crayon`에서 단독 페이지로도 뜬다.
 
 테마 토글은 밤 테마를 제대로 구현할 때(Phase 10) 다시 단다. 컴포넌트(`ui/ThemeToggle`)와 스토어는 그대로 있다.
 
@@ -46,12 +48,13 @@ Canvas 밖(`App`): `SceneGate` — 첫 화면 가림막. 바닥·캐릭터·Intr
 ## 상태 관리 (zustand)
 
 - `useThemeStore` — 테마 모드(light/dark) + toggle, 2D·3D 동시 전환.
-- `useCameraStore` — 이동 상태: `position`(현재 위치, 좌표만 변경) · `target`(목표점, 경계 clamp) · `setTarget(point)` · `viewAngle`(CameraRig가 유도, 미니맵이 사용) · `followOffset`(카메라 − 캐릭터, CameraRig가 기록) · `motion.speed`(디버그용) · 상수 `CAMERA_BOUNDS` · `CHARACTER_START`.
+- `useCameraStore` — 이동 상태: `position`(현재 위치, 좌표만 변경) · `target`(목표점, 경계 clamp) · `setTarget(point)` · `viewAngle`(CameraRig가 유도, 미니맵이 사용) · `followOffset`(카메라 − 캐릭터, CameraRig가 기록) · `motion.speed`(디버그용) · `hasMoved`/`markMoved()`(우클릭 이동 입력을 받은 적 있는지 — 조작 안내를 걷는 신호. 잠금을 통과한 입력만 세고 처음 한 번만 `set`한다) · 상수 `CAMERA_BOUNDS` · `CHARACTER_START`.
 - `useStationStore` — 스테이션 상호작용: `nearId`(근접) · `activeId` · `phase`(`idle`/`entering`/`active`/`exiting`) · `setNear` · `activate` · `enterComplete` · `requestClose` · `exitComplete`. 초기값은 `about-intro`가 `active`인 상태다(사이트 첫 화면). `setNear`는 활성 스테이션에서 멀어지면 그대로 종료를 건다. 이동 잠금 여부는 `isMovementLocked(phase)`로 판단(진입 애니메이션 중에만 잠김).
 - 스테이션 게이트(`stations/useStationGate`) — 활성 상세가 아직 준비되지 않았음을 알리는 열쇠 모음. 공통층(`ActiveStationScene`)이 이를 보고 상세를 감췄다 보여준다.
 - `useSceneReadyStore` — 첫 화면에 필요한 것들의 준비 여부(`markReady(key)`). 바닥·캐릭터·스테이션·Intro 사진이 마운트되며 자기 이름을 올리고, `SceneGate`가 이를 보고 가림막을 걷는다.
 - `useIntroPageStore` — Intro 페이지의 개발용 튜닝 상태(영역·배치·테두리 표시). 프로덕션에는 HUD가 없어 항상 기본값이다.
-- `useSkillsPageStore` — Skills 페이지 전체의 개발용 튜닝 상태(영역·좌상단·테두리 표시 · 공구함 배치와 테두리·그림자 · 로고 자세 · 제목 · 목록 · 레벨 별 · 페이지 넘김 · 나가기 · 안내 화살표). 마찬가지로 프로덕션에서는 항상 기본값이다.
+- `useSkillsPageStore` — Skills 페이지 전체의 개발용 튜닝 상태(영역·좌상단·테두리 표시 · 공구함 배치와 테두리·그림자 · 로고 자세 · 제목 · 목록 · 레벨 별 · 페이지 넘김 · 나가기). 마찬가지로 프로덕션에서는 항상 기본값이다.
+- `useMapDecorationsStore` — 맵 장식의 개발용 튜닝 상태(안내 화살표 배치·연출 · 우클릭 안내 배치). 장식은 스테이션 소속이 아니므로 페이지 스토어와 나눠 둔다.
 
 ## 데이터 흐름 (Firestore → UI)
 
@@ -83,7 +86,7 @@ idle ──근접 + 좌클릭──> entering ──enterComplete()──> activ
 
 `스테이션 id → { Inactive?, distanceTo?, Scene?, Overlay? }`.
 
-- `Inactive` — 평소(비활성) 모습. 스테이션 위치에 **상시 마운트**된다. 등록하지 않으면 공통 임시 박스가 그려진다.
+- `Inactive` — 평소(비활성) 모습. 스테이션 위치에 **상시 마운트**된다. 등록하지 않으면 아무것도 그려지지 않는다.
 - `distanceTo` — 근접 판정에 쓸 거리 계산. 스테이션마다 영역 모양이 다르므로 계산을 맡긴다(영역 안이면 0). 등록하지 않으면 공통층이 배치 좌표까지의 거리로 잰다.
 - 상세가 서스펜드하지 않고 늦게 오는 것(Firestore 데이터 등)을 기다려야 하면 `useStationGate(key, waiting)`으로 알린다. 열쇠가 걸린 동안 공통층이 상세를 감춰 두므로, 준비되면 한 번에 뜬다.
 - `Scene`·`Overlay` — 활성화되는 동안만 마운트된다. `Scene`은 Canvas 안(3D), `Overlay`는 Canvas 밖(DOM)이다. 상세가 2D면 `Overlay`로 DOM 패널을 그리거나 `Scene` 안에서 drei `<Html transform>`을 쓸 수 있고, 3D면 `Scene`에서 직접 그린다. 공통 셸이나 기본 구현체는 두지 않는다.

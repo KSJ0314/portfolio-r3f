@@ -1,6 +1,7 @@
 import { DebugHUD } from './DebugHUD'
 import { GridPaperHUD } from './GridPaperHUD'
 import { IntroPageHUD } from './IntroPageHUD'
+import { MapDecorationsHUD } from './MapDecorationsHUD'
 import { SkillsPageHUD } from './SkillsPageHUD'
 
 /**
@@ -17,6 +18,7 @@ export function DevHUD() {
       <GridPaperHUD />
       <IntroPageHUD />
       <SkillsPageHUD />
+      <MapDecorationsHUD />
     </>
   )
 }

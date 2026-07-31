@@ -8,7 +8,6 @@ import {
   SKILLS_BOX_LOGO,
   SKILLS_BOX_PLACEMENT,
 } from '../../../stations/sections/about/AboutSkills/SkillsBox/SkillsBox.constants'
-import { GUIDE_ARROW_PLACEMENT } from '../../../stations/sections/about/AboutSkills/SkillsGuideArrow/SkillsGuideArrow.constants'
 import { SKILLS_EXIT } from '../../../stations/sections/about/AboutSkills/SkillsExit/SkillsExit.constants'
 import { SKILLS_PAGER } from '../../../stations/sections/about/AboutSkills/SkillsPager/SkillsPager.constants'
 import { SKILLS_LEVEL } from '../../../stations/sections/about/AboutSkills/SkillsPages/SkillItem/SkillLevel/SkillLevel.constants'
@@ -25,7 +24,6 @@ const LI = SKILLS_LIST_LAYOUT
 const LV = SKILLS_LEVEL
 const P = SKILLS_PAGER
 const E = SKILLS_EXIT
-const G = GUIDE_ARROW_PLACEMENT
 
 /** 툴팁 문구 — 설명 뒤에 기본값을 붙인다. */
 function hint(description: string, value: number | string) {
@@ -33,7 +31,7 @@ function hint(description: string, value: number | string) {
 }
 
 /**
- * Skills 영역과 안내 화살표를 마우스로 조절하는 개발용 HUD(dev에서만 렌더된다).
+ * Skills 영역과 그 위 요소들을 마우스로 조절하는 개발용 HUD(dev에서만 렌더된다).
  *
  * 패널 자체(`<Leva>`)는 GridPaperHUD가 그리고, 여기서는 값만 등록해 같은 패널에 얹는다.
  * 값이 정해지면 "값 복사"로 얻은 JSON을
@@ -50,8 +48,6 @@ export function SkillsPageHUD() {
   const setLevel = useSkillsPageStore((s) => s.setLevel)
   const setPager = useSkillsPageStore((s) => s.setPager)
   const setExit = useSkillsPageStore((s) => s.setExit)
-  const setGuide = useSkillsPageStore((s) => s.setGuide)
-  const redrawGuide = useSkillsPageStore((s) => s.redrawGuide)
 
   const [values, set] = useControls(
     'Skills 영역',
@@ -370,39 +366,6 @@ export function SkillsPageHUD() {
           hint: hint('위 끝에서 내리는 거리.', E.top),
         },
       }, { collapsed: true }),
-      '안내 화살표': folder({
-        arrowScale: {
-          value: G.scale,
-          min: 0.2,
-          max: 20,
-          step: 0.1,
-          label: '크기',
-          hint: hint('기준 크기에 곱하는 배율. 획 굵기도 같이 커져 그림째 확대된다.', G.scale),
-        },
-        arrowPosition: {
-          value: { x: G.x, z: G.z },
-          step: 0.5,
-          joystick: false,
-          label: '좌표',
-          hint: `그림 좌상단 꼭지점(월드 x, z). 캐릭터 시작 위치가 기본값이다.\n기본값: (${G.x}, ${G.z})`,
-        },
-        arrowRotation: {
-          value: G.rotation,
-          min: -180,
-          max: 180,
-          step: 1,
-          label: '회전',
-          hint: hint('y축 회전(도). 좌상단 꼭지점을 축으로 돈다.', G.rotation),
-        },
-        arrowSeconds: {
-          value: G.seconds,
-          min: 0.2,
-          max: 6,
-          step: 0.1,
-          label: '그리는 시간',
-          hint: hint('처음부터 끝까지 그어지는 데 걸리는 시간(초).', G.seconds),
-        },
-      }, { collapsed: true }),
     }),
     { collapsed: true },
   )
@@ -411,12 +374,11 @@ export function SkillsPageHUD() {
   useControls(
     'Skills 영역',
     {
-      '화살표 다시 그리기': button(() => redrawGuide()),
       '값 복사(JSON)': button(() => {
         const state = useSkillsPageStore.getState()
-        const { area, topLeft, box, logo, title, list, level, pager, exit, guide } = state
+        const { area, topLeft, box, logo, title, list, level, pager, exit } = state
         const json = JSON.stringify(
-          { area, topLeft, box, logo, title, list, level, pager, exit, guide },
+          { area, topLeft, box, logo, title, list, level, pager, exit },
           null,
           2,
         )
@@ -463,14 +425,10 @@ export function SkillsPageHUD() {
           exitSize: E.size,
           exitRight: E.right,
           exitTop: E.top,
-          arrowScale: G.scale,
-          arrowPosition: { x: G.x, z: G.z },
-          arrowRotation: G.rotation,
-          arrowSeconds: G.seconds,
         }),
       ),
     },
-    [set, redrawGuide],
+    [set],
   )
 
   useEffect(() => {
@@ -543,17 +501,6 @@ export function SkillsPageHUD() {
     const { exitSize, exitRight, exitTop } = values
     setExit({ size: exitSize, right: exitRight, top: exitTop })
   }, [values, setExit])
-
-  useEffect(() => {
-    const { arrowScale, arrowPosition, arrowRotation, arrowSeconds } = values
-    setGuide({
-      scale: arrowScale,
-      x: arrowPosition.x,
-      z: arrowPosition.z,
-      rotation: arrowRotation,
-      seconds: arrowSeconds,
-    })
-  }, [values, setGuide])
 
   return null
 }

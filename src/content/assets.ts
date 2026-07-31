@@ -1,4 +1,8 @@
 import { DEFAULT_PAPER_STICKER_PARAMS, type PaperStickerParams } from '../lib/PaperSticker'
+import {
+  RIGHT_CLICK_HINT_PARAMS,
+  RIGHT_CLICK_HINT_URL,
+} from '../scene/MapDecorations/RightClickHint/RightClickHint.constants'
 import { EXIT_STICKER_PARAMS, EXIT_STICKER_URL } from '../stations/ExitSticker/ExitSticker.constants'
 import {
   SKILLS_BOX_PLACEMENT,
@@ -50,5 +54,9 @@ export const STICKER_ASSETS: StickerAsset[] = [
   {
     url: EXIT_STICKER_URL,
     params: { ...DEFAULT_PAPER_STICKER_PARAMS, ...EXIT_STICKER_PARAMS },
+  },
+  {
+    url: RIGHT_CLICK_HINT_URL,
+    params: { ...DEFAULT_PAPER_STICKER_PARAMS, ...RIGHT_CLICK_HINT_PARAMS },
   },
 ]

@@ -7,7 +7,6 @@ import {
   SKILLS_BOX_LOGO,
   SKILLS_BOX_PLACEMENT,
 } from '../stations/sections/about/AboutSkills/SkillsBox/SkillsBox.constants'
-import { GUIDE_ARROW_PLACEMENT } from '../stations/sections/about/AboutSkills/SkillsGuideArrow/SkillsGuideArrow.constants'
 import { SKILLS_EXIT } from '../stations/sections/about/AboutSkills/SkillsExit/SkillsExit.constants'
 import { SKILLS_PAGER } from '../stations/sections/about/AboutSkills/SkillsPager/SkillsPager.constants'
 import { SKILLS_LEVEL } from '../stations/sections/about/AboutSkills/SkillsPages/SkillItem/SkillLevel/SkillLevel.constants'
@@ -19,19 +18,6 @@ import type { StationArea } from '../stations/types'
 export interface AreaCorner {
   x: number
   z: number
-}
-
-/** Skills로 가는 바닥 화살표의 배치·연출. */
-export interface GuideArrowPlacement {
-  /** 기준 크기에 곱하는 배율. 획 굵기도 같이 곱해져 그림째 확대된다. */
-  scale: number
-  /** 그림 좌상단 꼭지점(월드 x, z). */
-  x: number
-  z: number
-  /** y축 회전(도). 좌상단 꼭지점을 축으로 돈다. */
-  rotation: number
-  /** 처음부터 끝까지 그어지는 데 걸리는 시간(초). */
-  seconds: number
 }
 
 /** 종이 스티커로 붙인 공구함 그림의 배치·모양. */
@@ -153,10 +139,6 @@ interface SkillsPageState {
   pager: SkillsPagerPlacement
   /** 나가기 X의 배치. */
   exit: SkillsExitPlacement
-  /** 바닥 화살표의 배치·연출. */
-  guide: GuideArrowPlacement
-  /** 값이 바뀌면 화살표를 새로 마운트해 그리는 연출을 다시 재생한다(HUD 버튼). */
-  guideRedraw: number
   setArea: (area: StationArea) => void
   setTopLeft: (topLeft: AreaCorner) => void
   setShowOutline: (show: boolean) => void
@@ -167,8 +149,6 @@ interface SkillsPageState {
   setLevel: (level: SkillsLevelPlacement) => void
   setPager: (pager: SkillsPagerPlacement) => void
   setExit: (exit: SkillsExitPlacement) => void
-  setGuide: (guide: GuideArrowPlacement) => void
-  redrawGuide: () => void
 }
 
 /**
@@ -187,8 +167,6 @@ export const useSkillsPageStore = create<SkillsPageState>((set) => ({
   level: { ...SKILLS_LEVEL },
   pager: { ...SKILLS_PAGER },
   exit: { ...SKILLS_EXIT },
-  guide: { ...GUIDE_ARROW_PLACEMENT },
-  guideRedraw: 0,
   setArea: (area) => set({ area }),
   setTopLeft: (topLeft) => set({ topLeft }),
   setShowOutline: (showOutline) => set({ showOutline }),
@@ -199,6 +177,4 @@ export const useSkillsPageStore = create<SkillsPageState>((set) => ({
   setLevel: (level) => set({ level }),
   setPager: (pager) => set({ pager }),
   setExit: (exit) => set({ exit }),
-  setGuide: (guide) => set({ guide }),
-  redrawGuide: () => set((s) => ({ guideRedraw: s.guideRedraw + 1 })),
 }))
