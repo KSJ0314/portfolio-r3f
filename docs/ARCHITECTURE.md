@@ -86,7 +86,7 @@ idle ──근접 + 좌클릭──> entering ──enterComplete()──> activ
 
 `스테이션 id → { Inactive?, distanceTo?, Scene?, Overlay? }`.
 
-- `Inactive` — 평소(비활성) 모습. 스테이션 위치에 **상시 마운트**된다. 등록하지 않으면 공통 임시 박스가 그려진다.
+- `Inactive` — 평소(비활성) 모습. 스테이션 위치에 **상시 마운트**된다. 등록하지 않으면 아무것도 그려지지 않는다.
 - `distanceTo` — 근접 판정에 쓸 거리 계산. 스테이션마다 영역 모양이 다르므로 계산을 맡긴다(영역 안이면 0). 등록하지 않으면 공통층이 배치 좌표까지의 거리로 잰다.
 - 상세가 서스펜드하지 않고 늦게 오는 것(Firestore 데이터 등)을 기다려야 하면 `useStationGate(key, waiting)`으로 알린다. 열쇠가 걸린 동안 공통층이 상세를 감춰 두므로, 준비되면 한 번에 뜬다.
 - `Scene`·`Overlay` — 활성화되는 동안만 마운트된다. `Scene`은 Canvas 안(3D), `Overlay`는 Canvas 밖(DOM)이다. 상세가 2D면 `Overlay`로 DOM 패널을 그리거나 `Scene` 안에서 drei `<Html transform>`을 쓸 수 있고, 3D면 `Scene`에서 직접 그린다. 공통 셸이나 기본 구현체는 두지 않는다.
