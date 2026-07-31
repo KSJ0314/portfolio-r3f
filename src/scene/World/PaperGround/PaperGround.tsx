@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { useTexture } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { RepeatWrapping, SRGBColorSpace } from 'three'
+import { useSceneReadyStore } from '../../../state/useSceneReadyStore'
 import { useThemeStore } from '../../../state/useThemeStore'
 import { PAPER_DAY_TINT, PAPER_NIGHT_TINT, PAPER_TILE_SIZE } from './PaperGround.constants'
 import { useGridPaperPreview } from './PaperGround.hooks'
@@ -39,6 +40,12 @@ export function PaperGround({ size, onPointerDown, onPointerMove }: PaperGroundP
       texture.needsUpdate = true
     }
   }, [baked, maxAnisotropy, size])
+
+  // 텍스처가 준비돼야 마운트되므로(useTexture), 여기까지 왔으면 바닥은 그릴 준비가 끝났다.
+  const markReady = useSceneReadyStore((s) => s.markReady)
+  useEffect(() => {
+    markReady('ground')
+  }, [markReady])
 
   const tint = useMemo(() => (mode === 'dark' ? PAPER_NIGHT_TINT : PAPER_DAY_TINT), [mode])
 

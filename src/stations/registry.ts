@@ -3,6 +3,11 @@ import type { Vector3 } from 'three'
 import type { Station } from '../content/stations'
 import type { StationPhase } from '../state/useStationStore'
 import { AboutIntroInactive, AboutIntroScene, aboutIntroDistanceTo } from './sections/about/AboutIntro'
+import {
+  AboutSkillsInactive,
+  AboutSkillsScene,
+  aboutSkillsDistanceTo,
+} from './sections/about/AboutSkills'
 
 /**
  * 스테이션 레지스트리 — `스테이션 id → 전용 구현`.
@@ -21,6 +26,8 @@ import { AboutIntroInactive, AboutIntroScene, aboutIntroDistanceTo } from './sec
  *   그 전까지 캐릭터 이동은 잠겨 있다.
  * - `phase`가 `exiting`이면 종료 애니메이션을 재생하고, 끝나면 `exitComplete()`를 호출해야 한다.
  *   그 시점에 캐릭터가 우클릭했던 지점으로 출발하고 카메라 팔로우가 재개된다.
+ * - 상세는 **다 준비된 뒤 한 번에** 보인다. Firestore 데이터처럼 서스펜드하지 않고 늦게 오는 것이
+ *   있으면 `useStationGate(key, waiting)`으로 알린다 — 그동안 공통층이 상세를 그리지 않는다.
  * - 활성화되는 동안 **카메라 제어권은 이 컴포넌트에 있다**(공통층은 팔로우를 멈춘다).
  *   원하는 대로 움직이되(gsap 트윈·useFrame 등) 언마운트 시 자기 트윈을 정리할 것.
  *   카메라를 어디에 두고 끝내도 복귀는 공통층(CameraRig)이 보장한다.
@@ -62,6 +69,11 @@ export const STATION_REGISTRY: Record<string, StationEntry> = {
     Inactive: AboutIntroInactive,
     distanceTo: aboutIntroDistanceTo,
     Scene: AboutIntroScene,
+  },
+  'about-skills': {
+    Inactive: AboutSkillsInactive,
+    distanceTo: aboutSkillsDistanceTo,
+    Scene: AboutSkillsScene,
   },
 }
 

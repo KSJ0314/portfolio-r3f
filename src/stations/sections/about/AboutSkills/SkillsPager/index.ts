@@ -1,0 +1,1 @@
+export { SkillsPager } from './SkillsPager'

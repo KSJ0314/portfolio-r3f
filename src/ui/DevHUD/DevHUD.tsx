@@ -1,6 +1,8 @@
 import { DebugHUD } from './DebugHUD'
 import { GridPaperHUD } from './GridPaperHUD'
 import { IntroPageHUD } from './IntroPageHUD'
+import { MapDecorationsHUD } from './MapDecorationsHUD'
+import { SkillsPageHUD } from './SkillsPageHUD'
 
 /**
  * 개발용 HUD 묶음. 디버그 상태 표시(DebugHUD)와 leva 튜닝 패널(GridPaperHUD가 패널을 그리고
@@ -15,6 +17,8 @@ export function DevHUD() {
       <DebugHUD />
       <GridPaperHUD />
       <IntroPageHUD />
+      <SkillsPageHUD />
+      <MapDecorationsHUD />
     </>
   )
 }

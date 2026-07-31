@@ -1,4 +1,5 @@
 import type { StationArea } from '../../../types'
+import { EXIT_ARROW } from './ExitArrow/ExitArrow.constants'
 
 /**
  * Intro 페이지 안의 배치 값. 눈으로 맞춰야 하는 값이라 개발용 HUD로 조절한다.
@@ -72,13 +73,14 @@ export const DEFAULT_INTRO_PAGE_LAYOUT: IntroPageLayout = {
   quoteBarGap: 0.3,
   photoBottom: 0,
   photoHeight: 3.3,
-  exitArrowSize: 1.25,
-  exitArrowRight: 0.05,
-  exitArrowBottom: 0.7,
-  exitArrowColor: '#55bcf0',
-  exitArrowStroke: 0.135,
-  exitArrowRoughness: 0.55,
-  exitArrowOpacity: 0.7,
+  // 화살표 자체의 값은 화살표가 갖는다. 여기서는 페이지 배치 기본값으로 실어 HUD에 넘길 뿐이다.
+  exitArrowSize: EXIT_ARROW.size,
+  exitArrowRight: EXIT_ARROW.right,
+  exitArrowBottom: EXIT_ARROW.bottom,
+  exitArrowColor: EXIT_ARROW.color,
+  exitArrowStroke: EXIT_ARROW.strokeWidth,
+  exitArrowRoughness: EXIT_ARROW.roughness,
+  exitArrowOpacity: EXIT_ARROW.opacity,
 }
 
 /** 프로필 사진. 레포에 직접 넣어둔 파일이다. 비율은 불러온 이미지에서 읽으므로 여기 적지 않는다. */

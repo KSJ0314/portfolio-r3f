@@ -1,0 +1,1 @@
+export { ExitSticker } from './ExitSticker'

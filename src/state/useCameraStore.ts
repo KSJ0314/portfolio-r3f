@@ -35,8 +35,15 @@ interface CameraState {
    * `speed`: 이번 프레임 실제 이동 속도(유닛/초). Character가 매 프레임 기록.
    */
   motion: { speed: number }
+  /**
+   * 우클릭으로 이동 입력을 준 적이 있는지. 조작을 익혔다는 신호라 우클릭 안내를 걷는 데 쓴다.
+   * 세션 한정이라 저장하지 않는다.
+   */
+  hasMoved: boolean
   /** 목표점을 설정한다(경계 안으로 clamp). */
   setTarget: (point: Vector3) => void
+  /** 우클릭 이동을 받았음을 표시한다(처음 한 번만). */
+  markMoved: () => void
   /** 뷰 각도를 설정한다(값이 바뀔 때만). */
   setViewAngle: (angle: number) => void
   /** 팔로우 오프셋을 기록한다(좌표만 갱신). */
@@ -49,6 +56,7 @@ export const useCameraStore = create<CameraState>((set, get) => ({
   viewAngle: 0,
   followOffset: new Vector3(),
   motion: { speed: 0 },
+  hasMoved: false,
   setTarget: (point) => {
     get().target.set(
       clamp(point.x, -CAMERA_BOUNDS, CAMERA_BOUNDS),
@@ -61,5 +69,9 @@ export const useCameraStore = create<CameraState>((set, get) => ({
   },
   setFollowOffset: (offset) => {
     get().followOffset.copy(offset)
+  },
+  markMoved: () => {
+    // 우클릭마다 부르는 자리라, 이미 켜졌으면 set을 건너뛰어 리렌더를 만들지 않는다.
+    if (!get().hasMoved) set({ hasMoved: true })
   },
 }))

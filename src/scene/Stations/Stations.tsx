@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Raycaster, Vector2 } from 'three'
 import type { Group } from 'three'
@@ -74,8 +74,12 @@ export function Stations() {
 
   return (
     <group ref={groupRef}>
+      {/* 경계는 스테이션마다 따로 둔다. 하나로 묶으면 가장 느린 텍스처가 준비될 때까지
+          다른 스테이션까지 통째로 안 그려져, 다 같이 늦게 한꺼번에 나타난다. */}
       {STATIONS.map((station) => (
-        <Station key={station.id} data={station} />
+        <Suspense key={station.id} fallback={null}>
+          <Station data={station} />
+        </Suspense>
       ))}
     </group>
   )

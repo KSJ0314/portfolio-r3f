@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="444" height="636" viewBox="0 20 148 212">
+  <!-- 오른쪽 버튼을 칠하고 클릭 이펙트를 붙인 마우스 아이콘. 종이 스티커로 구워 쓰므로 배경은 비운다. -->
+  <path
+    d="M64 44 C97 44 118 68 118 104 L118 164 C118 200 97 224 64 224 C31 224 10 200 10 164 L10 104 C10 68 31 44 64 44 Z"
+    fill="#ffffff"
+  />
+  <!-- 우클릭 자리를 하늘색으로 채워 어느 쪽을 누르는지 알린다. -->
+  <path d="M64 44 C97 44 118 68 118 104 Q91 117 64 117 Z" fill="#55bcf0" />
+
+  <g fill="none" stroke="#6b6b6b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path
+      d="M64 44 C97 44 118 68 118 104 L118 164 C118 200 97 224 64 224 C31 224 10 200 10 164 L10 104 C10 68 31 44 64 44 Z"
+    />
+    <!-- 버튼과 몸체를 가르는 선. 아래로 처지게 둬 손이 얹히는 면처럼 보인다. -->
+    <path d="M10 104 Q64 130 118 104" />
+    <path d="M64 44 L64 117" />
+  </g>
+
+  <!-- 휠. 두 버튼 사이에 놓이고 아래 끝이 구분선에 걸친다. -->
+  <rect
+    x="56" y="85" width="16" height="48" rx="8"
+    fill="#ffffff" stroke="#6b6b6b" stroke-width="6"
+  />
+
+  <!-- 눌린 순간을 알리는 이펙트. 우클릭 버튼 위에서 12시·1~2시·3시로 뻗는다. -->
+  <g fill="none" stroke="#55bcf0" stroke-width="8" stroke-linecap="round">
+    <path d="M103 44 L103 30" />
+    <path d="M114 49 L124 39" />
+    <path d="M119 60 L135 60" />
+  </g>
+</svg>
