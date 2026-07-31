@@ -1,5 +1,4 @@
-import type { CrayonDrawing } from '../../../../../lib/Crayon'
-import { CHARACTER_START } from '../../../../../state/useCameraStore'
+import type { CrayonDrawing } from '../../../lib/Crayon'
 
 /** 바닥과 겹쳐 깜빡이지 않도록 살짝 띄운다. Intro 페이지 내용과 같은 층이다. */
 export const GUIDE_ARROW_Y = 0.02
@@ -25,9 +24,9 @@ export const GUIDE_ARROW = {
 export const GUIDE_ARROW_PLACEMENT = {
   /** 기준 크기에 곱하는 배율. 굵기도 같이 곱해진다. */
   scale: 4.5,
-  /** 그림 좌상단 꼭지점(월드 x, z) — 캐릭터 시작 위치에 맞춰 둔다. */
-  x: CHARACTER_START[0],
-  z: CHARACTER_START[2],
+  /** 그림 좌상단 꼭지점(월드 x, z). */
+  x: 0,
+  z: 5,
   /** y축 회전(도). 좌상단 꼭지점을 축으로 돈다. */
   rotation: -12,
   /** 처음부터 끝까지 그어지는 데 걸리는 시간(초). */
