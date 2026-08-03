@@ -40,8 +40,17 @@ interface CameraState {
    * 세션 한정이라 저장하지 않는다.
    */
   hasMoved: boolean
+  /**
+   * 스테이션 연출이 지정한 이동 중인지. 이동 잠금 중에도 이 목표점으로는 평소 속도로 걸어간다.
+   * 도착하면 Character가 끄고, 그것이 다음 연출로 넘어가는 신호가 된다.
+   */
+  walking: boolean
   /** 목표점을 설정한다(경계 안으로 clamp). */
   setTarget: (point: Vector3) => void
+  /** 지정한 지점으로 걸어가게 한다(스테이션 연출용). 진입 잠금 중에도 멈추지 않는다. */
+  walkTo: (point: Vector3) => void
+  /** 연출 이동을 끝낸다(도착·중단). */
+  endWalk: () => void
   /** 우클릭 이동을 받았음을 표시한다(처음 한 번만). */
   markMoved: () => void
   /** 뷰 각도를 설정한다(값이 바뀔 때만). */
@@ -57,12 +66,20 @@ export const useCameraStore = create<CameraState>((set, get) => ({
   followOffset: new Vector3(),
   motion: { speed: 0 },
   hasMoved: false,
+  walking: false,
   setTarget: (point) => {
     get().target.set(
       clamp(point.x, -CAMERA_BOUNDS, CAMERA_BOUNDS),
       0,
       clamp(point.z, -CAMERA_BOUNDS, CAMERA_BOUNDS),
     )
+  },
+  walkTo: (point) => {
+    get().setTarget(point)
+    if (!get().walking) set({ walking: true })
+  },
+  endWalk: () => {
+    if (get().walking) set({ walking: false })
   },
   setViewAngle: (angle) => {
     if (get().viewAngle !== angle) set({ viewAngle: angle })

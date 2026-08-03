@@ -10,6 +10,7 @@ import { useStationStore } from '../../state/useStationStore'
  * 캐릭터 이동은 Character가 처리한다.
  *
  * **카메라 제어권**: 스테이션이 활성화되면(`activeId`) 팔로우를 멈추고 카메라를 놓는다.
+ * 연출이 캐릭터를 자리로 데려가는 동안(`walking`)은 아직 놓지 않고 평소처럼 따라간다.
  * 그때부터 카메라를 어떻게 움직일지는 전적으로 해당 스테이션 구현의 몫이며(포커스 트윈 등) 공통층은 그 방식을 알지 못한다.
  * 대신 **복귀는 공통층이 보장한다.**
  * 스테이션이 카메라를 어디로 끌고 갔든 닫히는 순간 팔로우가 재개되어 원래 오프셋·zoom으로 돌아온다. (DECISIONS 007)
@@ -21,7 +22,10 @@ export function CameraRig() {
   const ready = useRef(false)
   const position = useCameraStore((s) => s.position)
   // 활성 스테이션이 있으면 카메라 제어권을 넘긴다(팔로우 중단).
-  const follow = useStationStore((s) => s.activeId === null)
+  // 다만 연출 이동 중에는 아직 넘기지 않는다 — 캐릭터가 자리로 걸어가는 동안은 평소처럼 따라간다.
+  const active = useStationStore((s) => s.activeId !== null)
+  const walking = useCameraStore((s) => s.walking)
+  const follow = !active || walking
 
   // 오프셋을 카메라 초기 위치에서 유도한다(카메라 설정이 단일 소스).
   // useLayoutEffect는 커밋 직후 동기 실행된다.
