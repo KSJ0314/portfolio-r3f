@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useTheme } from 'styled-components'
 import { STATIONS, getSection } from '../../content/stations'
 import { CAMERA_BOUNDS, useCameraStore } from '../../state/useCameraStore'
@@ -34,13 +34,31 @@ const VIEW_TOP = -VIEW_RADIUS / 2
  * 이름은 회전 밖에 둬 똑바로 선 채로 유지한다.
  * 스테이션을 고르면 그 스테이션이 등록한 자리로 캐릭터를 옮기고 닫는다(활성화는 하지 않는다).
  *
- * 여는 동안에는 캐릭터가 움직이지 않으므로(입력이 이 모달에 막힌다) 좌표는 열릴 때 한 번만 읽는다.
+ * 모달이 막는 것은 새 입력뿐이라 걷던 이동은 지도를 열어도 이어진다.
+ * 그래서 캐릭터 마커는 미니맵처럼 rAF로 좌표만 다시 쓴다(리렌더 없음).
  */
 export function WorldMap({ onClose }: WorldMapProps) {
   const theme = useTheme()
   const { position, viewAngle } = useCameraStore.getState()
   const cos = Math.cos(viewAngle)
   const sin = Math.sin(viewAngle)
+  const playerRef = useRef<SVGCircleElement>(null)
+
+  // 걷는 중에 열었으면 캐릭터가 계속 움직이므로 마커 좌표만 매 프레임 다시 쓴다.
+  useEffect(() => {
+    let raf = 0
+    const update = () => {
+      const marker = playerRef.current
+      if (marker) {
+        const { x, z } = useCameraStore.getState().position
+        marker.setAttribute('cx', String(x * cos - z * sin))
+        marker.setAttribute('cy', String(x * sin + z * cos))
+      }
+      raf = requestAnimationFrame(update)
+    }
+    raf = requestAnimationFrame(update)
+    return () => cancelAnimationFrame(raf)
+  }, [cos, sin])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -106,8 +124,9 @@ export function WorldMap({ onClose }: WorldMapProps) {
             )
           })}
 
-          {/* 캐릭터 현재 위치 */}
+          {/* 캐릭터 현재 위치 — 첫 프레임만 여기서 잡고, 이후 좌표는 rAF가 쓴다. */}
           <circle
+            ref={playerRef}
             cx={playerX}
             cy={playerY}
             r={1.8}
