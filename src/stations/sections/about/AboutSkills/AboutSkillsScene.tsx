@@ -6,7 +6,7 @@ import { useCameraStore } from '../../../../state/useCameraStore'
 import { useSkillsPageStore } from '../../../../state/useSkillsPageStore'
 import { useSkillsSequenceStore } from '../../../../state/useSkillsSequenceStore'
 import { useStationStore } from '../../../../state/useStationStore'
-import type { StationDetailProps } from '../../../registry'
+import { type StationDetailProps, walkToStand } from '../../../registry'
 import { SKILLS_LOGO_SECONDS, SKILLS_TURN_EASE, SKILLS_TURN_SECONDS } from './AboutSkills.constants'
 import { SkillsExit } from './SkillsExit'
 import { SkillsPages } from './SkillsPages'
@@ -26,7 +26,6 @@ const WORLD_UP = new Vector3(0, 1, 0)
 
 const _matrix = new Matrix4()
 const _center = new Vector3()
-const _stand = new Vector3()
 
 /** 다른 연출이 도는 동안 비워 두는 구간. 타임라인 길이만 늘린다. */
 function wait(timeline: gsap.core.Timeline, seconds: number) {
@@ -121,10 +120,7 @@ export function AboutSkillsScene({ phase }: StationDetailProps) {
         wait(timeline, SKILLS_LOGO_SECONDS)
       })
 
-      // 자리는 영역 중심 기준이라 HUD로 영역을 옮기면 따라온다.
-      const { area, topLeft, stand } = useSkillsPageStore.getState()
-      _stand.set(topLeft.x + area.width / 2 + stand.x, 0, topLeft.z + area.height / 2 + stand.z)
-      useCameraStore.getState().walkTo(_stand)
+      walkToStand('about-skills')
     } else {
       // 공구상자가 제자리로 돌아온 뒤에 카메라가 움직인다.
       setLogoTurn(false)

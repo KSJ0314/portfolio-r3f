@@ -1,20 +1,28 @@
 import styled from 'styled-components'
 
-export const MinimapPanel = styled.div`
+export const MinimapPanel = styled.button`
   position: fixed;
-  /* 표시 전용 미니맵 — 캔버스 위를 덮어도 씬 클릭/드래그를 막지 않도록 포인터 통과 */
-  pointer-events: none;
   top: 16px;
   right: 16px;
   z-index: 10;
   width: 164px;
   height: 164px;
+  padding: 0;
   border-radius: 50%;
   overflow: hidden;
+  /* 누르면 월드맵이 열린다. */
+  cursor: pointer;
   border: 2px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.surface};
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
-  transition: border-color 0.3s ease, background 0.3s ease;
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.2s ease,
+    transform 0.2s ease;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.accent};
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    transform: scale(1.03);
+  }
 `
 
 export const MinimapSvg = styled.svg`

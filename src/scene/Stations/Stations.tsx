@@ -28,12 +28,13 @@ export function Stations() {
     let nearest: string | null = null
     let best = NEAR_RADIUS
     for (const station of STATIONS) {
+      // 자리가 정해지지 않은 스테이션은 종이 위에 없으므로 근접도 없다.
+      const at = station.position
+      if (!at) continue
       // 거리 재는 법은 스테이션이 등록한 것을 쓴다(영역이 있으면 그 테두리 기준).
       // 등록하지 않았으면 배치 좌표까지의 거리로 잰다.
       const distanceTo = getStationEntry(station.id)?.distanceTo
-      const dist = distanceTo
-        ? distanceTo(pos, station)
-        : Math.hypot(pos.x - station.position[0], pos.z - station.position[1])
+      const dist = distanceTo ? distanceTo(pos, station) : Math.hypot(pos.x - at[0], pos.z - at[1])
       if (dist < best) {
         best = dist
         nearest = station.id

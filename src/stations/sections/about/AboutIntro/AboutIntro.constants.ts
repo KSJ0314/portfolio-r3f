@@ -59,6 +59,9 @@ export const INK = '#3a3a3a'
 /** Intro 페이지 영역. 개발용 HUD(IntroPageHUD)로 정면뷰에서 맞춘 값이다. */
 export const DEFAULT_INTRO_PAGE_AREA: StationArea = { width: 11, height: 6.5 }
 
+/** 캐릭터가 서는 자리(월드 x, z). 페이지 바깥 아래쪽이다. */
+export const INTRO_STAND: readonly [number, number] = [0, 5]
+
 /** 배치 기본값. 임시로 잡은 값이고 HUD로 맞춰 확정한다. */
 export const DEFAULT_INTRO_PAGE_LAYOUT: IntroPageLayout = {
   paddingX: 0,

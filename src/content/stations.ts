@@ -34,8 +34,11 @@ export interface Station {
   label: string
   /** 미니맵 등 좁은 곳에 쓰는 짧은 이름. */
   short: string
-  /** 맵 배치 좌표 [x, z]. */
-  position: Coord
+  /**
+   * 맵 배치 좌표 [x, z]. 자리가 정해진 스테이션만 갖는다.
+   * 없으면 아직 종이 위에 놓일 자리가 정해지지 않은 것이라 씬·지도에 나오지 않는다.
+   */
+  position?: Coord
   /** 활성화되면 읽어올 Firestore 컬렉션들. 데이터 활용은 스테이션 상세 구현에서. */
   collections: CollectionName[]
 }
@@ -47,21 +50,21 @@ export const SECTIONS: Section[] = [
 ]
 
 // about-intro는 사이트 첫 화면을 겸하므로 원점에 둔다.
-// 나머지는 여전히 임시 배치이고, Intro 페이지 영역과 겹치지 않게 물려둔 것뿐이다.
+// 자리를 정한 스테이션만 좌표를 갖는다 — 나머지는 상세 구현에서 영역과 함께 정한다.
 export const STATIONS: Station[] = [
   // About — 4개
   { id: 'about-intro', sectionId: 'about', label: 'Intro', short: 'Intro', position: [0, 0], collections: ['profile'] },
   { id: 'about-skills', sectionId: 'about', label: 'Skills', short: 'Skills', position: SKILLS_CENTER, collections: ['skills'] },
-  { id: 'about-career', sectionId: 'about', label: 'Experience & Education', short: 'Career', position: [20, 0], collections: ['experiences', 'education', 'spec'] },
-  { id: 'about-award', sectionId: 'about', label: 'Awards & Certifications', short: 'Award', position: [27, 0], collections: ['awards'] },
+  { id: 'about-career', sectionId: 'about', label: 'Experience & Education', short: 'Career', collections: ['experiences', 'education', 'spec'] },
+  { id: 'about-award', sectionId: 'about', label: 'Awards & Certifications', short: 'Award', collections: ['awards'] },
 
   // Projects — 프로젝트마다 1개 (현재 플레이스홀더 3개)
-  { id: 'project-1', sectionId: 'projects', label: 'Project 1', short: 'Proj 1', position: [0, 14], collections: ['projects'] },
-  { id: 'project-2', sectionId: 'projects', label: 'Project 2', short: 'Proj 2', position: [0, 20], collections: ['projects'] },
-  { id: 'project-3', sectionId: 'projects', label: 'Project 3', short: 'Proj 3', position: [0, 26], collections: ['projects'] },
+  { id: 'project-1', sectionId: 'projects', label: 'Project 1', short: 'Proj 1', collections: ['projects'] },
+  { id: 'project-2', sectionId: 'projects', label: 'Project 2', short: 'Proj 2', collections: ['projects'] },
+  { id: 'project-3', sectionId: 'projects', label: 'Project 3', short: 'Proj 3', collections: ['projects'] },
 
   // Guestbook — 1개
-  { id: 'guestbook', sectionId: 'guestbook', label: 'Guestbook', short: 'Guest', position: [-18, 0], collections: ['guestbook'] },
+  { id: 'guestbook', sectionId: 'guestbook', label: 'Guestbook', short: 'Guest', collections: ['guestbook'] },
 ]
 
 const SECTION_BY_ID: Record<SectionId, Section> = Object.fromEntries(

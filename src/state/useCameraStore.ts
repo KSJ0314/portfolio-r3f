@@ -49,6 +49,8 @@ interface CameraState {
   setTarget: (point: Vector3) => void
   /** 지정한 지점으로 걸어가게 한다(스테이션 연출용). 진입 잠금 중에도 멈추지 않는다. */
   walkTo: (point: Vector3) => void
+  /** 지정한 지점으로 즉시 옮긴다(월드맵 이동). 목표점도 함께 옮겨 걸어가지 않는다. */
+  teleportTo: (point: Vector3) => void
   /** 연출 이동을 끝낸다(도착·중단). */
   endWalk: () => void
   /** 우클릭 이동을 받았음을 표시한다(처음 한 번만). */
@@ -77,6 +79,11 @@ export const useCameraStore = create<CameraState>((set, get) => ({
   walkTo: (point) => {
     get().setTarget(point)
     if (!get().walking) set({ walking: true })
+  },
+  teleportTo: (point) => {
+    get().setTarget(point)
+    // 목표점은 경계 안으로 clamp되므로 그 값을 그대로 현재 위치로 삼는다.
+    get().position.copy(get().target)
   },
   endWalk: () => {
     if (get().walking) set({ walking: false })
