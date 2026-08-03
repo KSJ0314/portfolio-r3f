@@ -76,6 +76,8 @@ export function AboutIntroScene({ station, phase }: StationDetailProps) {
 
   // 정면뷰 자세는 페이지 한가운데 위에서 수직으로 내려다보는 고정 자세다.
   useLayoutEffect(() => {
+    // 자리가 정해진 스테이션만 활성화되므로 좌표가 없으면 볼 것도 없다.
+    if (!station.position) return
     const [x, z] = station.position
     frontPosition.current.set(x, FOCUS_HEIGHT, z)
     _center.set(x, 0, z)
@@ -109,7 +111,7 @@ export function AboutIntroScene({ station, phase }: StationDetailProps) {
   }, [phase, applyPose])
 
   // 나가기 화살표는 완전히 활성인 동안에만 둔다(진입·종료 애니메이션 중에는 안 보인다).
-  if (phase !== 'active') return null
+  if (phase !== 'active' || !station.position) return null
 
   const [x, z] = station.position
   return (

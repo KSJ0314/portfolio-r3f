@@ -7,8 +7,11 @@ import { useIntroPageStore } from '../../../../state/useIntroPageStore'
  * 근접 판정이 중심점이 아니라 영역 기준으로 잡히도록 레지스트리에 등록한다.
  */
 export function aboutIntroDistanceTo(point: Vector3, station: Station): number {
+  // 자리가 정해지지 않았으면 종이 위에 없으므로 근접 대상이 아니다.
+  const at = station.position
+  if (!at) return Infinity
   const { width, height } = useIntroPageStore.getState().area
-  const dx = Math.max(Math.abs(point.x - station.position[0]) - width / 2, 0)
-  const dz = Math.max(Math.abs(point.z - station.position[1]) - height / 2, 0)
+  const dx = Math.max(Math.abs(point.x - at[0]) - width / 2, 0)
+  const dz = Math.max(Math.abs(point.z - at[1]) - height / 2, 0)
   return Math.hypot(dx, dz)
 }

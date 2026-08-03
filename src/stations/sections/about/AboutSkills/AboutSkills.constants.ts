@@ -15,11 +15,14 @@ export const INK = '#3a3a3a'
 /** Skills 영역의 좌상단 꼭지점(월드 x, z). 이 점을 기준으로 영역이 +x·+z로 펼쳐진다. */
 export const SKILLS_TOP_LEFT = { x: 5, z: 3 } as const
 
+/** 캐릭터가 서는 자리 — 영역 중심 기준 오프셋(월드 x, z). */
+export const SKILLS_STAND_OFFSET = { x: 3, z: 4 } as const
+
 /**
- * 활성 전환 시간·이징. 카메라 각도 전환과 공구상자 이동이 **겹치지 않고 차례로** 돈다 —
- * 들어갈 때는 카메라가 먼저 돌고 그 뒤에 공구상자가 로고 자리로 물러나며,
+ * 활성 전환 시간·이징. 캐릭터 이동·카메라 각도 전환·공구상자 이동이 **겹치지 않고 차례로** 돈다 —
+ * 들어갈 때는 캐릭터가 자리로 걸어간 뒤 카메라가 돌고 그 뒤에 공구상자가 로고 자리로 물러나며,
  * 나올 때는 공구상자가 제자리로 돌아온 뒤에 카메라가 항공뷰로 돌아간다.
- * 두 연출이 순서를 맞춰야 하므로 값을 여기서 함께 들고 있는다.
+ * 걷는 시간은 거리에 따라 달라져 상수로 둘 수 없다(차례는 `useSkillsSequenceStore`가 알린다).
  */
 export const SKILLS_TURN_SECONDS = 1.5
 export const SKILLS_LOGO_SECONDS = 1
@@ -29,4 +32,13 @@ export const SKILLS_TURN_EASE = 'power2.inOut'
 export const SKILLS_CENTER: readonly [number, number] = [
   SKILLS_TOP_LEFT.x + SKILLS_AREA.width / 2,
   SKILLS_TOP_LEFT.z + SKILLS_AREA.height / 2,
+]
+
+/**
+ * 활성화할 때 캐릭터가 걸어가 서는 자리(월드 x, z). 중심 + 오프셋이라 영역을 옮기면 따라온다.
+ * 레지스트리에 등록해 공통층이 이 자리로 데려간다.
+ */
+export const SKILLS_STAND: readonly [number, number] = [
+  SKILLS_CENTER[0] + SKILLS_STAND_OFFSET.x,
+  SKILLS_CENTER[1] + SKILLS_STAND_OFFSET.z,
 ]

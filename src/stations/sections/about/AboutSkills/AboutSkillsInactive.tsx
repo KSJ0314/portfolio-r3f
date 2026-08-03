@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Line } from '@react-three/drei'
 import { useSkillsPageStore } from '../../../../state/useSkillsPageStore'
 import type { StationInactiveProps } from '../../../registry'
-import { INK } from './AboutSkills.constants'
+import { INK, SKILLS_CENTER } from './AboutSkills.constants'
 import { SkillsBox } from './SkillsBox'
 
 /** 바닥과 겹쳐 깜빡이지 않도록 살짝 띄운다. 클릭 판정 면 < 테두리 순으로 얹는다. */
@@ -16,7 +16,7 @@ const OUTLINE_Y = 0.01
  * 종이 위에는 공구함 그림이 오려 붙인 스티커로 놓이고, 범위 테두리는 개발용 HUD에서 켤 때만 그린다.
  * 스킬 목록은 인터랙션 UI 단계(8-2)에서 채운다.
  *
- * 마운트 자리는 station.position(배치 좌표)이지만, 영역 위치는 store의 좌상단+크기로 정해지므로
+ * 마운트 자리는 배치 좌표(SKILLS_CENTER)이지만, 영역 위치는 store의 좌상단+크기로 정해지므로
  * 그 차이만큼 그룹을 옮겨 실제 영역에 놓는다(HUD로 좌표를 바꾸면 영역·근접·클릭이 함께 따라온다).
  */
 export function AboutSkillsInactive({ station }: StationInactiveProps) {
@@ -28,9 +28,9 @@ export function AboutSkillsInactive({ station }: StationInactiveProps) {
   const halfWidth = width / 2
   const halfHeight = height / 2
 
-  // 영역 중심(월드) = 좌상단 + 반크기. 마운트 자리(station.position)와의 차이만큼 안에서 옮긴다.
-  const offsetX = topLeft.x + halfWidth - station.position[0]
-  const offsetZ = topLeft.z + halfHeight - station.position[1]
+  // 영역 중심(월드) = 좌상단 + 반크기. 마운트 자리(배치 좌표 = SKILLS_CENTER)와의 차이만큼 안에서 옮긴다.
+  const offsetX = topLeft.x + halfWidth - SKILLS_CENTER[0]
+  const offsetZ = topLeft.z + halfHeight - SKILLS_CENTER[1]
 
   const outline = useMemo<[number, number, number][]>(() => {
     // 닫힌 사각형이라 첫 점으로 돌아온다.

@@ -43,6 +43,7 @@ import {
   Slider,
   TextInput,
   Title,
+  TitleLink,
   ToolRow,
 } from './CrayonStudio.styled'
 
@@ -545,7 +546,10 @@ export function StudioModal({ onClose }: StudioModalProps) {
         </Board>
 
         <Sidebar>
-          <Title>크레파스 스튜디오</Title>
+          {/* 단독 페이지에서는 갈 곳이 자기 자신이라 링크로 걸지 않는다. */}
+          <Title>
+            {fullPage ? '크레파스 스튜디오' : <TitleLink to="/crayon">크레파스 스튜디오</TitleLink>}
+          </Title>
 
           <Section>
             <SectionHead>

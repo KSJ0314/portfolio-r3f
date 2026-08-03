@@ -438,6 +438,7 @@ export function SkillsPageHUD() {
     setShowOutline(showOutline)
   }, [values, setArea, setTopLeft, setShowOutline])
 
+
   useEffect(() => {
     const { boxHeight, boxPosition, boxBorder } = values
     const { boxShadowBlur, boxShadowDistance, boxShadowOpacity } = values

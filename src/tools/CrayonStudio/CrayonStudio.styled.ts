@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import styled, { css } from 'styled-components'
 import { PAPER_TILE_PX } from './CrayonStudio.constants'
 
@@ -177,6 +178,16 @@ export const Title = styled.h2`
   font-family: ${({ theme }) => theme.fonts.hand};
   font-size: 28px;
   font-weight: 400;
+`
+
+/** 제목을 누르면 단독 페이지(/crayon)로 간다. */
+export const TitleLink = styled(Link)`
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 `
 
 export const CloseButton = styled.button`
