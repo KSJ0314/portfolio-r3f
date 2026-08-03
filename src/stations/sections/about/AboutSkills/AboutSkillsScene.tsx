@@ -4,6 +4,7 @@ import { Matrix4, Quaternion, Vector3 } from 'three'
 import gsap from 'gsap'
 import { useCameraStore } from '../../../../state/useCameraStore'
 import { useSkillsPageStore } from '../../../../state/useSkillsPageStore'
+import { useSkillsSequenceStore } from '../../../../state/useSkillsSequenceStore'
 import { useStationStore } from '../../../../state/useStationStore'
 import type { StationDetailProps } from '../../../registry'
 import { SKILLS_LOGO_SECONDS, SKILLS_TURN_EASE, SKILLS_TURN_SECONDS } from './AboutSkills.constants'
@@ -25,6 +26,7 @@ const WORLD_UP = new Vector3(0, 1, 0)
 
 const _matrix = new Matrix4()
 const _center = new Vector3()
+const _stand = new Vector3()
 
 /** 다른 연출이 도는 동안 비워 두는 구간. 타임라인 길이만 늘린다. */
 function wait(timeline: gsap.core.Timeline, seconds: number) {
@@ -32,12 +34,13 @@ function wait(timeline: gsap.core.Timeline, seconds: number) {
 }
 
 /**
- * `about-skills` 활성 구현 — 카메라 각도 전환.
+ * `about-skills` 활성 구현 — 캐릭터 이동과 카메라 각도 전환.
  *
  * Intro와 같이 오브젝트를 건드리지 않고 카메라만 정면(수직)으로 돌린다. 배율은 바꾸지 않는다.
- * 다만 **공구상자 이동과 겹치지 않고 차례로** 돈다 — 들어갈 때는 카메라가 먼저 돌고 그 뒤에
- * 공구상자가 로고 자리로 물러나며, 나올 때는 공구상자가 제자리로 돌아온 뒤에 카메라가 돌아간다.
- * 공구상자는 상시 마운트된 비활성 구현(SkillsBox)이 같은 시간값을 보고 스스로 움직인다.
+ * 다만 **세 연출이 겹치지 않고 차례로** 돈다 — 들어갈 때는 캐릭터가 페이지 앞자리로 걸어가고,
+ * 도착하면 카메라가 돌고, 그 뒤에 공구상자가 로고 자리로 물러난다.
+ * 나올 때는 공구상자가 제자리로 돌아온 뒤에 카메라가 항공뷰로 돌아간다.
+ * 공구상자는 상시 마운트된 비활성 구현(SkillsBox)이 여기서 내는 신호를 보고 스스로 움직인다.
  */
 export function AboutSkillsScene({ phase }: StationDetailProps) {
   const camera = useThree((s) => s.camera)
@@ -79,12 +82,17 @@ export function AboutSkillsScene({ phase }: StationDetailProps) {
     _matrix.lookAt(frontPosition.current, _center, FRONT_UP)
     frontQuaternion.current.setFromRotationMatrix(_matrix)
 
-    if (useStationStore.getState().phase === 'active') applyPose(1)
+    // 활성 중에 다시 붙었으면(HMR·재마운트) 공구함도 로고 자리에 있어야 한다.
+    if (useStationStore.getState().phase === 'active') {
+      applyPose(1)
+      useSkillsSequenceStore.getState().setLogoTurn(true)
+    }
   }, [area, topLeft, applyPose])
 
   useEffect(() => {
     if (phase !== 'entering' && phase !== 'exiting') return
     const entering = phase === 'entering'
+    const { setLogoTurn } = useSkillsSequenceStore.getState()
 
     const state = { progress: entering ? 0 : 1 }
     const turn = {
@@ -94,25 +102,42 @@ export function AboutSkillsScene({ phase }: StationDetailProps) {
       onUpdate: () => applyPose(state.progress),
     }
 
-    const timeline = gsap.timeline({
-      onComplete: () => {
-        const { enterComplete, exitComplete } = useStationStore.getState()
-        if (entering) enterComplete()
-        else exitComplete()
-      },
-    })
+    let timeline: gsap.core.Timeline | null = null
+    const complete = () => {
+      const { enterComplete, exitComplete } = useStationStore.getState()
+      if (entering) enterComplete()
+      else exitComplete()
+    }
+
+    let unsubscribe: (() => void) | undefined
     if (entering) {
-      timeline.to(state, turn)
-      // 공구상자가 로고 자리로 물러나는 동안 카메라는 정면뷰에 머문다.
-      wait(timeline, SKILLS_LOGO_SECONDS)
+      // 캐릭터가 자리에 선 뒤에 카메라를 넘겨받고, 다 돌면 공구상자에게 차례를 넘긴다.
+      unsubscribe = useCameraStore.subscribe((next, prev) => {
+        if (!prev.walking || next.walking) return
+        timeline = gsap.timeline({ onComplete: complete })
+        timeline.to(state, turn)
+        timeline.call(() => setLogoTurn(true))
+        // 공구상자가 로고 자리로 물러나는 동안 카메라는 정면뷰에 머문다.
+        wait(timeline, SKILLS_LOGO_SECONDS)
+      })
+
+      // 자리는 영역 중심 기준이라 HUD로 영역을 옮기면 따라온다.
+      const { area, topLeft, stand } = useSkillsPageStore.getState()
+      _stand.set(topLeft.x + area.width / 2 + stand.x, 0, topLeft.z + area.height / 2 + stand.z)
+      useCameraStore.getState().walkTo(_stand)
     } else {
       // 공구상자가 제자리로 돌아온 뒤에 카메라가 움직인다.
+      setLogoTurn(false)
+      timeline = gsap.timeline({ onComplete: complete })
       wait(timeline, SKILLS_LOGO_SECONDS)
       timeline.to(state, turn)
     }
 
     return () => {
-      timeline.kill()
+      unsubscribe?.()
+      timeline?.kill()
+      // 걷는 도중에 사라지면 잠금 예외가 남아 캐릭터가 계속 걸어간다.
+      useCameraStore.getState().endWalk()
     }
   }, [phase, applyPose])
 

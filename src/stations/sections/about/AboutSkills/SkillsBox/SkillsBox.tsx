@@ -3,18 +3,16 @@ import { type Group, MathUtils } from 'three'
 import gsap from 'gsap'
 import { PaperSticker } from '../../../../../lib/PaperSticker'
 import { useSkillsPageStore } from '../../../../../state/useSkillsPageStore'
-import { type StationPhase, useStationStore } from '../../../../../state/useStationStore'
-import {
-  SKILLS_LOGO_SECONDS,
-  SKILLS_TURN_EASE,
-  SKILLS_TURN_SECONDS,
-} from '../AboutSkills.constants'
+import { useSkillsSequenceStore } from '../../../../../state/useSkillsSequenceStore'
+import { useStationStore } from '../../../../../state/useStationStore'
+import { SKILLS_LOGO_SECONDS, SKILLS_TURN_EASE } from '../AboutSkills.constants'
 import { SKILLS_BOX_URL, SKILLS_BOX_Y } from './SkillsBox.constants'
 import type { SkillsBoxProps } from './SkillsBox.types'
 
-/** 로고 자리에 가 있어야 하는 상태인지 — 1이면 로고, 0이면 평소 자리. */
-function logoTarget(activeId: string | null, phase: StationPhase, stationId: string): number {
-  return activeId === stationId && phase !== 'exiting' ? 1 : 0
+/** 마운트 시점의 자세 — 1이면 로고, 0이면 평소 자리. 활성 중에 다시 붙어도 로고 자리에서 시작한다. */
+function initialProgress(stationId: string): number {
+  const { activeId, phase } = useStationStore.getState()
+  return activeId === stationId && phase === 'active' ? 1 : 0
 }
 
 /**
@@ -22,7 +20,7 @@ function logoTarget(activeId: string | null, phase: StationPhase, stationId: str
  *
  * 활성화되면 절반 크기로 줄어 영역 좌상단으로 물러나 로고가 되고, 닫히면 제자리로 돌아온다.
  * **평소 모습과 활성 모습이 같은 오브젝트**여야 이어서 변형되므로, 활성 구현(Scene)에서 따로 그리지 않고
- * 상시 마운트된 이 컴포넌트가 스스로 라이프사이클을 구독해 움직인다.
+ * 상시 마운트된 이 컴포넌트가 스스로 차례 신호를 구독해 움직인다.
  * 매 프레임 리렌더하지 않도록 스토어를 구독해 gsap가 그룹만 직접 건드린다.
  *
  * 좌표는 영역 중심 기준이라 영역을 옮기거나 크기를 바꿔도 함께 따라온다.
@@ -33,9 +31,7 @@ export function SkillsBox({ stationId }: SkillsBoxProps) {
   const logo = useSkillsPageStore((s) => s.logo)
   const area = useSkillsPageStore((s) => s.area)
   const group = useRef<Group>(null)
-  // 마운트 시점의 단계에 맞춰 시작한다(활성 중에 다시 붙어도 로고 자리에 있게).
-  const current = useStationStore.getState()
-  const pose = useRef({ progress: logoTarget(current.activeId, current.phase, stationId) })
+  const pose = useRef({ progress: initialProgress(stationId) })
 
   /** 두 자세를 섞어 그룹에 적용한다. 0이면 평소 자리, 1이면 로고 자리. */
   const applyPose = useCallback(
@@ -65,17 +61,15 @@ export function SkillsBox({ stationId }: SkillsBoxProps) {
     let tween: gsap.core.Tween | null = null
     let target = pose.current.progress
 
-    const unsubscribe = useStationStore.subscribe((state) => {
-      const next = logoTarget(state.activeId, state.phase, stationId)
+    const unsubscribe = useSkillsSequenceStore.subscribe((state) => {
+      const next = state.logoTurn ? 1 : 0
       if (next === target) return
       target = next
       tween?.kill()
-      // 카메라 전환과 겹치지 않게 순서를 지킨다 — 물러날 땐 카메라가 다 돈 뒤에,
-      // 돌아올 땐 먼저 움직이고 카메라가 그 뒤를 잇는다.
+      // 차례가 오면 곧바로 움직인다. 앞선 연출을 기다리는 몫은 신호를 내는 쪽(Scene)에 있다.
       tween = gsap.to(pose.current, {
         progress: next,
         duration: SKILLS_LOGO_SECONDS,
-        delay: next === 1 ? SKILLS_TURN_SECONDS : 0,
         ease: SKILLS_TURN_EASE,
         onUpdate: () => applyPose(pose.current.progress),
       })
@@ -86,7 +80,7 @@ export function SkillsBox({ stationId }: SkillsBoxProps) {
       tween?.kill()
       unsubscribe()
     }
-  }, [applyPose, stationId])
+  }, [applyPose])
 
   return (
     <group ref={group}>
