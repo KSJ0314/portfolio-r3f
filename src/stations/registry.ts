@@ -1,11 +1,18 @@
 import type { ComponentType } from 'react'
-import type { Vector3 } from 'three'
+import { Vector3 } from 'three'
 import type { Station } from '../content/stations'
+import { useCameraStore } from '../state/useCameraStore'
 import type { StationPhase } from '../state/useStationStore'
-import { AboutIntroInactive, AboutIntroScene, aboutIntroDistanceTo } from './sections/about/AboutIntro'
+import {
+  AboutIntroInactive,
+  AboutIntroScene,
+  INTRO_STAND,
+  aboutIntroDistanceTo,
+} from './sections/about/AboutIntro'
 import {
   AboutSkillsInactive,
   AboutSkillsScene,
+  SKILLS_STAND,
   aboutSkillsDistanceTo,
 } from './sections/about/AboutSkills'
 
@@ -57,6 +64,12 @@ export interface StationEntry {
    * 등록하지 않으면 공통층이 배치 좌표(중심점)까지의 거리로 잰다.
    */
   distanceTo?: (point: Vector3, station: Station) => number
+  /**
+   * 활성화할 때 캐릭터가 서는 자리(월드 x, z).
+   * 데려가는 것은 공통층(`walkToStand`)이 맡고, 언제 데려갈지는 스테이션이 자기 연출 순서에서 정한다.
+   * 등록하지 않으면 진입 이동이 없다.
+   */
+  stand?: readonly [number, number]
   /** 3D 상세 — Canvas 안에 마운트. 오브젝트 확장·카메라 연출 등. */
   Scene?: ComponentType<StationDetailProps>
   /** 2D 상세 — Canvas 밖(DOM)에 마운트. 텍스트·이미지 패널 등. */
@@ -68,14 +81,38 @@ export const STATION_REGISTRY: Record<string, StationEntry> = {
   'about-intro': {
     Inactive: AboutIntroInactive,
     distanceTo: aboutIntroDistanceTo,
+    stand: INTRO_STAND,
     Scene: AboutIntroScene,
   },
   'about-skills': {
     Inactive: AboutSkillsInactive,
     distanceTo: aboutSkillsDistanceTo,
+    stand: SKILLS_STAND,
     Scene: AboutSkillsScene,
   },
 }
 
 /** 활성 스테이션의 등록 구현을 찾는다(없으면 undefined). */
 export const getStationEntry = (id: string): StationEntry | undefined => STATION_REGISTRY[id]
+
+const _stand = new Vector3()
+
+/**
+ * 등록된 자리로 캐릭터를 걸어가게 한다. 자리마다 값은 달라도 데려가는 방식은 같으므로 여기 하나로 둔다.
+ * 진입 잠금 중에도 걸어가며, 도착하면 `useCameraStore.walking`이 꺼진다.
+ */
+export function walkToStand(id: string): void {
+  const stand = STATION_REGISTRY[id]?.stand
+  if (!stand) return
+  useCameraStore.getState().walkTo(_stand.set(stand[0], 0, stand[1]))
+}
+
+/**
+ * 등록된 자리로 캐릭터를 즉시 옮긴다(월드맵에서 고른 스테이션으로 이동).
+ * 자리를 등록하지 않은 스테이션은 배치 좌표로 보낸다.
+ */
+export function teleportToStand(station: Station): void {
+  const stand = STATION_REGISTRY[station.id]?.stand ?? station.position
+  if (!stand) return
+  useCameraStore.getState().teleportTo(_stand.set(stand[0], 0, stand[1]))
+}

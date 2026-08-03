@@ -8,10 +8,11 @@ import { useSceneReadyStore } from '../../state/useSceneReadyStore'
  *
  * 비활성 상태의 모습은 레지스트리에 등록된 스테이션별 구현이 그린다.
  * 아직 등록되지 않은 스테이션은 **아무것도 그리지 않는다** — 종이 위에 놓을 그림이 정해지기 전이다.
+ * 자리(배치 좌표)가 정해지지 않은 스테이션도 마찬가지로 놓지 않는다.
  * 좌클릭 활성화는 Stations가 레이캐스트로 판정하고, 그 대상(id를 실은 면)은 구현이 둔다.
  */
 export function Station({ data }: { data: StationData }) {
-  const [x, z] = data.position
+  const at = data.position
   const Inactive = getStationEntry(data.id)?.Inactive
 
   // 경계가 스테이션마다 있으므로 여기까지 왔으면 이 스테이션의 텍스처는 다 준비된 것이다.
@@ -21,5 +22,7 @@ export function Station({ data }: { data: StationData }) {
     markReady(`station:${data.id}`)
   }, [markReady, data.id])
 
-  return <group position={[x, 0, z]}>{Inactive && <Inactive station={data} />}</group>
+  if (!at) return null
+
+  return <group position={[at[0], 0, at[1]]}>{Inactive && <Inactive station={data} />}</group>
 }

@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import {
   SKILLS_AREA,
-  SKILLS_STAND,
   SKILLS_TOP_LEFT,
 } from '../stations/sections/about/AboutSkills/AboutSkills.constants'
 import {
@@ -17,12 +16,6 @@ import type { StationArea } from '../stations/types'
 
 /** 영역 좌상단 꼭지점(월드 x, z). */
 export interface AreaCorner {
-  x: number
-  z: number
-}
-
-/** 활성화할 때 캐릭터가 걸어가 서는 자리(영역 중심 기준 오프셋). */
-export interface SkillsStandSpot {
   x: number
   z: number
 }
@@ -132,8 +125,6 @@ interface SkillsPageState {
   topLeft: AreaCorner
   /** 영역 테두리를 그릴지. 범위를 눈으로 확인하는 개발용이라 기본은 끔. */
   showOutline: boolean
-  /** 활성화할 때 캐릭터가 서는 자리. */
-  stand: SkillsStandSpot
   /** 공구함 스티커의 배치·모양. */
   box: SkillsBoxPlacement
   /** 활성 상태에서 로고처럼 놓이는 자세. */
@@ -151,7 +142,6 @@ interface SkillsPageState {
   setArea: (area: StationArea) => void
   setTopLeft: (topLeft: AreaCorner) => void
   setShowOutline: (show: boolean) => void
-  setStand: (stand: SkillsStandSpot) => void
   setBox: (box: SkillsBoxPlacement) => void
   setLogo: (logo: SkillsBoxLogo) => void
   setTitle: (title: SkillsTitlePlacement) => void
@@ -170,7 +160,6 @@ export const useSkillsPageStore = create<SkillsPageState>((set) => ({
   area: { ...SKILLS_AREA },
   topLeft: { ...SKILLS_TOP_LEFT },
   showOutline: false,
-  stand: { ...SKILLS_STAND },
   box: { ...SKILLS_BOX_PLACEMENT },
   logo: { ...SKILLS_BOX_LOGO },
   title: { ...SKILLS_TITLE },
@@ -181,7 +170,6 @@ export const useSkillsPageStore = create<SkillsPageState>((set) => ({
   setArea: (area) => set({ area }),
   setTopLeft: (topLeft) => set({ topLeft }),
   setShowOutline: (showOutline) => set({ showOutline }),
-  setStand: (stand) => set({ stand }),
   setBox: (box) => set({ box }),
   setLogo: (logo) => set({ logo }),
   setTitle: (title) => set({ title }),

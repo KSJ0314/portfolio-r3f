@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { button, folder, useControls } from 'leva'
 import {
   SKILLS_AREA,
-  SKILLS_STAND,
   SKILLS_TOP_LEFT,
 } from '../../../stations/sections/about/AboutSkills/AboutSkills.constants'
 import {
@@ -18,7 +17,6 @@ import { useSkillsPageStore } from '../../../state/useSkillsPageStore'
 
 const A = SKILLS_AREA
 const T = SKILLS_TOP_LEFT
-const S = SKILLS_STAND
 const B = SKILLS_BOX_PLACEMENT
 const L = SKILLS_BOX_LOGO
 const TI = SKILLS_TITLE
@@ -43,7 +41,6 @@ export function SkillsPageHUD() {
   const setArea = useSkillsPageStore((s) => s.setArea)
   const setTopLeft = useSkillsPageStore((s) => s.setTopLeft)
   const setShowOutline = useSkillsPageStore((s) => s.setShowOutline)
-  const setStand = useSkillsPageStore((s) => s.setStand)
   const setBox = useSkillsPageStore((s) => s.setBox)
   const setLogo = useSkillsPageStore((s) => s.setLogo)
   const setTitle = useSkillsPageStore((s) => s.setTitle)
@@ -83,15 +80,6 @@ export function SkillsPageHUD() {
           joystick: false,
           label: '좌표',
           hint: `영역 좌상단 꼭지점(월드 x, z).\n기본값: (${T.x}, ${T.z})`,
-        },
-      }, { collapsed: true }),
-      '캐릭터 자리': folder({
-        standPosition: {
-          value: { x: S.x, z: S.z },
-          step: 0.5,
-          joystick: false,
-          label: '좌표',
-          hint: `활성화할 때 캐릭터가 걸어가 서는 자리(영역 중심 기준 x, z).\n기본값: (${S.x}, ${S.z})`,
         },
       }, { collapsed: true }),
       공구함: folder({
@@ -388,9 +376,9 @@ export function SkillsPageHUD() {
     {
       '값 복사(JSON)': button(() => {
         const state = useSkillsPageStore.getState()
-        const { area, topLeft, stand, box, logo, title, list, level, pager, exit } = state
+        const { area, topLeft, box, logo, title, list, level, pager, exit } = state
         const json = JSON.stringify(
-          { area, topLeft, stand, box, logo, title, list, level, pager, exit },
+          { area, topLeft, box, logo, title, list, level, pager, exit },
           null,
           2,
         )
@@ -403,7 +391,6 @@ export function SkillsPageHUD() {
           height: A.height,
           showOutline: false,
           position: { x: T.x, z: T.z },
-          standPosition: { x: S.x, z: S.z },
           boxHeight: B.height,
           boxPosition: { x: B.x, z: B.z },
           boxBorder: B.border,
@@ -451,10 +438,6 @@ export function SkillsPageHUD() {
     setShowOutline(showOutline)
   }, [values, setArea, setTopLeft, setShowOutline])
 
-  useEffect(() => {
-    const { standPosition } = values
-    setStand({ x: standPosition.x, z: standPosition.z })
-  }, [values, setStand])
 
   useEffect(() => {
     const { boxHeight, boxPosition, boxBorder } = values
