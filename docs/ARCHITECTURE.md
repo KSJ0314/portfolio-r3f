@@ -36,8 +36,11 @@ _작성 예정_
     - `AssetPreload` — 앱이 뜰 때 종이 스티커를 미리 구워 캐시에 넣는다(그리는 것 없음). 필요해진 순간에 굽기 시작하면 그때 서스펜드가 걸려 이미 떠 있던 것들이 사라졌다 돌아온다. 목록은 `content/assets.ts`이고, 에셋을 추가하면 거기 한 줄 넣는다.
     - `MapDecorations`(자체 `Suspense`) — 스테이션에 속하지 않는 맵 장식(길안내 화살표·조작 안내·표지판)의 마운트 자리. 영역·근접 판정·라이프사이클이 없어 마운트만 하고, 무엇을 언제 어떻게 그릴지는 요소가 각자 정한다. 특정 스테이션으로 유도하는 요소도 그 스테이션이 아니라 여기 속한다. Suspense를 요소마다 두지 않는 이유는 하나만 빠뜨려도 그 suspend가 씬 전체로 번지기 때문이다. (DECISIONS 018)
       - `useAfterIntro`(`MapDecorations.hooks`) — 장식이 공유하는 등장 조건. 라이프사이클이 처음 `idle`이 되는 시점(= Intro가 닫혀 카메라 전환이 끝난 뒤)이고, 지연 초를 주면 그만큼 더 기다린다. 첫 화면은 Intro가 활성이라 그 위에 장식을 얹으면 페이지를 가린다.
+      - `useAfterStation`(`MapDecorations.hooks`) — 그 스테이션을 **열었다 닫은 뒤**인지. 아직 가보지 않은 곳으로 유도하는 장식은 앞 스테이션을 보고 나온 뒤에 나타나야 한다.
       - `SkillsGuideArrow` — 캐릭터 시작 자리에서 Skills 쪽을 가리키는 바닥 화살표. 등장하며 크레파스로 긋듯 그어진다.
       - `RightClickHint` — 화살표 곁의 우클릭 안내 아이콘(오른쪽 버튼을 칠한 마우스 그림, 종이 스티커). 화살표를 다 그은 뒤에 나타나고, `useCameraStore.hasMoved`가 켜지면(= 우클릭으로 이동하면) 사라진다.
+      - `Crosswalk` — Skills를 닫고 나오면 그어지는 횡단보도. `about-career` 쪽으로 건너가라는 안내다. **닫히기 시작하면 카메라 복귀와 함께** 캐릭터가 Skills 자리로 되돌아오고, 도착해야 그어진다 — 닫는 방법이 근접 이탈이기도 해서 그냥 그으면 화면 밖에서 그려진다. 그동안 이동을 잠그며, 카메라를 아직 스테이션이 쥐고 있는 구간에서는 연출 이동이 아니라 평소 이동(`moveToStand`)으로 보낸다. 다 그으면 `crosswalkDrawn`으로 알린다.
+      - `TrafficLight` — 횡단보도 곁에 **세워 두는** 종이 스티커. 세운 종이는 그 자체로 서 있는지 읽히지 않으므로 바닥에 그림자를 따로 깐다(같은 그림을 검게 눌러 눕힌 판). 판이 향하는 방향은 `followOffset`에서 구해 화면을 정면으로 본다. 자리는 횡단보도 우상단 꼭지점 기준 상대 좌표이고, 등장은 `crosswalkDrawn`을 본다 — 걷는 시간이 거리마다 달라 지연으로는 차례를 맞출 수 없다.
 
 Canvas 밖(`App`): `SceneGate` — 첫 화면 가림막. 바닥·캐릭터·Intro(글씨·사진)가 모두 준비될 때까지 덮었다가 페이드로 걷는다. 경계가 나뉘어 있어 준비되는 대로 하나씩 나타나면 순서가 뒤집혀 보이므로, 함께 보여야 하는 것만 골라 기다린다. 한 번 걷으면 다시 덮지 않고, 제 시간에 준비되지 않으면 새로고침으로 재시도하다 횟수를 넘기면 그냥 걷는다. `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) + ESC 종료 + 미구현 스테이션 fallback. `Minimap`(우상단, 누르면 월드맵이 열린다) · `WorldMap`(맵 전체를 보는 모달 — 스테이션을 고르면 그 스테이션이 등록한 자리로 순간이동하고 닫힌다. 활성화까지는 하지 않는다) · `CrayonStudio`(오른쪽 아래 크레파스 버튼 → 모달 그리기 도구, 제목을 누르면 단독 페이지로 간다. 코드 좌표 복사만 dev로 가려진다) · `DevHUD`(dev 전용 HUD 묶음 — `DebugHUD` 상태 표시 + `GridPaperHUD`·`IntroPageHUD`·`SkillsPageHUD`·`MapDecorationsHUD` leva 튜닝 패널. 패널 자체는 `GridPaperHUD`가 그리고 나머지는 폴더로 얹힌다). `DevHUD`만 App이 `import.meta.env.DEV`로 감싸 프로덕션 번들에서 빠진다. 크레파스 스튜디오는 `/crayon`에서 단독 페이지로도 뜬다.
 
@@ -50,14 +53,15 @@ Canvas 밖(`App`): `SceneGate` — 첫 화면 가림막. 바닥·캐릭터·Intr
 ## 상태 관리 (zustand)
 
 - `useThemeStore` — 테마 모드(light/dark) + toggle, 2D·3D 동시 전환.
-- `useCameraStore` — 이동 상태: `position`(현재 위치, 좌표만 변경) · `target`(목표점, 경계 clamp) · `setTarget(point)` · `walking`/`walkTo(point)`/`endWalk()`(스테이션 연출이 지정한 이동 — 잠금 중에도 그 자리로는 걸어가고, 도착하면 `Character`가 끈다) · `teleportTo(point)`(월드맵에서 고른 자리로 즉시 옮김) · `viewAngle`(CameraRig가 유도, 미니맵이 사용) · `followOffset`(카메라 − 캐릭터, CameraRig가 기록) · `motion.speed`(디버그용) · `hasMoved`/`markMoved()`(우클릭 이동 입력을 받은 적 있는지 — 조작 안내를 걷는 신호. 잠금을 통과한 입력만 세고 처음 한 번만 `set`한다) · 상수 `CAMERA_BOUNDS` · `CHARACTER_START`.
+- `useCameraStore` — 이동 상태: `position`(현재 위치, 좌표만 변경) · `target`(목표점, 경계 clamp) · `setTarget(point)` · `walking`/`walkTo(point)`/`endWalk()`(스테이션 연출이 지정한 이동 — 잠금 중에도 그 자리로는 걸어가고, 도착하면 `Character`가 끈다) · `teleportTo(point)`(월드맵에서 고른 자리로 즉시 옮김) · `viewAngle`(CameraRig가 유도, 미니맵이 사용) · `followOffset`(카메라 − 캐릭터, CameraRig가 기록) · `motion.speed`(디버그용) · `hasMoved`/`markMoved()`(우클릭 이동 입력을 받은 적 있는지 — 조작 안내를 걷는 신호. 잠금을 통과한 입력만 세고 처음 한 번만 `set`한다) · `locks`/`lockMovement()`/`unlockMovement()`(스테이션 밖 연출이 거는 이동 잠금. 개수로 세어 연출이 겹쳐도 각자 걸고 각자 푼다) · 상수 `CAMERA_BOUNDS` · `CHARACTER_START`.
+  **잠금은 두 갈래로 쓰인다.** 입력을 받는 `World`는 `isMovementBlocked()`(스테이션 진입 + 맵 연출)를 보고 목표점 갱신을 멈추고, 목표점을 현재 위치로 스냅해 즉시 멈추는 `Character`는 **진입 잠금만** 본다. 맵 연출 잠금까지 스냅에 걸면 잠그는 순간 캐릭터가 굳어, 연출이 지정한 자리로 걸어가지 못한다.
 - `useStationStore` — 스테이션 상호작용: `nearId`(근접) · `activeId` · `phase`(`idle`/`entering`/`active`/`exiting`) · `setNear` · `activate` · `enterComplete` · `requestClose` · `exitComplete`. 초기값은 `about-intro`가 `active`인 상태다(사이트 첫 화면). `setNear`는 활성 스테이션에서 멀어지면 그대로 종료를 건다. 이동 잠금 여부는 `isMovementLocked(phase)`로 판단(진입 애니메이션 중에만 잠김).
 - 스테이션 게이트(`stations/useStationGate`) — 활성 상세가 아직 준비되지 않았음을 알리는 열쇠 모음. 공통층(`ActiveStationScene`)이 이를 보고 상세를 감췄다 보여준다.
 - `useSceneReadyStore` — 첫 화면에 필요한 것들의 준비 여부(`markReady(key)`). 바닥·캐릭터·스테이션·Intro 사진이 마운트되며 자기 이름을 올리고, `SceneGate`가 이를 보고 가림막을 걷는다.
 - `useIntroPageStore` — Intro 페이지의 개발용 튜닝 상태(영역·배치·테두리 표시). 프로덕션에는 HUD가 없어 항상 기본값이다.
 - `useSkillsPageStore` — Skills 페이지 전체의 개발용 튜닝 상태(영역·좌상단·테두리 표시 · 공구함 배치와 테두리·그림자 · 로고 자세 · 제목 · 목록 · 레벨 별 · 페이지 넘김 · 나가기). 마찬가지로 프로덕션에서는 항상 기본값이다.
 - `useSkillsSequenceStore` — Skills 활성 연출의 차례 신호(`logoTurn`). 걷는 시간이 거리에 따라 달라져 지연 상수로 차례를 맞출 수 없어, 전체 순서를 아는 활성 구현이 신호를 내고 상시 마운트된 공구함이 그것을 본다.
-- `useMapDecorationsStore` — 맵 장식의 개발용 튜닝 상태(안내 화살표 배치·연출 · 우클릭 안내 배치). 장식은 스테이션 소속이 아니므로 페이지 스토어와 나눠 둔다.
+- `useMapDecorationsStore` — 맵 장식의 개발용 튜닝 상태(안내 화살표 배치·연출 · 우클릭 안내 배치 · 횡단보도 배치·연출 · 신호등 배치·그림자). 장식은 스테이션 소속이 아니므로 페이지 스토어와 나눠 둔다. 튜닝 값이 아닌 `crosswalkDrawn`도 여기 둔다 — 뒤이어 나오는 장식이 차례를 기다리는 신호다.
 
 ## 데이터 흐름 (Firestore → UI)
 
@@ -80,6 +84,8 @@ idle ──근접 + 좌클릭──> entering ──enterComplete()──> activ
 - 이동 잠금은 `entering`에만 걸린다. `active`에서는 평소처럼 이동할 수 있고, **걸어서 근접 범위를 벗어나는 것이 곧 닫기**다. 종료 중에도 이동을 막지 않는다 — 걸어나가다 멈칫하지 않게.
 - 나가기 UI(버튼·화살표 등)는 스테이션 구현이 각자 제공한다. 공통층은 자리도 모양도 정해주지 않는다.
 - 우클릭은 순수하게 이동이다. 좌클릭은 idle 상태에서 근접한 스테이션을 활성화하고(`Stations`가 캔버스 `mousedown`을 레이캐스트), 활성 상태에서는 상세 내부 요소 상호작용에 쓴다.
+
+**종이 스티커는 컴포넌트로만 그린다** (DECISIONS 025). `lib/PaperSticker`는 굽는 훅을 내보내지 않으므로 스티커를 그리는 일은 전부 `<PaperSticker>`를 지난다. 재질을 바꿔야 하는 쓰임(겹쳐 놓기·바닥 그림자)과 같은 스티커를 여러 장 늘어놓는 일도 그 props로 받는다.
 
 **공용 부품** (`src/stations/`)
 

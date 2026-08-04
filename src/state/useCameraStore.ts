@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { Vector3 } from 'three'
+import { isMovementLocked, useStationStore } from './useStationStore'
 
 /**
  * 캐릭터가 이동할 수 있는 최대 반경(경계). 경계에서 투명 벽처럼 멈춘다.
@@ -45,6 +46,11 @@ interface CameraState {
    * 도착하면 Character가 끄고, 그것이 다음 연출로 넘어가는 신호가 된다.
    */
   walking: boolean
+  /**
+   * 스테이션 밖 연출이 걸어 둔 이동 잠금 수. 0보다 크면 이동이 막힌다.
+   * 개수로 세는 이유는 연출이 겹쳐도 각자 걸고 각자 풀게 하기 위함이다.
+   */
+  locks: number
   /** 목표점을 설정한다(경계 안으로 clamp). */
   setTarget: (point: Vector3) => void
   /** 지정한 지점으로 걸어가게 한다(스테이션 연출용). 진입 잠금 중에도 멈추지 않는다. */
@@ -53,6 +59,10 @@ interface CameraState {
   teleportTo: (point: Vector3) => void
   /** 연출 이동을 끝낸다(도착·중단). */
   endWalk: () => void
+  /** 이동을 잠근다(연출용). 푸는 것은 건 쪽의 몫이다. */
+  lockMovement: () => void
+  /** 자기가 건 이동 잠금을 푼다. */
+  unlockMovement: () => void
   /** 우클릭 이동을 받았음을 표시한다(처음 한 번만). */
   markMoved: () => void
   /** 뷰 각도를 설정한다(값이 바뀔 때만). */
@@ -69,6 +79,7 @@ export const useCameraStore = create<CameraState>((set, get) => ({
   motion: { speed: 0 },
   hasMoved: false,
   walking: false,
+  locks: 0,
   setTarget: (point) => {
     get().target.set(
       clamp(point.x, -CAMERA_BOUNDS, CAMERA_BOUNDS),
@@ -88,6 +99,9 @@ export const useCameraStore = create<CameraState>((set, get) => ({
   endWalk: () => {
     if (get().walking) set({ walking: false })
   },
+  lockMovement: () => set((s) => ({ locks: s.locks + 1 })),
+  // 이미 푼 잠금을 또 풀어 음수가 되면 남은 잠금이 무시되므로 0에서 멈춘다.
+  unlockMovement: () => set((s) => ({ locks: Math.max(0, s.locks - 1) })),
   setViewAngle: (angle) => {
     if (get().viewAngle !== angle) set({ viewAngle: angle })
   },
@@ -99,3 +113,11 @@ export const useCameraStore = create<CameraState>((set, get) => ({
     if (!get().hasMoved) set({ hasMoved: true })
   },
 }))
+
+/**
+ * 지금 이동이 막혔는지 — 스테이션 진입 애니메이션이거나, 맵 연출이 잠가 둔 동안이다.
+ * 매 프레임 부르는 자리라 구독하지 않고 스토어에서 곧장 읽는다.
+ */
+export function isMovementBlocked(): boolean {
+  return useCameraStore.getState().locks > 0 || isMovementLocked(useStationStore.getState().phase)
+}

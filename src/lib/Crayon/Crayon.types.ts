@@ -19,8 +19,26 @@ export interface CrayonStrokeParams {
   seed: number
 }
 
+/**
+ * 그림 바깥 윤곽을 마무리하는 값.
+ *
+ * 획을 겹쳐 면을 채우면 획들이 끝나는 자리에서 윤곽이 딱 떨어진다.
+ * 바깥으로 갈수록 알갱이를 덜 찍어 테두리를 너덜하게 남긴다.
+ */
+export interface CrayonEdgeParams {
+  /** 알갱이가 성기어지는 띠의 폭 — 텍스처 짧은 변 대비 비율. */
+  feather: number
+  /** 거는 강도(0~1). 1이면 윤곽 바깥에서 알갱이가 완전히 사라진다. */
+  strength: number
+  /** 모서리가 둥글어지는 정도(0~1). 0이면 직각 그대로고, 곧은 변은 값과 무관하게 그대로다. */
+  roundness: number
+}
+
 /** 한 그림의 획들이 함께 쓰는 값. 씨앗만 획마다 다르다. */
-export type CrayonSharedParams = Partial<Omit<CrayonStrokeParams, 'seed'>>
+export type CrayonSharedParams = Partial<Omit<CrayonStrokeParams, 'seed'>> & {
+  /** 바깥 윤곽 마무리. 주지 않으면 걸지 않는다 — 면을 채운 그림에만 쓴다. */
+  edge?: Partial<CrayonEdgeParams>
+}
 
 /** 크레파스 획 하나 = 0~1 정규화 경로 + 그 획만의 씨앗(획마다 달라야 서로 다른 손놀림처럼 보인다). */
 export interface CrayonStroke {
