@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { MathUtils } from 'three'
 import { Crayon } from '../../../lib/Crayon'
 import { useCameraStore } from '../../../state/useCameraStore'
@@ -34,11 +34,30 @@ export function Crosswalk() {
 
   const started = useRef(false)
   const locked = useRef(false)
-  const released = useRef(false)
   const cleanup = useRef<() => void>(() => {})
 
+  // 잠금은 거는 것과 푸는 것을 짝지어 둔다. 정리 함수를 나중에 붙이면 그 사이에 언마운트될 때 남는다.
+  const acquireLock = useCallback(() => {
+    if (locked.current) return
+    locked.current = true
+    useCameraStore.getState().lockMovement()
+  }, [])
+
+  const releaseLock = useCallback(() => {
+    if (!locked.current) return
+    locked.current = false
+    useCameraStore.getState().unlockMovement()
+  }, [])
+
   // 언마운트될 때 잠금이 남지 않게 한다 — 풀 기회를 놓치면 이동이 영영 막힌다.
-  useEffect(() => () => cleanup.current(), [])
+  // 여기서는 잠금만 푼다. 중단된 것을 "다 그었다"고 알리면 신호등이 먼저 서 버린다.
+  useEffect(
+    () => () => {
+      cleanup.current()
+      releaseLock()
+    },
+    [releaseLock],
+  )
 
   // 닫히기 시작하는 순간 잠그고 자리로 되돌아 걷게 해, 카메라 복귀와 같이 진행되게 한다.
   //
@@ -49,60 +68,48 @@ export function Crosswalk() {
     const check = (s: { activeId: string | null; phase: StationPhase }) => {
       if (locked.current || s.activeId !== CROSSWALK_AFTER_STATION || s.phase !== 'exiting') return
       if (!moveToStand(CROSSWALK_AFTER_STATION)) return
-      locked.current = true
-      useCameraStore.getState().lockMovement()
+      acquireLock()
     }
 
     const unsubscribe = useStationStore.subscribe(check)
     // 구독은 다음 변화부터 알리므로 지금 상태를 한 번 본다.
     check(useStationStore.getState())
     return unsubscribe
-  }, [])
+  }, [acquireLock])
 
   useEffect(() => {
     if (!returned || started.current) return
     started.current = true
 
-    let timer = 0
-    let unsubscribe = () => {}
-
-    const release = () => {
-      if (released.current) return
-      released.current = true
-      if (locked.current) useCameraStore.getState().unlockMovement()
-      markDrawn()
-    }
-
-    const beginDrawing = () => {
-      setDrawing(true)
-      timer = window.setTimeout(release, seconds * 1000)
-    }
-
-    cleanup.current = () => {
-      unsubscribe()
-      window.clearTimeout(timer)
-      release()
-    }
-
     // 닫히는 순간을 놓쳤으면 여기서 잠근다.
-    if (!locked.current) {
-      locked.current = true
-      useCameraStore.getState().lockMovement()
-    }
+    acquireLock()
 
     // 자리를 등록하지 않은 스테이션은 데려올 곳이 없으니 기다리지 않고 곧장 긋는다.
     if (!walkToStand(CROSSWALK_AFTER_STATION)) {
-      timer = window.setTimeout(beginDrawing, 0)
+      const timer = window.setTimeout(() => setDrawing(true), 0)
+      cleanup.current = () => window.clearTimeout(timer)
       return
     }
 
+    let unsubscribe = () => {}
     unsubscribe = useCameraStore.subscribe((s) => {
       // 자리에 닿으면 Character가 walking을 끈다. 이펙트 몸통이 아니라 구독 콜백이라 여기서 상태를 바꾼다.
       if (s.walking) return
       unsubscribe()
-      beginDrawing()
+      setDrawing(true)
     })
-  }, [returned, seconds, markDrawn])
+    cleanup.current = unsubscribe
+  }, [returned, acquireLock])
+
+  // 다 그으면 잠금을 풀고 차례를 넘긴다. 다시 그리기(HUD)로 연출이 재생되면 그 신호도 다시 낸다.
+  useEffect(() => {
+    if (!drawing) return
+    const timer = window.setTimeout(() => {
+      releaseLock()
+      markDrawn()
+    }, seconds * 1000)
+    return () => window.clearTimeout(timer)
+  }, [drawing, redraw, seconds, releaseLock, markDrawn])
 
   if (!drawing) return null
 

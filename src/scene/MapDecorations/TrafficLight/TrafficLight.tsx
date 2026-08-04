@@ -30,6 +30,7 @@ export function TrafficLight() {
   if (!revealed) return null
 
   // 횡단보도 우상단 꼭지점. 좌표가 상단 중앙이고 가로는 기준 크기 × 배율이다.
+  // 횡단보도의 회전은 따라가지 않는다 — 옮기거나 키우는 것만 따라온다.
   const cornerX = crosswalk.x + (CROSSWALK.size * crosswalk.scale) / 2
   const cornerZ = crosswalk.z
 

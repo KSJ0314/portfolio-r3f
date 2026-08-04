@@ -103,7 +103,10 @@ export const useMapDecorationsStore = create<MapDecorationsState>((set, get) => 
   redrawGuide: () => set((s) => ({ guideRedraw: s.guideRedraw + 1 })),
   setHint: (hint) => set({ hint }),
   setCrosswalk: (crosswalk) => set({ crosswalk }),
-  redrawCrosswalk: () => set((s) => ({ crosswalkRedraw: s.crosswalkRedraw + 1 })),
+  // 다시 그리면 연출이 처음부터 재생되므로 다 그었다는 신호도 내린다 — 뒤이어 나오는 장식이
+  // 그리는 동안 서 있으면 안 된다. 다 그으면 횡단보도가 다시 켠다.
+  redrawCrosswalk: () =>
+    set((s) => ({ crosswalkRedraw: s.crosswalkRedraw + 1, crosswalkDrawn: false })),
   markCrosswalkDrawn: () => {
     if (!get().crosswalkDrawn) set({ crosswalkDrawn: true })
   },
