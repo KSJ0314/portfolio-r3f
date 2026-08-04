@@ -100,11 +100,27 @@ const _stand = new Vector3()
 /**
  * 등록된 자리로 캐릭터를 걸어가게 한다. 자리마다 값은 달라도 데려가는 방식은 같으므로 여기 하나로 둔다.
  * 진입 잠금 중에도 걸어가며, 도착하면 `useCameraStore.walking`이 꺼진다.
+ * 자리를 등록하지 않았으면 걸어가지 않고 false를 준다 — 도착을 기다리는 쪽이 영영 기다리지 않도록.
  */
-export function walkToStand(id: string): void {
+export function walkToStand(id: string): boolean {
   const stand = STATION_REGISTRY[id]?.stand
-  if (!stand) return
+  if (!stand) return false
   useCameraStore.getState().walkTo(_stand.set(stand[0], 0, stand[1]))
+  return true
+}
+
+/**
+ * 등록된 자리로 캐릭터를 **평소 이동으로** 보낸다(우클릭한 것과 같다).
+ *
+ * `walkToStand`와 달리 연출 이동(`walking`)으로 표시하지 않는다. 그 표시를 켜면 카메라 팔로우가
+ * 되살아나(`CameraRig`), 스테이션이 돌리던 복귀 트윈과 부딪혀 카메라가 튄다.
+ * 그래서 스테이션이 아직 카메라를 쥐고 있는 동안(종료 애니메이션 중)에는 이쪽을 쓴다.
+ */
+export function moveToStand(id: string): boolean {
+  const stand = STATION_REGISTRY[id]?.stand
+  if (!stand) return false
+  useCameraStore.getState().setTarget(_stand.set(stand[0], 0, stand[1]))
+  return true
 }
 
 /**

@@ -1,6 +1,8 @@
 import { Suspense } from 'react'
+import { Crosswalk } from './Crosswalk'
 import { RightClickHint } from './RightClickHint'
 import { SkillsGuideArrow } from './SkillsGuideArrow'
+import { TrafficLight } from './TrafficLight'
 
 /**
  * 종이 위에 얹히는 맵 장식들의 자리 — 길안내 화살표·조작 안내처럼 스테이션에 속하지 않는 요소.
@@ -13,6 +15,8 @@ export function MapDecorations() {
     <Suspense fallback={null}>
       <SkillsGuideArrow />
       <RightClickHint />
+      <Crosswalk />
+      <TrafficLight />
     </Suspense>
   )
 }
