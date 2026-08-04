@@ -32,6 +32,7 @@ export function Crosswalk() {
   const returned = useAfterStation(CROSSWALK_AFTER_STATION)
   const [drawing, setDrawing] = useState(false)
 
+  const sent = useRef(false)
   const started = useRef(false)
   const locked = useRef(false)
   const cleanup = useRef<() => void>(() => {})
@@ -64,10 +65,14 @@ export function Crosswalk() {
   // 잠금이 여기서부터 걸려야 한다 — 영역 밖으로 걸어 나가 닫히는 경우에는 우클릭을 누른 채이고,
   // 그러면 매 프레임 목표점이 커서로 덮어써져 되돌려 보낸 자리가 곧바로 지워진다.
   // 다만 연출 이동으로 보내지는 않는다 — 그러면 팔로우가 되살아나 복귀 트윈과 부딪힌다.
+  //
+  // 처음 닫을 때 한 번만 돈다. 잠금 여부로 막으면 첫 시퀀스가 끝나 잠금이 풀린 뒤
+  // 두 번째 종료에서 다시 잠기는데, 그때는 풀어 줄 쪽이 없어 이동이 영영 막힌다.
   useEffect(() => {
     const check = (s: { activeId: string | null; phase: StationPhase }) => {
-      if (locked.current || s.activeId !== CROSSWALK_AFTER_STATION || s.phase !== 'exiting') return
+      if (sent.current || s.activeId !== CROSSWALK_AFTER_STATION || s.phase !== 'exiting') return
       if (!moveToStand(CROSSWALK_AFTER_STATION)) return
+      sent.current = true
       acquireLock()
     }
 
