@@ -38,9 +38,10 @@ export function Character() {
   useFrame((_, delta) => {
     _prev.copy(position)
     const { walking, endWalk } = useCameraStore.getState()
-    // 스테이션 진입 애니메이션 중에는 이동이 잠긴다.
-    // 이동 중 활성화했을 수 있으므로 남은 목표점을 현재 위치로 스냅해 즉시 멈춘다(관성 없이).
+    // 스테이션 진입 애니메이션 중에는 남은 목표점을 현재 위치로 스냅해 즉시 멈춘다(관성 없이).
     // 연출이 지정한 이동은 예외다 — 잠긴 동안 스테이션이 캐릭터를 자기 자리로 데려간다.
+    // 맵 연출이 건 잠금(`locks`)은 여기서 스냅하지 않는다. 그쪽은 **입력만** 막고 지정한 자리로는
+    // 계속 걸어가야 하기 때문이다(World가 목표점 갱신을 막는다).
     if (!walking && isMovementLocked(useStationStore.getState().phase)) target.copy(position)
     const dist = position.distanceTo(target)
     if (dist > ARRIVE_EPSILON) {

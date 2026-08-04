@@ -1,4 +1,4 @@
-import { DEFAULT_PAPER_STICKER_PARAMS, usePaperStickerTexture } from '../../lib/PaperSticker'
+import { PaperSticker } from '../../lib/PaperSticker'
 import { useStationStore } from '../../state/useStationStore'
 import { usePointerCursor } from '../usePointerCursor'
 import { EXIT_STICKER_PARAMS, EXIT_STICKER_URL } from './ExitSticker.constants'
@@ -14,19 +14,15 @@ import type { ExitStickerProps } from './ExitSticker.types'
  */
 export function ExitSticker({ x, y, size }: ExitStickerProps) {
   const cursor = usePointerCursor()
-  const { texture, plane } = usePaperStickerTexture(EXIT_STICKER_URL, {
-    ...DEFAULT_PAPER_STICKER_PARAMS,
-    ...EXIT_STICKER_PARAMS,
-  })
 
   return (
-    <mesh
+    <PaperSticker
+      url={EXIT_STICKER_URL}
+      height={size}
+      params={EXIT_STICKER_PARAMS}
       position={[x, y, 0]}
       onClick={() => useStationStore.getState().requestClose()}
       {...cursor}
-    >
-      <planeGeometry args={[plane.width * size, plane.height * size]} />
-      <meshBasicMaterial map={texture} transparent toneMapped={false} />
-    </mesh>
+    />
   )
 }

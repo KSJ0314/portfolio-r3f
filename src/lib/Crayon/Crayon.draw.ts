@@ -1,4 +1,5 @@
 import { DEFAULT_CRAYON_PARAMS, GRAIN_SIZE, GRAIN_STEP, PATTERN_PERIOD } from './Crayon.constants'
+import { createCrayonEdgeField, type CrayonEdgeField } from './Crayon.edge'
 import type {
   CrayonDrawing,
   CrayonPoint,
@@ -20,6 +21,9 @@ import type {
  * 마우스로 긋는 동안 이미 그린 부분을 다시 건드리지 않아야 해서,
  * 무늬의 진행도를 획 전체 대비 비율이 아니라 **시작점부터 따라간 거리**로 잡는다.
  * 한 번에 그리는 `drawCrayonStroke`도 이 위에 얹혀 있어 결과가 서로 어긋나지 않는다.
+ *
+ * 면을 채우는 그림은 그림 전체의 바깥 윤곽에서도 알갱이를 덜 찍어야 테두리가 너덜하다.
+ * 그 판정은 그리기 전에 만들어 둔 값밭(`Crayon.edge`)이 맡고, 붓은 알갱이마다 그 값을 본다.
  */
 
 /** 씨앗을 받는 작은 난수 생성기(mulberry32). */
@@ -57,10 +61,14 @@ export interface CrayonStrokePainter {
  * 마지막 샘플은 다음 점이 와야 진행 방향이 정해지므로 **한 칸 남겨 두고** 그린다.
  * 끝의 둥근 마무리도 획이 끝나야 위치가 정해지므로 `finish()`에서 붙인다.
  * 난수는 붓 하나가 계속 이어 쓰기 때문에, 나눠 그려도 한 번에 그린 것과 결과가 같다.
+ *
+ * `edge`를 주면 그림 바깥 윤곽에 가까운 알갱이를 건너뛴다. 주지 않으면 난수를 소비하지도 않아
+ * 결과가 예전과 완전히 같다.
  */
 export function createCrayonStrokePainter(
   ctx: CanvasRenderingContext2D,
   params: CrayonStrokeParams,
+  edge?: CrayonEdgeField | null,
 ): CrayonStrokePainter {
   const { width, color, opacity, roughness, patchiness, wobble, seed } = params
   const random = createRandom(seed)
@@ -205,6 +213,9 @@ export function createCrayonStrokePainter(
       const grainX = centerX + normalX * across * halfHere + (dx / length) * alongJitter
       const grainY = centerY + normalY * across * halfHere + (dy / length) * alongJitter
 
+      // 그림 바깥 윤곽에 가까울수록 덜 찍는다 — 면을 채워도 테두리가 자연스럽게 끝난다.
+      if (edge && random() > edge.at(grainX, grainY)) continue
+
       ctx.globalAlpha = Math.min(
         1,
         opacity * pressure * (0.35 + 0.65 * random()) * (1 - Math.abs(across) * 0.35),
@@ -289,10 +300,11 @@ export function drawCrayonStroke(
   ctx: CanvasRenderingContext2D,
   points: readonly CrayonPoint[],
   params: CrayonStrokeParams,
+  edge?: CrayonEdgeField | null,
 ): void {
   if (points.length < 1) return
 
-  const painter = createCrayonStrokePainter(ctx, params)
+  const painter = createCrayonStrokePainter(ctx, params, edge)
   painter.extend(points)
   painter.finish()
 }
@@ -303,6 +315,7 @@ export function drawCrayonStroke(
  * 가로세로를 따로 받으므로 정사각이 아닌 캔버스에도 그릴 수 있다.
  * `params`는 획들이 공유하는 값이며 `DEFAULT_CRAYON_PARAMS`에 병합된다.
  * 씨앗은 획이 정하고, 색도 획이 갖고 있으면 그쪽이 공유 색을 이긴다(한 그림에 여러 색을 섞을 수 있다).
+ * `params.edge`를 주면 그림 전체의 바깥 윤곽 값밭을 먼저 만들어 획들이 함께 본다.
  */
 export function drawCrayonDrawing(
   ctx: CanvasRenderingContext2D,
@@ -311,13 +324,21 @@ export function drawCrayonDrawing(
   drawing: CrayonDrawing,
   params?: CrayonSharedParams,
 ): void {
-  const shared = { ...DEFAULT_CRAYON_PARAMS, ...params }
+  const { edge, ...rest } = params ?? {}
+  const shared = { ...DEFAULT_CRAYON_PARAMS, ...rest }
+  const field = createCrayonEdgeField(drawing, width, height, shared.width, edge)
+
   for (const stroke of drawing) {
     const points = stroke.points.map(([u, v]): CrayonPoint => [u * width, v * height])
-    drawCrayonStroke(ctx, points, {
-      ...shared,
-      seed: stroke.seed,
-      color: stroke.color ?? shared.color,
-    })
+    drawCrayonStroke(
+      ctx,
+      points,
+      {
+        ...shared,
+        seed: stroke.seed,
+        color: stroke.color ?? shared.color,
+      },
+      field,
+    )
   }
 }

@@ -2,8 +2,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import type { ThreeEvent } from '@react-three/fiber'
 import { Plane, Raycaster, Vector2, Vector3 } from 'three'
-import { useCameraStore } from '../../state/useCameraStore'
-import { isMovementLocked, useStationStore } from '../../state/useStationStore'
+import { isMovementBlocked, useCameraStore } from '../../state/useCameraStore'
 import { PaperGround } from './PaperGround'
 
 /**
@@ -40,7 +39,7 @@ export function World() {
   useFrame(() => {
     if (!holding.current) return
     // 이동이 잠긴 동안에는 목표점을 갱신하지 않는다(홀드 중 상태가 바뀌었을 수도 있으므로 매 프레임 확인).
-    if (isMovementLocked(useStationStore.getState().phase)) return
+    if (isMovementBlocked()) return
     // 홀드 임계 시간 전에는 커서 재조준을 하지 않는다.
     // 짧은 클릭에서 캐릭터가 움직이며 커서 밑 월드 지점이 앞으로 밀려
     // 목표점이 클릭 지점을 넘어서는(오버슛) 것을 막는다.
@@ -58,8 +57,8 @@ export function World() {
     (e: ThreeEvent<PointerEvent>) => {
       if (e.button !== 2) return
 
-      // 진입 애니메이션 중에는 이동 입력을 받지 않는다.
-      if (isMovementLocked(useStationStore.getState().phase)) return
+      // 진입 애니메이션이나 맵 연출 중에는 이동 입력을 받지 않는다.
+      if (isMovementBlocked()) return
 
       e.stopPropagation()
       pointer.current.copy(e.pointer)

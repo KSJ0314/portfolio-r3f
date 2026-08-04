@@ -16,7 +16,7 @@ export const INK = '#3a3a3a'
 export const SKILLS_TOP_LEFT = { x: 5, z: 3 } as const
 
 /** 캐릭터가 서는 자리 — 영역 중심 기준 오프셋(월드 x, z). */
-export const SKILLS_STAND_OFFSET = { x: 3, z: 4 } as const
+export const SKILLS_STAND_OFFSET = { x: 2, z: 4 } as const
 
 /**
  * 활성 전환 시간·이징. 캐릭터 이동·카메라 각도 전환·공구상자 이동이 **겹치지 않고 차례로** 돈다 —
