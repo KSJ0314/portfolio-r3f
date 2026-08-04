@@ -1,4 +1,4 @@
-import type { CrayonStrokeParams } from './Crayon.types'
+import type { CrayonEdgeParams, CrayonStrokeParams } from './Crayon.types'
 
 /** 획을 따라 왁스를 찍는 간격(px). 촘촘할수록 알갱이가 빽빽해진다. */
 export const GRAIN_STEP = 0.7
@@ -17,6 +17,13 @@ export const CRAYON_TEXTURE_PIXELS = 512
 
 /** plane이 그림보다 넓은 기본 배율. 획이 가장자리에서 잘리지 않도록 여백을 준다. */
 export const CRAYON_TEXTURE_MARGIN = 1.35
+
+/** 바깥 윤곽 마무리 기본값. */
+export const DEFAULT_CRAYON_EDGE: CrayonEdgeParams = {
+  feather: 0.1,
+  strength: 1,
+  roundness: 0,
+}
 
 /** 크레파스 획 기본값. */
 export const DEFAULT_CRAYON_PARAMS: CrayonStrokeParams = {

@@ -3,7 +3,7 @@ import type { CanvasTexture } from 'three'
 import { CRAYON_TEXTURE_MARGIN, CRAYON_TEXTURE_PIXELS } from './Crayon.constants'
 import { useCrayonRevealTexture } from './Crayon.reveal'
 import { useCrayonTexture } from './Crayon.texture'
-import type { CrayonDrawing, CrayonSharedParams } from './Crayon.types'
+import type { CrayonDrawing, CrayonEdgeParams, CrayonSharedParams } from './Crayon.types'
 
 /** 획 굵기 대비 손떨림 폭의 기본 비율. 굵을수록 더 흔들리게. */
 const WOBBLE_RATIO = 0.18
@@ -25,6 +25,11 @@ type CrayonProps = {
   patchiness?: number
   /** 획 굵기 대비 손떨림 폭의 비율. 크기를 바꿔도 손맛이 유지되도록 비율로 받는다. */
   wobbleRatio?: number
+  /**
+   * 바깥 윤곽 마무리 — 그림 가장자리로 갈수록 알갱이를 덜 찍어 테두리가 자연스럽게 끝난다.
+   * 획을 겹쳐 면을 채운 그림에 준다. 주지 않으면 걸지 않는다.
+   */
+  edge?: Partial<CrayonEdgeParams>
   /** plane이 그림보다 넓은 배율(획 잘림 방지). */
   margin?: number
   /** 텍스처 해상도(px). */
@@ -109,6 +114,7 @@ export function Crayon({
   opacity,
   patchiness,
   wobbleRatio = WOBBLE_RATIO,
+  edge,
   margin = CRAYON_TEXTURE_MARGIN,
   pixels = CRAYON_TEXTURE_PIXELS,
   reveal,
@@ -132,6 +138,7 @@ export function Crayon({
       roughness,
       opacity,
       patchiness,
+      edge,
     },
     texWidth,
     texHeight,

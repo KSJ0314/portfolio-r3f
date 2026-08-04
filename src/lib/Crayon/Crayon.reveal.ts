@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { CanvasTexture, SRGBColorSpace } from 'three'
 import { DEFAULT_CRAYON_PARAMS } from './Crayon.constants'
 import { createCrayonStrokePainter } from './Crayon.draw'
+import { createCrayonEdgeField } from './Crayon.edge'
 import type { CrayonDrawing, CrayonPoint, CrayonSharedParams } from './Crayon.types'
 
 /**
@@ -51,7 +52,10 @@ function createCrayonReveal({ drawing, params, width, height }: CrayonBakeInput)
   const texture = new CanvasTexture(canvas)
   texture.colorSpace = SRGBColorSpace
 
-  const shared = { ...DEFAULT_CRAYON_PARAMS, ...params }
+  const { edge, ...rest } = params
+  const shared = { ...DEFAULT_CRAYON_PARAMS, ...rest }
+  // 값밭은 그림 전체로 미리 만든다. 그래서 첫 획부터 테두리가 적용된 채로 그어진다.
+  const field = createCrayonEdgeField(drawing, width, height, shared.width, edge)
 
   const strokes: RevealStroke[] = drawing.map((stroke) => {
     const points = stroke.points.map(([u, v]): CrayonPoint => [u * width, v * height])
@@ -96,11 +100,15 @@ function createCrayonReveal({ drawing, params, width, height }: CrayonBakeInput)
       while (index < strokes.length) {
         const stroke = strokes[index]
         if (!painter) {
-          painter = createCrayonStrokePainter(ctx, {
-            ...shared,
-            seed: stroke.seed,
-            color: stroke.color,
-          })
+          painter = createCrayonStrokePainter(
+            ctx,
+            {
+              ...shared,
+              seed: stroke.seed,
+              color: stroke.color,
+            },
+            field,
+          )
           next = 0
         }
 
