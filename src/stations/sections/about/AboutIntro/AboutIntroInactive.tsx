@@ -1,8 +1,9 @@
-import { Suspense, useCallback, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Line, Text } from '@react-three/drei'
 import { BODY_FONT, HAND_FONT } from '../../../../content/fonts'
 import { useDoc } from '../../../../lib/firebase'
 import { useIntroPageStore } from '../../../../state/useIntroPageStore'
+import { useSceneReadyStore } from '../../../../state/useSceneReadyStore'
 import type { StationInactiveProps } from '../../../registry'
 import type { TroikaTextMesh } from '../../../types'
 import { AREA_Y, CONTENT_Y, INK, OUTLINE_Y } from './AboutIntro.constants'
@@ -24,7 +25,15 @@ export function AboutIntroInactive({ station }: StationInactiveProps) {
   const { width, height } = useIntroPageStore((s) => s.area)
   const layout = useIntroPageStore((s) => s.layout)
   const showOutline = useIntroPageStore((s) => s.showOutline)
-  const { data: profile } = useDoc<ProfileDoc>('profile', 'main')
+  const { data: profile, loading: profileLoading } = useDoc<ProfileDoc>('profile', 'main')
+
+  // 글씨는 텍스처가 아니라 Firestore를 기다리므로 서스펜드하지 않는다.
+  // 마운트만으로 준비됐다고 하면 가림막이 데이터보다 먼저 걷혀 사진만 뜬 페이지가 보인다.
+  // 읽기가 끝나면(실패·문서 없음 포함) 그릴 수 있는 상태이므로 그때 알린다.
+  const markReady = useSceneReadyStore((s) => s.markReady)
+  useEffect(() => {
+    if (!profileLoading) markReady('intro-text')
+  }, [profileLoading, markReady])
 
   // 인용 막대를 본문 높이에 맞추려면 줄이 몇 줄로 접혔는지 알아야 한다.
   // 글자 크기·폭·줄바꿈에 따라 달라지므로 troika가 배치를 끝낸 뒤 알려주는 값을 받는다.
