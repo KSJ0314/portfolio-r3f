@@ -3,8 +3,15 @@
  * 나머지(다른 스테이션의 그림 등)는 나중에 나타나도 무방하므로 기다리지 않는다.
  *
  * Intro는 글씨와 사진이 준비되는 시점이 달라 경계가 나뉘어 있으므로 둘 다 확인한다.
+ * 스테이션이 마운트됐다는 것만으로는 글씨가 준비됐다고 볼 수 없다 — 글씨는 Firestore를 기다린다.
  */
-export const REQUIRED_KEYS = ['ground', 'character', 'station:about-intro', 'intro-photo']
+export const REQUIRED_KEYS = [
+  'ground',
+  'character',
+  'station:about-intro',
+  'intro-text',
+  'intro-photo',
+]
 
 /** 이 시간 안에 준비되지 않으면 무언가 잘못된 것으로 본다(ms). */
 export const READY_TIMEOUT = 3000
