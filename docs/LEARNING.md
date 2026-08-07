@@ -119,6 +119,14 @@
 - **참고**: 관련 링크·이슈·커밋
 ```
 
+### [2026-08-07] 첫 화면에서 Intro 사진이 두 번 그려짐
+
+- **증상**: 새로고침하면 가끔 Intro 사진이 떴다가 다시 그려진다. 한 번에 뜰 때도 있어 간헐적으로 보였다. 개발 서버와 배포본 모두에서 재현된다.
+- **환경**: React 19, @react-three/fiber v9, Firestore.
+- **원인**: 첫 화면 가림막(`SceneGate`)이 기다리는 목록에 사진(`intro-photo`)만 있고 글씨는 없었다. 글씨가 준비됐는지를 뜻하는 신호가 아예 없었고, 대신 있던 `station:about-intro`는 스테이션이 **마운트되자마자** 올라가는 신호라 Firestore 데이터를 기다리지 않는다. 데이터가 사진보다 느린 경우 가림막이 먼저 걷혀 사진만 있는 페이지가 보이고, 데이터가 도착하며 페이지가 다시 그려진다. 데이터가 빠르면 한 번에 떠서 증상이 나타나지 않는다.
+- **해결**: `AboutIntroInactive`가 Firestore 읽기가 끝난 뒤 `intro-text`를 올리고, 가림막이 그 키까지 기다리게 했다. 읽기 실패나 문서 없음도 준비로 다뤄, 가림막이 걷히지 않아 새로고침을 되풀이하는 일이 없게 했다.
+- **참고**: `src/ui/SceneGate/SceneGate.constants.ts`, `src/stations/sections/about/AboutIntro/AboutIntroInactive.tsx`
+
 ### [2026-07-28] 첫 화면 로딩 — 순서 뒤집힘·깜빡임·카메라 튐
 
 - **증상**:

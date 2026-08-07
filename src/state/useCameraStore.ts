@@ -4,8 +4,9 @@ import { isMovementLocked, useStationStore } from './useStationStore'
 
 /**
  * 캐릭터가 이동할 수 있는 최대 반경(경계). 경계에서 투명 벽처럼 멈춘다.
+ * 스테이션 영역을 다 품되 바닥(`GROUND_SIZE`)보다는 작게 둬 가장자리가 화면에 안 보인다.
  */
-export const CAMERA_BOUNDS = 30
+export const CAMERA_BOUNDS = 50
 
 /**
  * 캐릭터 시작 위치 [x, y, z]. Intro 페이지 바깥 아래쪽이다.

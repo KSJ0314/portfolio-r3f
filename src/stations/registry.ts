@@ -1,8 +1,14 @@
 import type { ComponentType } from 'react'
 import { Vector3 } from 'three'
-import type { Station } from '../content/stations'
+import { type Station, getStation } from '../content/stations'
 import { useCameraStore } from '../state/useCameraStore'
 import type { StationPhase } from '../state/useStationStore'
+import {
+  AboutCareerInactive,
+  AboutCareerScene,
+  aboutCareerDistanceTo,
+  careerStandFor,
+} from './sections/about/AboutCareer'
 import {
   AboutIntroInactive,
   AboutIntroScene,
@@ -68,8 +74,13 @@ export interface StationEntry {
    * 활성화할 때 캐릭터가 서는 자리(월드 x, z).
    * 데려가는 것은 공통층(`walkToStand`)이 맡고, 언제 데려갈지는 스테이션이 자기 연출 순서에서 정한다.
    * 등록하지 않으면 진입 이동이 없다.
+   *
+   * 자리가 늘 같은 점이 아니라 **캐릭터가 선 자리에 따라 달라지는** 스테이션은 함수를 등록한다
+   * (예: 어느 쪽에서 오든 가장 가까운 영역 테두리). 거리 계산을 맡긴 것(`distanceTo`)과 같은 갈래다.
    */
-  stand?: readonly [number, number]
+  stand?:
+    | readonly [number, number]
+    | ((point: Vector3, station: Station) => readonly [number, number] | null)
   /** 3D 상세 — Canvas 안에 마운트. 오브젝트 확장·카메라 연출 등. */
   Scene?: ComponentType<StationDetailProps>
   /** 2D 상세 — Canvas 밖(DOM)에 마운트. 텍스트·이미지 패널 등. */
@@ -90,6 +101,13 @@ export const STATION_REGISTRY: Record<string, StationEntry> = {
     stand: SKILLS_STAND,
     Scene: AboutSkillsScene,
   },
+  // 서는 자리는 한 점이 아니라 캐릭터가 선 자리에서 가장 가까운 영역 테두리다.
+  'about-career': {
+    Inactive: AboutCareerInactive,
+    distanceTo: aboutCareerDistanceTo,
+    stand: careerStandFor,
+    Scene: AboutCareerScene,
+  },
 }
 
 /** 활성 스테이션의 등록 구현을 찾는다(없으면 undefined). */
@@ -98,12 +116,24 @@ export const getStationEntry = (id: string): StationEntry | undefined => STATION
 const _stand = new Vector3()
 
 /**
+ * 등록된 자리를 실제 좌표로 푼다. 함수로 등록했으면 **지금 캐릭터 위치**를 넘겨 그때그때 구한다.
+ * 등록하지 않았거나 구할 수 없으면 null이다.
+ */
+function resolveStand(station: Station): readonly [number, number] | null {
+  const stand = STATION_REGISTRY[station.id]?.stand
+  if (!stand) return null
+  if (typeof stand !== 'function') return stand
+  return stand(useCameraStore.getState().position, station)
+}
+
+/**
  * 등록된 자리로 캐릭터를 걸어가게 한다. 자리마다 값은 달라도 데려가는 방식은 같으므로 여기 하나로 둔다.
  * 진입 잠금 중에도 걸어가며, 도착하면 `useCameraStore.walking`이 꺼진다.
  * 자리를 등록하지 않았으면 걸어가지 않고 false를 준다 — 도착을 기다리는 쪽이 영영 기다리지 않도록.
  */
 export function walkToStand(id: string): boolean {
-  const stand = STATION_REGISTRY[id]?.stand
+  const station = getStation(id)
+  const stand = station && resolveStand(station)
   if (!stand) return false
   useCameraStore.getState().walkTo(_stand.set(stand[0], 0, stand[1]))
   return true
@@ -117,7 +147,8 @@ export function walkToStand(id: string): boolean {
  * 그래서 스테이션이 아직 카메라를 쥐고 있는 동안(종료 애니메이션 중)에는 이쪽을 쓴다.
  */
 export function moveToStand(id: string): boolean {
-  const stand = STATION_REGISTRY[id]?.stand
+  const station = getStation(id)
+  const stand = station && resolveStand(station)
   if (!stand) return false
   useCameraStore.getState().setTarget(_stand.set(stand[0], 0, stand[1]))
   return true
@@ -128,7 +159,7 @@ export function moveToStand(id: string): boolean {
  * 자리를 등록하지 않은 스테이션은 배치 좌표로 보낸다.
  */
 export function teleportToStand(station: Station): void {
-  const stand = STATION_REGISTRY[station.id]?.stand ?? station.position
+  const stand = resolveStand(station) ?? station.position
   if (!stand) return
   useCameraStore.getState().teleportTo(_stand.set(stand[0], 0, stand[1]))
 }

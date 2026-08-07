@@ -10,6 +10,7 @@
  * 스테이션 최종 배치·스케일은 각 스테이션 상세 구현(Phase 8)에서 정한다.
  */
 
+import { CAREER_CENTER } from '../stations/sections/about/AboutCareer/AboutCareer.constants'
 import { SKILLS_CENTER } from '../stations/sections/about/AboutSkills/AboutSkills.constants'
 import type { CollectionName } from '../lib/firebase/firestore'
 
@@ -55,7 +56,7 @@ export const STATIONS: Station[] = [
   // About — 4개
   { id: 'about-intro', sectionId: 'about', label: 'Intro', short: 'Intro', position: [0, 0], collections: ['profile'] },
   { id: 'about-skills', sectionId: 'about', label: 'Skills', short: 'Skills', position: SKILLS_CENTER, collections: ['skills'] },
-  { id: 'about-career', sectionId: 'about', label: 'Experience & Education', short: 'Career', collections: ['experiences', 'education', 'spec'] },
+  { id: 'about-career', sectionId: 'about', label: 'Experience & Education', short: 'Career', position: CAREER_CENTER, collections: ['experiences', 'education', 'spec'] },
   { id: 'about-award', sectionId: 'about', label: 'Awards & Certifications', short: 'Award', collections: ['awards'] },
 
   // Projects — 프로젝트마다 1개 (현재 플레이스홀더 3개)

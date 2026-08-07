@@ -9,6 +9,13 @@ import {
 } from '../scene/MapDecorations/TrafficLight/TrafficLight.constants'
 import { EXIT_STICKER_PARAMS, EXIT_STICKER_URL } from '../stations/ExitSticker/ExitSticker.constants'
 import {
+  CAREER_EDUCATION,
+  CAREER_PAPER_PARAMS,
+  CAREER_SPEC,
+  EDUCATION_URL,
+  SPEC_URL,
+} from '../stations/sections/about/AboutCareer/CareerPaper/CareerPaper.constants'
+import {
   SKILLS_BOX_PLACEMENT,
   SKILLS_BOX_URL,
 } from '../stations/sections/about/AboutSkills/SkillsBox/SkillsBox.constants'
@@ -66,5 +73,21 @@ export const STICKER_ASSETS: StickerAsset[] = [
   {
     url: TRAFFIC_LIGHT_URL,
     params: { ...DEFAULT_PAPER_STICKER_PARAMS, ...TRAFFIC_LIGHT_PARAMS },
+  },
+  {
+    url: EDUCATION_URL,
+    params: {
+      ...DEFAULT_PAPER_STICKER_PARAMS,
+      ...CAREER_PAPER_PARAMS,
+      border: CAREER_EDUCATION.border,
+    },
+  },
+  {
+    url: SPEC_URL,
+    params: {
+      ...DEFAULT_PAPER_STICKER_PARAMS,
+      ...CAREER_PAPER_PARAMS,
+      border: CAREER_SPEC.border,
+    },
   },
 ]
