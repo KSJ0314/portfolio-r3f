@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import type { ThreeElements } from '@react-three/fiber'
 import { DEFAULT_PAPER_STICKER_PARAMS } from './PaperSticker.constants'
 import { usePaperStickerTexture } from './PaperSticker.texture'
@@ -23,6 +24,11 @@ type PaperStickerProps = {
    * 투명한 여백이 뒤엣것을 잘라내지 않는다.
    */
   depthWrite?: boolean
+  /**
+   * 구운 그림의 월드 크기(여백 제외)를 알려준다.
+   * 가로는 그림 비율에서 나오므로 굽기 전에는 알 수 없다 — 폭에 맞춰 다른 것을 놓을 때 쓴다.
+   */
+  onMeasure?: (size: { width: number; height: number }) => void
   // `args`(생성자 인자)는 받지 않는다 — 여러 장일 때는 판이 아니라 그룹에 얹히므로 뜻이 달라진다.
 } & Omit<ThreeElements['mesh'], 'children' | 'count' | 'args'>
 
@@ -45,6 +51,7 @@ export function PaperSticker({
   color,
   opacity,
   depthWrite,
+  onMeasure,
   // 여러 장일 때 판정에서 빼려면 그룹이 아니라 각 판에 걸어야 한다.
   raycast,
   ...mesh
@@ -56,6 +63,11 @@ export function PaperSticker({
 
   const planeW = plane.width * height
   const planeH = plane.height * height
+  const artW = artwork.width * height
+
+  useEffect(() => {
+    onMeasure?.({ width: artW, height })
+  }, [onMeasure, artW, height])
 
   const material = (
     <meshBasicMaterial
@@ -78,7 +90,6 @@ export function PaperSticker({
   }
 
   // 간격은 여백을 뺀 그림 폭으로 잰다. 판 폭으로 재면 여백만큼 벌어져 사이가 성기어 보인다.
-  const artW = artwork.width * height
   const step = artW + gap
 
   return (
