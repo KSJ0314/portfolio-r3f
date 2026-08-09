@@ -1,13 +1,19 @@
-import type { StationArea } from '../../../types'
+import type { StationArea, StationAreaPadding } from '../../../types'
 
 /**
  * Career 영역(가로 × 세로). 바닥에 눕은 사각형이고, 이게 곧 클릭·근접 판정 범위다.
  * 시작 추정값이라 HUD로 맞춰 확정한다.
  */
-export const CAREER_AREA: StationArea = { width: 13.5, height: 8 }
+export const CAREER_AREA: StationArea = { width: 14, height: 8 }
 
 /** 종이에 적힌 글씨·선 색(다른 About 스테이션과 같은 잉크색). */
 export const INK = '#3a3a3a'
+
+/** 곁들이는 글씨의 색 — 날짜·기관명처럼 내용을 거드는 값에 쓴다. */
+export const INK_MUTED = '#696969'
+
+/** 칸을 가르는 선의 색. 글씨보다 물러나 있어야 내용을 읽는 데 걸리지 않는다. */
+export const INK_LINE = '#d0d0d0'
 
 /**
  * Career 영역의 상단 중앙(월드 x, z). 횡단보도를 건너온 자리와 맞물리는 기준점이라
@@ -25,11 +31,14 @@ export const CAREER_TURN_EASE = 'power2.inOut'
 /** 캐릭터가 설 자리를 테두리에서 바깥으로 얼마나 띄울지. 0이면 테두리 위에 선다. */
 export const CAREER_STAND_MARGIN = 0
 
-/** 영역을 세로로 가르는 칸 수 — 교육 · 자격증 · 수상내역. */
-export const CAREER_COLUMN_COUNT = 3
+/**
+ * 영역 테두리에서 내용까지 들이는 여백. 로고·제목·목록·구분선이 이 안쪽을 기준으로 놓인다.
+ * 나가기는 UI라 여백을 따르지 않고 구석에 남으므로, 좌우 여백을 아이콘 폭만큼 주면 글이 아래로 가지 않는다.
+ */
+export const CAREER_AREA_PADDING: StationAreaPadding = { x: 0.2, y: 0.3 }
 
-/** 칸마다 붙는 제목. 순서가 곧 칸 순서이고, 그 칸의 로고가 되는 그림도 같은 순서다. */
-export const CAREER_COLUMN_TITLES = ['교육', '수상내역', '자격증'] as const
+/** 영역을 세로로 가르는 칸 수 — 교육 · 수상내역 · 자격증. */
+export const CAREER_COLUMN_COUNT = 3
 
 /** 활성 상태에서 각 그림이 물러나 로고가 되는 자세. */
 export const CAREER_LOGO = {
@@ -44,19 +53,14 @@ export const CAREER_LOGO = {
   left: 0.5,
 }
 
-/** 로고 옆에 나란히 붙는 손글씨 제목. */
-export const CAREER_TITLE = {
-  /** 글자 크기. */
-  size: 0.5,
-  /** 로고 오른쪽 끝에서 제목까지 띄우는 거리. */
-  gap: 0.3,
-  /** 세로 보정. 양수면 위로 올라간다. */
-  offsetY: 0,
+/** 칸 하나의 가로. 좌우 여백을 뗀 안쪽을 칸 수로 고르게 나눈다. */
+export function careerColumnWidth(width: number, paddingX: number): number {
+  return (width - paddingX * 2) / CAREER_COLUMN_COUNT
 }
 
-/** 칸 왼쪽 테두리의 x(영역 중심 기준). 로고도 제목도 이 선에서부터 잰다. */
-export function careerColumnLeft(index: number, width: number): number {
-  return -width / 2 + (width / CAREER_COLUMN_COUNT) * index
+/** 칸 왼쪽 테두리의 x(영역 중심 기준). 로고도 제목도 목록도 이 선에서부터 잰다. */
+export function careerColumnLeft(index: number, width: number, paddingX: number): number {
+  return -width / 2 + paddingX + careerColumnWidth(width, paddingX) * index
 }
 
 /** Career 영역의 중심(월드 x, z). 상단 중앙 + 세로 반크기. stations.ts의 배치 좌표로 쓴다. */

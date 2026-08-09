@@ -36,6 +36,7 @@ const OUTLINE_Y = 0.01
 export function AboutCareerInactive({ station }: StationInactiveProps) {
   const area = useCareerPageStore((s) => s.area)
   const topCenter = useCareerPageStore((s) => s.topCenter)
+  const padding = useCareerPageStore((s) => s.padding)
   const showOutline = useCareerPageStore((s) => s.showOutline)
   const education = useCareerPageStore((s) => s.education)
   const spec = useCareerPageStore((s) => s.spec)
@@ -55,13 +56,13 @@ export function AboutCareerInactive({ station }: StationInactiveProps) {
   // 배율은 평소 크기마다 달라진다 — 로고 높이를 맞춰야 셋이 같은 크기로 보인다.
   // 가로도 그림마다 다르므로, 왼쪽 끝을 칸에 맞추려면 올라온 가로의 절반만큼 안으로 들인다.
   const logoAt = useMemo<(index: number, ownHeight: number) => CareerLogoTarget>(() => {
-    const z = -halfHeight + logo.top
+    const z = -halfHeight + padding.y + logo.top
     return (index, ownHeight) => ({
-      x: careerColumnLeft(index, width) + logo.left + (widths[index] ?? 0) / 2,
+      x: careerColumnLeft(index, width, padding.x) + logo.left + (widths[index] ?? 0) / 2,
       z,
       scale: ownHeight > 0 ? logo.height / ownHeight : 0,
     })
-  }, [width, halfHeight, logo, widths])
+  }, [width, halfHeight, padding, logo, widths])
 
   const outline = useMemo<[number, number, number][]>(() => {
     // 닫힌 사각형이라 첫 점으로 돌아온다.

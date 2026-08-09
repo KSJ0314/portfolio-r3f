@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
+import { Suspense, useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
 import { Matrix4, Quaternion, Vector3 } from 'three'
 import gsap from 'gsap'
@@ -9,6 +9,8 @@ import { useStationStore } from '../../../../state/useStationStore'
 import { type StationDetailProps, walkToStand } from '../../../registry'
 import { CAREER_TURN_EASE, CAREER_TURN_SECONDS } from './AboutCareer.constants'
 import { aboutCareerDistanceTo } from './AboutCareer.distance'
+import { CareerColumns } from './CareerColumns'
+import { CareerExit } from './CareerExit'
 import { CareerTitles } from './CareerTitles'
 
 const CAREER_ID = 'about-career'
@@ -138,8 +140,19 @@ export function AboutCareerScene({ phase }: StationDetailProps) {
     }
   }, [phase, applyPose])
 
-  // 제목은 완전히 활성인 동안에만 둔다(진입·종료 애니메이션 중에는 안 보인다).
+  // 페이지 내용은 완전히 활성인 동안에만 둔다(진입·종료 애니메이션 중에는 안 보인다).
   if (phase !== 'active') return null
 
-  return <CareerTitles />
+  // 제목은 로고 줄에 붙는 고정이고, 그 아래 세 칸이 내용을 채운다.
+  // 나가기 스티커를 굽는 동안 이 컴포넌트까지 서스펜드되면 카메라 연출이 텍스처 로딩에 물리므로,
+  // 내용은 자체 경계 안에 둔다.
+  return (
+    <>
+      <CareerTitles />
+      <Suspense fallback={null}>
+        <CareerColumns />
+        <CareerExit />
+      </Suspense>
+    </>
+  )
 }
