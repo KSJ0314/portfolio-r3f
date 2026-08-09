@@ -56,7 +56,7 @@ export const STATIONS: Station[] = [
   // About — 3개
   { id: 'about-intro', sectionId: 'about', label: 'Intro', short: 'Intro', position: [0, 0], collections: ['profile'] },
   { id: 'about-skills', sectionId: 'about', label: 'Skills', short: 'Skills', position: SKILLS_CENTER, collections: ['skills'] },
-  { id: 'about-career', sectionId: 'about', label: 'Education & Awards', short: 'Career', position: CAREER_CENTER, collections: ['education', 'awards', 'spec'] },
+  { id: 'about-career', sectionId: 'about', label: 'Education, Awards & Certifications', short: 'Career', position: CAREER_CENTER, collections: ['education', 'awards', 'spec'] },
 
   // Projects — 프로젝트마다 1개 (현재 플레이스홀더 3개)
   { id: 'project-1', sectionId: 'projects', label: 'Project 1', short: 'Proj 1', collections: ['projects'] },

@@ -37,7 +37,7 @@
 |---|---|---|
 | about-intro (Intro) | 🟢 | 🟢 |
 | about-skills (Skills) | 🟢 | 🟢 |
-| about-career (Education & Awards) | 🟢 | 🟢 |
+| about-career (Education, Awards & Certifications) | 🟢 | 🟢 |
 | project-1 | ⚪ | ⚪ (체험 데모 포함) |
 | project-2 | ⚪ | ⚪ (체험 데모 포함) |
 | project-3 | ⚪ | ⚪ (체험 데모 포함) |
