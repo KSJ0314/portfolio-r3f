@@ -53,11 +53,10 @@ export const SECTIONS: Section[] = [
 // about-intro는 사이트 첫 화면을 겸하므로 원점에 둔다.
 // 자리를 정한 스테이션만 좌표를 갖는다 — 나머지는 상세 구현에서 영역과 함께 정한다.
 export const STATIONS: Station[] = [
-  // About — 4개
+  // About — 3개
   { id: 'about-intro', sectionId: 'about', label: 'Intro', short: 'Intro', position: [0, 0], collections: ['profile'] },
   { id: 'about-skills', sectionId: 'about', label: 'Skills', short: 'Skills', position: SKILLS_CENTER, collections: ['skills'] },
-  { id: 'about-career', sectionId: 'about', label: 'Experience & Education', short: 'Career', position: CAREER_CENTER, collections: ['experiences', 'education', 'spec'] },
-  { id: 'about-award', sectionId: 'about', label: 'Awards & Certifications', short: 'Award', collections: ['awards'] },
+  { id: 'about-career', sectionId: 'about', label: 'Education, Awards & Certifications', short: 'Career', position: CAREER_CENTER, collections: ['education', 'awards', 'spec'] },
 
   // Projects — 프로젝트마다 1개 (현재 플레이스홀더 3개)
   { id: 'project-1', sectionId: 'projects', label: 'Project 1', short: 'Proj 1', collections: ['projects'] },

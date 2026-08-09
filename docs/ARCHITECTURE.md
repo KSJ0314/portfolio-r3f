@@ -30,7 +30,10 @@ _작성 예정_
           - `AboutCareerInactive` — 클릭 판정 판 + 오려 붙인 종이 두 장(`CareerPaper` — 교육·자격증) + 트로피 모델(`CareerTrophy`). 종이끼리는 깊이를 쓰지 않고 `renderOrder`로 앞뒤를 못 박는다 — 반투명은 카메라 거리로 정렬돼, 아래쪽에 놓인 종이가 위로 올라온다. 트로피는 바닥 그림자를 따로 깐다(실루엣을 스텐실에 표시하고 그 자리만 한 겹 칠한다. DECISIONS 027). 셋은 활성 구현이 내는 차례 신호(`useCareerSequenceStore.logoTurn`)를 구독해 스스로 제 칸의 로고 자리로 물러난다.
           - `AboutSkillsInactive` — 클릭 판정 판 + 공구함 스티커(`SkillsBox`). 스티커는 차례를 알리는 신호(`useSkillsSequenceStore.logoTurn`)를 구독해 스스로 줄어들어 영역 좌상단으로 물러나 로고가 된다. 전환을 활성 구현에 두지 않는 이유는 같은 오브젝트가 이어서 변형돼야 하기 때문이다. (DECISIONS 020)
       - `ActiveStationScene` — 활성 스테이션의 3D 상세 마운트 자리(레지스트리에 등록된 `Scene`). 상세는 **다 준비된 뒤 한 번에** 보여준다 — 스테이션이 `useStationGate`로 건 열쇠가 남아 있으면 마운트한 채 감춰, 그동안 텍스처를 굽고 글자 크기를 재는 일이 끝난다.
-        - `AboutCareerScene` — 캐릭터 이동과 카메라 각도 전환. 캐릭터가 **가장 가까운 영역 테두리**로 걸어간 뒤, 카메라 회전과 그림들의 로고 전환이 **동시에** 돈다(영역 안에서 열면 이동을 건너뛴다). 완전히 활성인 동안 칸 제목(`CareerTitles`)을 그린다. (DECISIONS 026)
+        - `AboutCareerScene` — 캐릭터 이동과 카메라 각도 전환. 캐릭터가 **가장 가까운 영역 테두리**로 걸어간 뒤, 카메라 회전과 그림들의 로고 전환이 **동시에** 돈다(영역 안에서 열면 이동을 건너뛴다). 완전히 활성인 동안 페이지 내용을 함께 그린다. (DECISIONS 026)
+          - `CareerTitles` — 로고 옆 손글씨 칸 이름(교육 · 수상내역 · 자격증). 고정이다.
+          - `CareerColumns` — 세 칸을 채우는 목록. `education`·`awards`·`spec`을 읽어 `{ 제목, 본문, 좌/우 한 줄 }` 한 형태로 정규화하고(`CareerColumns.data`), 칸마다 위에서부터 항목(`CareerEntry`)을 쌓는다. 칸이 맞닿는 경계에 세로 구분선도 여기서 세운다. 컬렉션마다 필드가 달라도 그리는 쪽은 한 종류만 다룬다. (DECISIONS 028)
+          - `CareerExit` — 우상단 나가기 자리. 아이콘은 공용 `ExitSticker`다.
         - `AboutSkillsScene` — 캐릭터 이동과 카메라 각도 전환. 세 연출이 **겹치지 않고 차례로** 돈다 — 캐릭터가 페이지 앞자리로 걸어간 뒤 카메라가 돌고, 그다음 공구함이 물러난다. 공구함에게 차례를 넘기는 신호와 라이프사이클 완료 신호를 낸다. 완전히 활성인 동안에는 페이지 내용을 함께 그린다.
           - `SkillsTitle` — 로고 옆 손글씨 제목. 고정이다.
           - `SkillsPages` — Firestore `skills`를 분류별 페이지로 나눠 그린다(`SkillItem` + 레벨 별 `SkillLevel`). 페이지를 넘기면 이 영역만 갈리고, 우측 하단 `SkillsPager`가 한 번에 하나(다음 또는 이전)만 낸다. (DECISIONS 021)
@@ -62,7 +65,7 @@ Canvas 밖(`App`): `SceneGate` — 첫 화면 가림막. 바닥·캐릭터·Intr
 - `useSceneReadyStore` — 첫 화면에 필요한 것들의 준비 여부(`markReady(key)`). 바닥·캐릭터·스테이션·Intro 사진이 마운트되며 자기 이름을 올리고, `SceneGate`가 이를 보고 가림막을 걷는다.
 - `useIntroPageStore` — Intro 페이지의 개발용 튜닝 상태(영역·배치·테두리 표시). 프로덕션에는 HUD가 없어 항상 기본값이다.
 - `useSkillsPageStore` — Skills 페이지 전체의 개발용 튜닝 상태(영역·좌상단·테두리 표시 · 공구함 배치와 테두리·그림자 · 로고 자세 · 제목 · 목록 · 레벨 별 · 페이지 넘김 · 나가기). 마찬가지로 프로덕션에서는 항상 기본값이다.
-- `useCareerPageStore` — Career 페이지의 개발용 튜닝 상태(영역·상단 중앙·테두리 표시 · 트로피 배치와 로고 자세·그림자 · 교육·자격증 종이 배치 · 로고 높이와 여백 · 제목). 프로덕션에서는 항상 기본값이다.
+- `useCareerPageStore` — Career 페이지의 개발용 튜닝 상태(영역·상단 중앙·**영역 여백**·테두리 표시 · 트로피 배치와 로고 자세·그림자 · 교육·자격증 종이 배치 · 로고 높이와 여백 · 제목 · 목록 · 구분선 · 나가기). 프로덕션에서는 항상 기본값이다.
 - `useCareerLogoStore` — 로고가 될 그림들의 잰 가로. 그림마다 가로가 달라 왼쪽 정렬·제목 간격을 상수로 잡을 수 없고, 텍스처를 굽거나 모델을 읽어야 알 수 있다. 각 그림이 재서 올리고 자리를 잡는 쪽이 그것을 본다. 튜닝 값이 아니라 측정값이라 페이지 스토어와 나눠 둔다.
 - `useCareerSequenceStore` — Career 활성 연출의 차례 신호(`logoTurn`). 캐릭터가 먼저 걷는 구간이 있고 걷는 시간은 거리마다 달라, 전체 순서를 아는 활성 구현이 때를 알린다.
 - `useSkillsSequenceStore` — Skills 활성 연출의 차례 신호(`logoTurn`). 걷는 시간이 거리에 따라 달라져 지연 상수로 차례를 맞출 수 없어, 전체 순서를 아는 활성 구현이 신호를 내고 상시 마운트된 공구함이 그것을 본다.
@@ -94,7 +97,9 @@ idle ──근접 + 좌클릭──> entering ──enterComplete()──> activ
 
 **공용 부품** (`src/stations/`)
 
-레지스트리에 등록하는 구현들이 함께 쓰는 것만 둔다. `ExitSticker`(나가기 아이콘 — 동작은 `requestClose()`, 놓을 자리는 스테이션이 정한다. DECISIONS 022) · `usePointerCursor`(누를 수 있는 씬 요소의 손가락 커서) · `types`(영역·troika 측정 타입).
+레지스트리에 등록하는 구현들이 함께 쓰는 것만 둔다. `ExitSticker`(나가기 아이콘 — 동작은 `requestClose()`, 종이에 눕는 각도 여기 있다. 스테이션은 자리와 크기만 넘긴다. DECISIONS 022) · `usePointerCursor`(누를 수 있는 씬 요소의 손가락 커서) · `types`(영역·영역 여백·troika 측정 타입).
+
+**영역 여백**(`StationAreaPadding`)은 영역 테두리에서 내용까지 들이는 거리다. 영역은 클릭·근접 판정 범위라 내용보다 넓게 잡히므로, 그 안에서 어디까지 쓸지를 이 값이 정한다. 새로 만드는 영역은 크기·좌표와 함께 이것을 기본으로 갖는다. **나가기·페이지 넘김 같은 UI 요소는 이 여백을 따르지 않는다** — 구석에 붙는 조작 요소라 여백을 넓혀도 그 자리에 남아야 한다. (DECISIONS 029)
 
 **레지스트리** (`src/stations/registry.ts`)
 

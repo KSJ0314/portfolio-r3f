@@ -2,24 +2,34 @@ import { useEffect } from 'react'
 import { button, folder, useControls } from 'leva'
 import {
   CAREER_AREA,
+  CAREER_AREA_PADDING,
   CAREER_LOGO,
-  CAREER_TITLE,
   CAREER_TOP_CENTER,
 } from '../../../stations/sections/about/AboutCareer/AboutCareer.constants'
+import {
+  CAREER_DIVIDER,
+  CAREER_LIST_LAYOUT,
+} from '../../../stations/sections/about/AboutCareer/CareerColumns/CareerColumns.constants'
+import { CAREER_EXIT } from '../../../stations/sections/about/AboutCareer/CareerExit/CareerExit.constants'
 import {
   CAREER_EDUCATION,
   CAREER_SPEC,
 } from '../../../stations/sections/about/AboutCareer/CareerPaper/CareerPaper.constants'
+import { CAREER_TITLE } from '../../../stations/sections/about/AboutCareer/CareerTitles/CareerTitles.constants'
 import { CAREER_TROPHY } from '../../../stations/sections/about/AboutCareer/CareerTrophy/CareerTrophy.constants'
 import { useCareerPageStore } from '../../../state/useCareerPageStore'
 
 const A = CAREER_AREA
+const AP = CAREER_AREA_PADDING
 const T = CAREER_TOP_CENTER
 const TR = CAREER_TROPHY
 const ED = CAREER_EDUCATION
 const SP = CAREER_SPEC
 const LO = CAREER_LOGO
 const TI = CAREER_TITLE
+const LI = CAREER_LIST_LAYOUT
+const DI = CAREER_DIVIDER
+const EX = CAREER_EXIT
 
 /** 툴팁 문구 — 설명 뒤에 기본값을 붙인다. */
 function hint(description: string, value: number | string) {
@@ -36,12 +46,16 @@ function hint(description: string, value: number | string) {
 export function CareerPageHUD() {
   const setArea = useCareerPageStore((s) => s.setArea)
   const setTopCenter = useCareerPageStore((s) => s.setTopCenter)
+  const setPadding = useCareerPageStore((s) => s.setPadding)
   const setShowOutline = useCareerPageStore((s) => s.setShowOutline)
   const setTrophy = useCareerPageStore((s) => s.setTrophy)
   const setEducation = useCareerPageStore((s) => s.setEducation)
   const setSpec = useCareerPageStore((s) => s.setSpec)
   const setLogo = useCareerPageStore((s) => s.setLogo)
   const setTitle = useCareerPageStore((s) => s.setTitle)
+  const setList = useCareerPageStore((s) => s.setList)
+  const setDivider = useCareerPageStore((s) => s.setDivider)
+  const setExit = useCareerPageStore((s) => s.setExit)
 
   const [values, set] = useControls(
     'Career 영역',
@@ -74,6 +88,22 @@ export function CareerPageHUD() {
           joystick: false,
           label: '좌표',
           hint: `영역 상단 중앙(월드 x, z).\n기본값: (${T.x}, ${T.z})`,
+        },
+        paddingY: {
+          value: AP.y,
+          min: 0,
+          max: 4,
+          step: 0.1,
+          label: '상하여백',
+          hint: hint('영역 위·아래 테두리에서 내용까지 들이는 거리. 나가기 같은 UI는 따라오지 않는다.', AP.y),
+        },
+        paddingX: {
+          value: AP.x,
+          min: 0,
+          max: 4,
+          step: 0.1,
+          label: '좌우여백',
+          hint: hint('영역 좌·우 테두리에서 내용까지 들이는 거리. 칸 셋은 이걸 뗀 안쪽을 나눠 갖는다.', AP.x),
         },
       }, { collapsed: true }),
       트로피: folder({
@@ -278,6 +308,140 @@ export function CareerPageHUD() {
           hint: hint('양수면 위로 올라간다.', TI.offsetY),
         },
       }, { collapsed: true }),
+      목록: folder({
+        listTop: {
+          value: LI.top,
+          min: 0,
+          max: 8,
+          step: 0.1,
+          label: '위 여백',
+          hint: hint('영역 위 테두리에서 목록이 시작하는 곳까지의 거리(로고 줄 아래).', LI.top),
+        },
+        listPaddingX: {
+          value: LI.paddingX,
+          min: 0,
+          max: 3,
+          step: 0.1,
+          label: '칸 좌우 여백',
+          hint: hint('칸 테두리에서 글이 시작·끝나는 곳까지의 거리. 오른쪽 값도 여기에 맞춰 붙는다.', LI.paddingX),
+        },
+        listItemGap: {
+          value: LI.itemGap,
+          min: 0,
+          max: 3,
+          step: 0.05,
+          label: '항목 간격',
+          hint: hint('항목 사이 세로 간격.', LI.itemGap),
+        },
+        listTitleSize: {
+          value: LI.titleSize,
+          min: 0.1,
+          max: 2,
+          step: 0.05,
+          label: '제목 크기',
+          hint: hint('항목 제목의 글자 크기. 글씨체는 본문과 같고 크기로만 구분한다.', LI.titleSize),
+        },
+        listTitleGap: {
+          value: LI.titleGap,
+          min: 0,
+          max: 2,
+          step: 0.01,
+          label: '제목-본문 간격',
+          hint: hint('항목 제목과 그 아래 첫 줄 사이 간격.', LI.titleGap),
+        },
+        listLineGap: {
+          value: LI.lineGap,
+          min: 0,
+          max: 2,
+          step: 0.01,
+          label: '줄 간격',
+          hint: hint('본문과 그 아래 줄(기간·기관명) 사이 간격.', LI.lineGap),
+        },
+        listBodySize: {
+          value: LI.bodySize,
+          min: 0.05,
+          max: 1,
+          step: 0.01,
+          label: '본문 크기',
+          hint: hint('기간·기관명·설명의 글자 크기.', LI.bodySize),
+        },
+        listBodyLineHeight: {
+          value: LI.bodyLineHeight,
+          min: 1,
+          max: 3,
+          step: 0.05,
+          label: '본문 줄높이',
+          hint: hint('설명이 접힐 때의 줄 간격(글자 크기 배수).', LI.bodyLineHeight),
+        },
+        listQuoteBarWidth: {
+          value: LI.quoteBarWidth,
+          min: 0,
+          max: 0.3,
+          step: 0.005,
+          label: '인용 막대 폭',
+          hint: hint('본문 왼쪽에 세우는 세로 막대의 폭. 높이는 접힌 본문을 따라간다.', LI.quoteBarWidth),
+        },
+        listQuoteBarGap: {
+          value: LI.quoteBarGap,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          label: '인용 막대 간격',
+          hint: hint('막대와 본문 사이 간격. 본문이 접히는 폭도 그만큼 줄어든다.', LI.quoteBarGap),
+        },
+      }, { collapsed: true }),
+      구분선: folder({
+        dividerWidth: {
+          value: DI.width,
+          min: 0,
+          max: 0.3,
+          step: 0.005,
+          label: '선 폭',
+          hint: hint('칸을 가르는 세로선의 폭. 0이면 그리지 않는다.', DI.width),
+        },
+        dividerTop: {
+          value: DI.top,
+          min: 0,
+          max: 6,
+          step: 0.1,
+          label: '위 여백',
+          hint: hint('영역 위 테두리에서 선이 시작하는 곳까지의 거리.', DI.top),
+        },
+        dividerBottom: {
+          value: DI.bottom,
+          min: 0,
+          max: 6,
+          step: 0.1,
+          label: '아래 여백',
+          hint: hint('영역 아래 테두리에서 선이 끝나는 곳까지의 거리.', DI.bottom),
+        },
+      }, { collapsed: true }),
+      나가기: folder({
+        exitSize: {
+          value: EX.size,
+          min: 0.1,
+          max: 3,
+          step: 0.05,
+          label: '크기',
+          hint: hint('나가기 아이콘 한 변의 크기.', EX.size),
+        },
+        exitRight: {
+          value: EX.right,
+          min: 0,
+          max: 4,
+          step: 0.1,
+          label: '우 여백',
+          hint: hint('영역 오른쪽 끝에서 아이콘까지 들이는 거리.', EX.right),
+        },
+        exitTop: {
+          value: EX.top,
+          min: 0,
+          max: 4,
+          step: 0.1,
+          label: '위 여백',
+          hint: hint('영역 위 끝에서 아이콘까지 내리는 거리.', EX.top),
+        },
+      }, { collapsed: true }),
     }),
     { collapsed: true },
   )
@@ -288,9 +452,10 @@ export function CareerPageHUD() {
     {
       '값 복사(JSON)': button(() => {
         const state = useCareerPageStore.getState()
-        const { area, topCenter, trophy, education, spec, logo, title } = state
+        const { area, topCenter, padding, trophy, education, spec, logo, title } = state
+        const { list, divider, exit } = state
         const json = JSON.stringify(
-          { area, topCenter, trophy, education, spec, logo, title },
+          { area, topCenter, padding, trophy, education, spec, logo, title, list, divider, exit },
           null,
           2,
         )
@@ -303,6 +468,8 @@ export function CareerPageHUD() {
           height: A.height,
           showOutline: false,
           position: { x: T.x, z: T.z },
+          paddingY: AP.y,
+          paddingX: AP.x,
           trophyHeight: TR.height,
           trophyPosition: { x: TR.x, z: TR.z },
           trophyRotation: TR.rotation,
@@ -327,6 +494,22 @@ export function CareerPageHUD() {
           titleSize: TI.size,
           titleGap: TI.gap,
           titleOffsetY: TI.offsetY,
+          listTop: LI.top,
+          listPaddingX: LI.paddingX,
+          listItemGap: LI.itemGap,
+          listTitleSize: LI.titleSize,
+          listTitleGap: LI.titleGap,
+          listLineGap: LI.lineGap,
+          listBodySize: LI.bodySize,
+          listBodyLineHeight: LI.bodyLineHeight,
+          listQuoteBarWidth: LI.quoteBarWidth,
+          listQuoteBarGap: LI.quoteBarGap,
+          dividerWidth: DI.width,
+          dividerTop: DI.top,
+          dividerBottom: DI.bottom,
+          exitSize: EX.size,
+          exitRight: EX.right,
+          exitTop: EX.top,
         }),
       ),
     },
@@ -334,11 +517,12 @@ export function CareerPageHUD() {
   )
 
   useEffect(() => {
-    const { width, height, showOutline, position } = values
+    const { width, height, showOutline, position, paddingX, paddingY } = values
     setArea({ width, height })
     setTopCenter({ x: position.x, z: position.z })
+    setPadding({ x: paddingX, y: paddingY })
     setShowOutline(showOutline)
-  }, [values, setArea, setTopCenter, setShowOutline])
+  }, [values, setArea, setTopCenter, setPadding, setShowOutline])
 
   useEffect(() => {
     const { trophyHeight, trophyPosition, trophyRotation } = values
@@ -390,6 +574,34 @@ export function CareerPageHUD() {
     const { titleSize, titleGap, titleOffsetY } = values
     setTitle({ size: titleSize, gap: titleGap, offsetY: titleOffsetY })
   }, [values, setTitle])
+
+  useEffect(() => {
+    const { listTop, listPaddingX, listItemGap, listTitleSize } = values
+    const { listTitleGap, listLineGap, listBodySize, listBodyLineHeight } = values
+    const { listQuoteBarWidth, listQuoteBarGap } = values
+    setList({
+      top: listTop,
+      paddingX: listPaddingX,
+      itemGap: listItemGap,
+      titleSize: listTitleSize,
+      titleGap: listTitleGap,
+      lineGap: listLineGap,
+      bodySize: listBodySize,
+      bodyLineHeight: listBodyLineHeight,
+      quoteBarWidth: listQuoteBarWidth,
+      quoteBarGap: listQuoteBarGap,
+    })
+  }, [values, setList])
+
+  useEffect(() => {
+    const { dividerWidth, dividerTop, dividerBottom } = values
+    setDivider({ width: dividerWidth, top: dividerTop, bottom: dividerBottom })
+  }, [values, setDivider])
+
+  useEffect(() => {
+    const { exitSize, exitRight, exitTop } = values
+    setExit({ size: exitSize, right: exitRight, top: exitTop })
+  }, [values, setExit])
 
   return null
 }
