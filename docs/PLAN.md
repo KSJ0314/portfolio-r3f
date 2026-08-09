@@ -50,6 +50,8 @@
 
 컬렉션: `profile · skills · experiences · education · awards · spec · projects · guestbook`
 
+- 스테이션별 매핑은 FIRESTORE.md. `experiences`는 담을 스테이션을 아직 정하지 않았다.
+
 - **콘텐츠 전부 Firestore** (향후 웹 이력서 사이트와 데이터 공유 목적).
 - 트레이드오프: 로딩 상태 처리 필요, SEO 약간 불리(포트폴리오엔 허용 범위).
 - **방명록**: 공개 작성 + App Check/reCAPTCHA + Firestore 보안 규칙으로 봇·악성 차단. 신고/삭제는 직접.
@@ -114,7 +116,7 @@ src/
 | **5. 맵/환경 베이스 디자인** ☆ | 스케치북 바닥(모눈종이) — Phase 4에서 완성. 길·경계벽·소품은 스케치북 전환으로 소멸, 스테이션 최종 배치·표지판·바닥 화살표는 Phase 8로 이관 |
 | **6. Firebase 데이터 레이어** ★ | SDK 초기화, 스키마, 보안 규칙, App Check, env/secrets |
 | **7. 콘텐츠** ★ | Firestore 콘텐츠 7종(profile/skills/experiences/education/awards/spec/projects) 스키마 확정 + 데이터 입력 |
-| **8. 스테이션 상세 구현** ★ | 스테이션 8개(About 4·Projects 3·Guestbook 1)를 8-1→8-2 순으로 하나씩 완전히 끝내고 다음으로 넘어간다. ([DECISIONS 013]) |
+| **8. 스테이션 상세 구현** ★ | 스테이션 7개(About 3·Projects 3·Guestbook 1)를 8-1→8-2 순으로 하나씩 완전히 끝내고 다음으로 넘어간다. ([DECISIONS 013]) |
 | **8-1. 정적 오브젝트** | 공통 임시 박스를 걷어내고 레지스트리에 스테이션별 비활성 상태(종이 위 그림 또는 3D 오브젝트)를 등록, 영역(클릭·근접 판정 범위)과 배치 좌표를 최종값으로 확정 |
 | **8-2. 인터랙션 UI** | 레지스트리에 `Scene`/`Overlay`를 등록해 활성화 전환 연출과 Firestore 데이터 렌더링을 구현, 스테이션 성격에 따라 카메라 제어(각도 전환 등)와 나가기 UI까지 직접 구현. 프로젝트는 "체험하기" 데모 진입점을, Guestbook은 쓰기 폼·봇 방지·보안 규칙을 이 안에서 함께 구현 |
 | **9. 인쇄/PDF 출력** ★ | 스테이션 구현이 전부 끝난 뒤, 콘텐츠 전체를 인쇄 문서(PrintView) 레이아웃으로 한 번에 설계·구현 ([DECISIONS 013]) |

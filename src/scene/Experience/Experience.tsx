@@ -24,6 +24,8 @@ export function Experience() {
       // xz는 캐릭터 시작 위치(CHARACTER_START)에 오프셋 (-7, +12)를 더한 값이다.
       // 캐릭터 시작점을 옮기면 여기도 같이 옮겨야 시점이 유지된다.
       camera={{ position: [-7, 12.5, 17], zoom: 85, near: 0.1, far: 100 }}
+      // 스텐실 버퍼는 기본으로 꺼져 있다. 그림자 실루엣을 표시해 한 겹만 칠하는 데 쓴다(CareerTrophy).
+      gl={{ stencil: true }}
       style={{ position: 'fixed', inset: 0 }}
       onContextMenu={(e) => e.preventDefault()}
     >
