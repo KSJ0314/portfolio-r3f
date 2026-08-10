@@ -2,30 +2,6 @@ import { Link } from 'react-router-dom'
 import styled, { css } from 'styled-components'
 import { PAPER_TILE_PX } from './CrayonStudio.constants'
 
-/** 오른쪽 아래 구석에 놓이는 스튜디오 여는 버튼. */
-export const LaunchButton = styled.button`
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 20;
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surface};
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
-  }
-`
-
 /** `$fullPage`는 단독 페이지(`/crayon`)용 — 뒤에 덮을 화면이 없어 어둡게 깔지 않고 여백도 두지 않는다. */
 export const Backdrop = styled.div<{ $fullPage?: boolean }>`
   position: fixed;
