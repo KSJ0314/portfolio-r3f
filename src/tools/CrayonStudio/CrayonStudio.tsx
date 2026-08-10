@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { CornerButton } from '../../ui/CornerButton'
 import {
   createCrayonCanvas,
   useCrayonStrokeInput,
@@ -34,7 +35,6 @@ import {
   FrameLayer,
   Hint,
   IconButton,
-  LaunchButton,
   Panel,
   ResetButton,
   Section,
@@ -759,14 +759,15 @@ export function CrayonStudio() {
 
   return (
     <>
-      <LaunchButton
+      <CornerButton
         type="button"
+        $slot={0}
         onClick={() => setOpen(true)}
         title="크레파스 스튜디오"
         aria-label="크레파스 스튜디오 열기"
       >
         <CrayonToolIcon color={DEFAULT_STUDIO_PARAMS.color} />
-      </LaunchButton>
+      </CornerButton>
       {open && <StudioModal onClose={() => setOpen(false)} />}
     </>
   )
