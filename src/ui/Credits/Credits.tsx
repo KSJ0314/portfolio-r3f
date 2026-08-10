@@ -125,8 +125,11 @@ function CreditsModal({ onClose }: CreditsModalProps) {
 
           <Detail>
             <Preview>
-              {/* 모델을 못 받아도 앱 전체가 내려가지 않게 막는다. 출처 글은 그대로 남아야 한다. */}
+              {/* 모델을 못 받아도 앱 전체가 내려가지 않게 막는다. 출처 글은 그대로 남아야 한다.
+                  경계는 한 번 걸리면 그 상태로 멈추므로, 고른 에셋이 바뀌면 갈아 끼워 되살린다.
+                  안 그러면 하나가 실패한 뒤로는 멀쩡한 모델을 골라도 계속 실패 화면만 뜬다. */}
               <SceneErrorBoundary
+                key={credit.modelUrl}
                 fallback={<PreviewFallback>모델을 불러오지 못했습니다.</PreviewFallback>}
               >
                 <Canvas camera={{ position: [1.5, 1.1, 1.8], fov: 38 }} dpr={[1, 2]}>
