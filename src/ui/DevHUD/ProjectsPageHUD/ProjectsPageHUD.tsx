@@ -321,6 +321,7 @@ export function ProjectsPageHUD() {
           glowCarpetFalloff: G.carpetFalloff,
           nearForward: N.forward,
           nearSize: { x: N.width, z: N.depth },
+          showOutline: false,
           markerPosition: { x: M.x, z: M.z },
           markerY: M.y,
           markerSize: M.size,

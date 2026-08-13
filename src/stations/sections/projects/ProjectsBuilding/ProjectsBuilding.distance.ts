@@ -30,6 +30,8 @@ function nearCenter(): { x: number; z: number; halfWidth: number; halfDepth: num
 export function projectsBuildingDistanceTo(point: Vector3): number {
   const { x, z, halfWidth, halfDepth } = nearCenter()
   // 사각형 밖으로 얼마나 벗어났는지만 축마다 잰다(안이면 0).
+  // 축에 나란한 사각형이라 건물 회전 0·90·180·270도에서만 문 앞과 맞는다.
+  // 건물을 막는 사각형(`useBlockersStore`)도 같은 전제다.
   const dx = Math.max(Math.abs(point.x - x) - halfWidth, 0)
   const dz = Math.max(Math.abs(point.z - z) - halfDepth, 0)
   return Math.hypot(dx, dz)
