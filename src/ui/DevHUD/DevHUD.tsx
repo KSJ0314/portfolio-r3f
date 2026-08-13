@@ -3,6 +3,7 @@ import { DebugHUD } from './DebugHUD'
 import { GridPaperHUD } from './GridPaperHUD'
 import { IntroPageHUD } from './IntroPageHUD'
 import { MapDecorationsHUD } from './MapDecorationsHUD'
+import { ProjectsPageHUD } from './ProjectsPageHUD'
 import { SkillsPageHUD } from './SkillsPageHUD'
 
 /**
@@ -20,6 +21,7 @@ export function DevHUD() {
       <IntroPageHUD />
       <SkillsPageHUD />
       <CareerPageHUD />
+      <ProjectsPageHUD />
       <MapDecorationsHUD />
     </>
   )

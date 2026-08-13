@@ -12,6 +12,7 @@
 
 import { CAREER_CENTER } from '../stations/sections/about/AboutCareer/AboutCareer.constants'
 import { SKILLS_CENTER } from '../stations/sections/about/AboutSkills/AboutSkills.constants'
+import { PROJECTS_CENTER } from '../stations/sections/projects/ProjectsBuilding/ProjectsBuilding.constants'
 import type { CollectionName } from '../lib/firebase/firestore'
 
 /** 섹션 식별자. */
@@ -58,10 +59,8 @@ export const STATIONS: Station[] = [
   { id: 'about-skills', sectionId: 'about', label: 'Skills', short: 'Skills', position: SKILLS_CENTER, collections: ['skills'] },
   { id: 'about-career', sectionId: 'about', label: 'Education, Awards & Certifications', short: 'Career', position: CAREER_CENTER, collections: ['education', 'awards', 'spec'] },
 
-  // Projects — 프로젝트마다 1개 (현재 플레이스홀더 3개)
-  { id: 'project-1', sectionId: 'projects', label: 'Project 1', short: 'Proj 1', collections: ['projects'] },
-  { id: 'project-2', sectionId: 'projects', label: 'Project 2', short: 'Proj 2', collections: ['projects'] },
-  { id: 'project-3', sectionId: 'projects', label: 'Project 3', short: 'Proj 3', collections: ['projects'] },
+  // Projects — 구역 전체가 스테이션 하나(건물)다. 프로젝트는 건물 안 전시대라 여기 오르지 않는다.
+  { id: 'projects', sectionId: 'projects', label: 'Projects', short: 'Projects', position: PROJECTS_CENTER, collections: ['projects'] },
 
   // Guestbook — 1개
   { id: 'guestbook', sectionId: 'guestbook', label: 'Guestbook', short: 'Guest', collections: ['guestbook'] },
