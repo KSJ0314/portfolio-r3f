@@ -5,7 +5,7 @@ import { useCameraStore } from '../../../state/useCameraStore'
 import { useMapDecorationsStore } from '../../../state/useMapDecorationsStore'
 import { type StationPhase, useStationStore } from '../../../state/useStationStore'
 import { moveToStand, walkToStand } from '../../../stations/registry'
-import { useAfterStation } from '../MapDecorations.hooks'
+import { useAfterStation } from '../../useAfterStation'
 import {
   CROSSWALK,
   CROSSWALK_AFTER_STATION,
