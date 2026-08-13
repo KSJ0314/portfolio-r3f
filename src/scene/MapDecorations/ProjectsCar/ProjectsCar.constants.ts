@@ -1,3 +1,5 @@
+import { CLICK_MARKER_MOTION } from '../../ClickMarker/ClickMarker.constants'
+
 /** 자동차 모델 파일. 출처 표기(`content/credits.ts`)가 이 값을 가져다 쓴다. */
 export const PROJECTS_CAR_URL = '/assets/car.glb'
 
@@ -35,14 +37,15 @@ export const PROJECTS_CAR_PLACEMENT = {
   bounceSeconds: 0.5,
   /** 다 펴진 뒤 출발까지 쉬는 시간(초). 곧장 떠나면 올라오는 것이 눈에 안 들어온다. */
   boardPause: 0.1,
-  /** 누르라는 표시(원뿔)의 끝이 놓일 높이(월드 y)와 원뿔 높이. */
+  /** 누르라는 표시(원뿔)의 끝이 놓일 높이(월드 y). 차는 지붕이 높아 기본값보다 위로 올린다. */
   markerY: 2,
-  markerSize: 0.5,
+  /** 원뿔 높이. */
+  markerSize: CLICK_MARKER_MOTION.size,
   /** 표시가 위아래로 흔들리는 폭과 한 번 오르내리는 시간(초). */
-  markerBob: 0.15,
-  markerBobSeconds: 1.6,
+  markerBob: CLICK_MARKER_MOTION.bob,
+  markerBobSeconds: CLICK_MARKER_MOTION.bobSeconds,
   /** 표시가 한 바퀴 도는 데 걸리는 시간(초). 0이면 돌지 않는다. */
-  markerSpinSeconds: 3,
+  markerSpinSeconds: CLICK_MARKER_MOTION.spinSeconds,
   /**
    * 바퀴 굴림 배수. 1이면 굴러간 거리 그대로다(음수면 반대 방향).
    *

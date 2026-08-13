@@ -27,7 +27,7 @@ docs: PLAN 로드맵 갱신
 - **`develop`**: 통합 브랜치. feature들이 모이는 "다음 릴리스" 상태 → Vercel 스테이징 프리뷰.
 - **`feature/*`**: 신규 기능·작업. `develop`에서 분기 → PR → `develop` 머지 후 삭제.
 - **`release/*`**: (운영 시작 후) 배포 전 최종 검증·버전 태깅 → `main`(+`develop`) 머지.
-- **`hotfix/*`**: (운영 후) 라이브 긴급 수정. `main`에서 분기 → `main`(+`develop`) 머지.
+- **`hotfix/*`**: (운영 후) 라이브 긴급 수정(버그·UX 보완 등 즉시 반영할 작은 변경). `main`에서 분기 → `main`(+`develop`) 머지.
 
 ### 개발 단계 규칙 (운영 전)
 
@@ -83,7 +83,7 @@ feature PR과 달리 정해진 틀을 따른다.
 
 ### hotfix PR (main + develop 동기화)
 
-라이브 버그 수정은 PR을 두 개 올린다.
+라이브에 바로 반영하는 수정은 PR을 두 개 올린다.
 
 - base=`main`이 먼저다. 제목은 증상 요약이고, 본문은 `## 개요` → `## 원인` → `## 수정` → `## 검증`.
 - main 머지 후 같은 브랜치로 base=`develop` PR을 하나 더 올린다. 제목 끝에 `(develop 동기화)`를 붙인다.
