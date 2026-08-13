@@ -48,14 +48,27 @@ interface CameraState {
    */
   walking: boolean
   /**
+   * 연출 이동에 쓸 걸음 속도(유닛/초). 0이면 평소 속도다.
+   * 연출마다 빠르기가 달라야 할 때가 있어 `walkTo`가 받아 둔다.
+   */
+  walkSpeed: number
+  /**
    * 스테이션 밖 연출이 걸어 둔 이동 잠금 수. 0보다 크면 이동이 막힌다.
    * 개수로 세는 이유는 연출이 겹쳐도 각자 걸고 각자 풀게 하기 위함이다.
    */
   locks: number
+  /**
+   * 캐릭터를 감출지. 탈것에 탄 동안처럼 캐릭터가 화면에 없어야 하는 구간에 켠다.
+   * 위치는 그대로 도므로 카메라 팔로우·미니맵은 평소와 같이 따라간다.
+   */
+  hidden: boolean
   /** 목표점을 설정한다(경계 안으로 clamp). */
   setTarget: (point: Vector3) => void
-  /** 지정한 지점으로 걸어가게 한다(스테이션 연출용). 진입 잠금 중에도 멈추지 않는다. */
-  walkTo: (point: Vector3) => void
+  /**
+   * 지정한 지점으로 걸어가게 한다(스테이션 연출용). 진입 잠금 중에도 멈추지 않는다.
+   * 속도를 주면 그 걸음으로 가고, 주지 않으면 평소 속도다.
+   */
+  walkTo: (point: Vector3, speed?: number) => void
   /** 지정한 지점으로 즉시 옮긴다(월드맵 이동). 목표점도 함께 옮겨 걸어가지 않는다. */
   teleportTo: (point: Vector3) => void
   /** 연출 이동을 끝낸다(도착·중단). */
@@ -64,6 +77,8 @@ interface CameraState {
   lockMovement: () => void
   /** 자기가 건 이동 잠금을 푼다. */
   unlockMovement: () => void
+  /** 캐릭터를 감추거나 다시 보인다. */
+  setHidden: (hidden: boolean) => void
   /** 우클릭 이동을 받았음을 표시한다(처음 한 번만). */
   markMoved: () => void
   /** 뷰 각도를 설정한다(값이 바뀔 때만). */
@@ -80,7 +95,9 @@ export const useCameraStore = create<CameraState>((set, get) => ({
   motion: { speed: 0 },
   hasMoved: false,
   walking: false,
+  walkSpeed: 0,
   locks: 0,
+  hidden: false,
   setTarget: (point) => {
     get().target.set(
       clamp(point.x, -CAMERA_BOUNDS, CAMERA_BOUNDS),
@@ -88,8 +105,9 @@ export const useCameraStore = create<CameraState>((set, get) => ({
       clamp(point.z, -CAMERA_BOUNDS, CAMERA_BOUNDS),
     )
   },
-  walkTo: (point) => {
+  walkTo: (point, speed = 0) => {
     get().setTarget(point)
+    if (get().walkSpeed !== speed) set({ walkSpeed: speed })
     if (!get().walking) set({ walking: true })
   },
   teleportTo: (point) => {
@@ -103,6 +121,9 @@ export const useCameraStore = create<CameraState>((set, get) => ({
   lockMovement: () => set((s) => ({ locks: s.locks + 1 })),
   // 이미 푼 잠금을 또 풀어 음수가 되면 남은 잠금이 무시되므로 0에서 멈춘다.
   unlockMovement: () => set((s) => ({ locks: Math.max(0, s.locks - 1) })),
+  setHidden: (hidden) => {
+    if (get().hidden !== hidden) set({ hidden })
+  },
   setViewAngle: (angle) => {
     if (get().viewAngle !== angle) set({ viewAngle: angle })
   },

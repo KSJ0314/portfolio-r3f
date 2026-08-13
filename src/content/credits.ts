@@ -1,10 +1,6 @@
+import { PROJECTS_CAR_URL } from '../scene/MapDecorations/ProjectsCar/ProjectsCar.constants'
 import { TROPHY_URL } from '../stations/sections/about/AboutCareer/CareerTrophy/CareerTrophy.constants'
-
-/**
- * 자동차 모델 파일. 아직 어느 스테이션도 쓰지 않아 여기에 둔다.
- * 프로젝트 스테이션이 이 모델을 쓰게 되면 그 스테이션의 `.constants.ts`로 옮기고 여기서 가져다 쓴다.
- */
-const CAR_URL = '/assets/car.glb'
+import { PROJECTS_BUILDING_URL } from '../stations/sections/projects/ProjectsBuilding/ProjectsBuilding.constants'
 
 /** 남의 저작물을 가져다 쓸 때 밝혀야 하는 것들. CC-BY가 요구하는 네 가지(제목·제작자·출처·라이선스)다. */
 export interface AssetCredit {
@@ -46,6 +42,16 @@ export const ASSET_CREDITS: AssetCredit[] = [
     licenseUrl: 'https://creativecommons.org/licenses/by/3.0/',
     sourceUrl: 'https://poly.pizza/m/75h3mi6uHuC',
     sourceName: 'Poly Pizza',
-    modelUrl: CAR_URL,
+    modelUrl: PROJECTS_CAR_URL,
+  },
+  // CC0는 표기 의무가 없지만, 가져다 쓴 것을 한자리에 모아 두는 편이 낫다.
+  {
+    title: 'Small Building',
+    author: 'Kenney',
+    license: 'CC0 1.0',
+    licenseUrl: 'https://creativecommons.org/publicdomain/zero/1.0/',
+    sourceUrl: 'https://poly.pizza/m/gyjF60t7CG',
+    sourceName: 'Poly Pizza',
+    modelUrl: PROJECTS_BUILDING_URL,
   },
 ]

@@ -21,6 +21,12 @@ import {
   SKILLS_STAND,
   aboutSkillsDistanceTo,
 } from './sections/about/AboutSkills'
+import {
+  ProjectsBuildingInactive,
+  ProjectsBuildingScene,
+  projectsBuildingDistanceTo,
+  projectsBuildingStand,
+} from './sections/projects/ProjectsBuilding'
 
 /**
  * 스테이션 레지스트리 — `스테이션 id → 전용 구현`.
@@ -107,6 +113,14 @@ export const STATION_REGISTRY: Record<string, StationEntry> = {
     distanceTo: aboutCareerDistanceTo,
     stand: careerStandFor,
     Scene: AboutCareerScene,
+  },
+  // 건물 전체가 아니라 문 앞 구역이 판정 범위다. 들어가는 곳은 문 하나뿐이다.
+  'projects': {
+    Inactive: ProjectsBuildingInactive,
+    distanceTo: projectsBuildingDistanceTo,
+    // 문 자리를 모델에서 재므로 값이 아니라 함수다. 재기 전이면 null이라 진입 이동을 건너뛴다.
+    stand: projectsBuildingStand,
+    Scene: ProjectsBuildingScene,
   },
 }
 

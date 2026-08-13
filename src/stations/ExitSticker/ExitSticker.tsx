@@ -1,6 +1,6 @@
 import { PaperSticker } from '../../lib/PaperSticker'
 import { useStationStore } from '../../state/useStationStore'
-import { usePointerCursor } from '../usePointerCursor'
+import { usePointerCursor } from '../../scene/usePointerCursor'
 import {
   EXIT_STICKER_PARAMS,
   EXIT_STICKER_ROTATION,

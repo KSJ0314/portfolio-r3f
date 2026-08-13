@@ -1,6 +1,6 @@
 import { Text } from '@react-three/drei'
 import { HAND_FONT } from '../../../../../content/fonts'
-import { usePointerCursor } from '../../../../usePointerCursor'
+import { usePointerCursor } from '../../../../../scene/usePointerCursor'
 import { INK } from '../AboutSkills.constants'
 import { PAGER_NEXT_TEXT, PAGER_PREV_TEXT } from './SkillsPager.constants'
 import type { SkillsPagerProps } from './SkillsPager.types'
