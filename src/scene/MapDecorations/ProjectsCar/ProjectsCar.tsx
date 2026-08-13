@@ -18,7 +18,7 @@ import {
 } from '../../../state/useMapDecorationsStore'
 import { ClickMarker } from '../../ClickMarker'
 import { usePointerCursor } from '../../usePointerCursor'
-import { useAfterStation } from '../MapDecorations.hooks'
+import { useAfterStation } from '../../useAfterStation'
 import {
   PROJECTS_CAR_AFTER_STATION,
   PROJECTS_CAR_HEADING,
@@ -30,8 +30,9 @@ import { disposeCar, splitCar } from './ProjectsCar.wheels'
 /**
  * 연출의 단계.
  * `ready`에서 차를 누르면 캐릭터가 걸어오고(`walking`), 닿으면 태우고(`boarding`) 달린다(`driving`).
+ * 내려주고 사라지면(`leaving`) 등장 자리에 다시 나타나 `ready`로 돌아간다.
  */
-type Stage = 'ready' | 'walking' | 'boarding' | 'driving' | 'leaving' | 'gone'
+type Stage = 'ready' | 'walking' | 'boarding' | 'driving' | 'leaving'
 
 const _raycaster = new Raycaster()
 const _pointer = new Vector2()
@@ -63,9 +64,11 @@ function CarRide({ placement }: { placement: ProjectsCarPlacement }) {
   const { camera, gl } = useThree()
   const { scene } = useGLTF(PROJECTS_CAR_URL)
   const markArrived = useMapDecorationsStore((s) => s.markCarArrived)
-  const cursor = usePointerCursor()
+  const arrived = useMapDecorationsStore((s) => s.carArrived)
 
   const [stage, setStage] = useState<Stage>('ready')
+  // 누를 수 있는 동안에만 손가락 커서를 붙인다. 훅이 되돌리는 일까지 맡는다.
+  const cursor = usePointerCursor(stage === 'ready')
   const stageRef = useRef<Stage>('ready')
   const advance = useCallback((next: Stage) => {
     stageRef.current = next
@@ -231,19 +234,20 @@ function CarRide({ placement }: { placement: ProjectsCarPlacement }) {
     return () => canvas.removeEventListener('mousedown', onMouseDown)
   }, [stage, camera, gl, ride])
 
-  // 출발하면 손가락 커서를 뗀다. 커서가 차 위에 얹힌 채로 핸들러가 사라지면 되돌릴 기회가 없다.
-  useEffect(() => {
-    if (stage !== 'ready') document.body.style.cursor = ''
-  }, [stage])
-
-  /** 도착하면 차는 사라지고 캐릭터가 그 자리에 내린다. */
+  /**
+   * 도착하면 차는 사라지고 캐릭터가 그 자리에 내린다.
+   *
+   * 사라진 뒤에는 **등장 자리에 다시 나타나** 또 탈 수 있게 한다. 자리를 따로 옮기지 않아도
+   * `useFrame`이 주행 중이 아닐 때 등장 자리로 되돌리므로, 옅은 동안 옮겨져 순간이동이 보이지 않는다.
+   */
   const arrive = useCallback(() => {
     advance('leaving')
     fadeTo(0, () => {
       useCameraStore.getState().setHidden(false)
       releaseLock()
       markArrived()
-      advance('gone')
+      advance('ready')
+      fadeTo(1)
     })
   }, [advance, fadeTo, releaseLock, markArrived])
 
@@ -295,7 +299,7 @@ function CarRide({ placement }: { placement: ProjectsCarPlacement }) {
       target.copy(position)
 
       if (remaining <= step) arrive()
-    } else if (stageRef.current !== 'leaving' && stageRef.current !== 'gone') {
+    } else if (stageRef.current !== 'leaving') {
       // 아직 출발 전이라 등장 자리에 둔다. HUD로 자리를 옮기면 그대로 따라온다.
       at.current.x = placement.startX
       at.current.z = placement.startZ
@@ -309,14 +313,15 @@ function CarRide({ placement }: { placement: ProjectsCarPlacement }) {
     // 뒤처져 달리는 내내 차가 화면 중앙에서 밀린다. 음수 우선순위는 자동 렌더를 뺏지 않는다.
   }, -1)
 
-  if (!car || stage === 'gone') return null
+  if (!car) return null
 
   return (
     <group ref={place}>
       {/* 누르라는 표시. 차 위에 떠 있고 눌러 출발하면 걷힌다.
-          레이캐스트를 막지 않아 표시를 눌러도 차를 누른 것으로 친다. */}
+          레이캐스트를 막지 않아 표시를 눌러도 차를 누른 것으로 친다.
+          한 번 타 본 뒤에는 누를 수 있다는 것을 이미 아니까 다시 내지 않는다. */}
       <ClickMarker
-        visible={stage === 'ready'}
+        visible={stage === 'ready' && !arrived}
         y={placement.markerY}
         size={placement.markerSize}
         bob={placement.markerBob}
@@ -326,9 +331,8 @@ function CarRide({ placement }: { placement: ProjectsCarPlacement }) {
       />
       <group ref={bounce}>
         <group rotation={[0, MathUtils.degToRad(PROJECTS_CAR_HEADING), 0]} scale={scale}>
-          {/* 누를 수 있는 동안에만 손가락 커서를 붙인다. 포인터 핸들러가 없으면
-              R3F 이벤트 대상이 아니라 우클릭 이동이 그대로 바닥으로 통과한다. */}
-          <mesh geometry={car.body} {...(stage === 'ready' ? cursor : {})}>
+          {/* 포인터 핸들러가 없으면 R3F 이벤트 대상이 아니라 우클릭 이동이 그대로 바닥으로 통과한다. */}
+          <mesh geometry={car.body} {...cursor}>
             <meshStandardMaterial
               ref={(material) => {
                 materials.current[0] = material

@@ -1,7 +1,12 @@
 import { useMemo } from 'react'
 import { Line } from '@react-three/drei'
+import { ClickMarker } from '../../../../scene/ClickMarker'
+import { CLICK_MARKER_MOTION } from '../../../../scene/ClickMarker/ClickMarker.constants'
+import { useAfterStation } from '../../../../scene/useAfterStation'
+import { usePointerCursor } from '../../../../scene/usePointerCursor'
 import { useCareerLogoStore } from '../../../../state/useCareerLogoStore'
 import { useCareerPageStore } from '../../../../state/useCareerPageStore'
+import { useStationStore } from '../../../../state/useStationStore'
 import type { StationInactiveProps } from '../../../registry'
 import { CAREER_CENTER, INK, careerColumnLeft } from './AboutCareer.constants'
 import type { CareerLogoTarget } from './AboutCareer.types'
@@ -43,6 +48,11 @@ export function AboutCareerInactive({ station }: StationInactiveProps) {
   const trophy = useCareerPageStore((s) => s.trophy)
   const logo = useCareerPageStore((s) => s.logo)
   const widths = useCareerLogoStore((s) => s.widths)
+  const phase = useStationStore((s) => s.phase)
+  // 누를 수 있는 동안에만 손가락 커서를 붙인다. 열려 있는 동안에는 페이지를 읽는 화면이다.
+  const cursor = usePointerCursor(phase === 'idle')
+  // 한 번 열어본 뒤에는 누를 수 있다는 것을 이미 아니까 표시를 다시 내지 않는다.
+  const visited = useAfterStation(station.id)
 
   const { width, height } = area
   const halfWidth = width / 2
@@ -77,15 +87,30 @@ export function AboutCareerInactive({ station }: StationInactiveProps) {
 
   return (
     <group position={[offsetX, 0, offsetZ]}>
-      {/* 클릭 판정 면. 포인터 핸들러가 없어 우클릭 이동은 바닥으로 통과하고, 좌클릭 활성화만 Stations가 잡는다. */}
+      {/* 클릭 판정 면. 포인터 핸들러는 커서뿐이라 우클릭 이동은 바닥으로 통과하고, 좌클릭 활성화만 Stations가 잡는다. */}
       <mesh
         position={[0, AREA_Y, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         userData={{ stationId: station.id }}
+        {...cursor}
       >
         <planeGeometry args={[width, height]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
+
+      {/* 자격증 종이 위에 뜨는 클릭 표시. 자리는 그 종이를 따라가므로 그림을 옮기면 함께 따라온다.
+          열려 있는 동안에는 누를 곳이 아니므로 걷힌다. */}
+      <group position={[spec.x, 0, spec.z]}>
+        <ClickMarker
+          visible={!visited && phase === 'idle'}
+          y={CLICK_MARKER_MOTION.y}
+          size={CLICK_MARKER_MOTION.size}
+          bob={CLICK_MARKER_MOTION.bob}
+          bobSeconds={CLICK_MARKER_MOTION.bobSeconds}
+          spinSeconds={CLICK_MARKER_MOTION.spinSeconds}
+          fadeSeconds={CLICK_MARKER_MOTION.fadeSeconds}
+        />
+      </group>
 
       {/* 오려 붙인 종이 두 장 — 살짝 겹치므로 자격증을 깔고 교육을 위에 얹는다. */}
       <CareerPaper
