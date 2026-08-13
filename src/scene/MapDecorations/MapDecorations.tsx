@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { Crosswalk } from './Crosswalk'
+import { ProjectsCar } from './ProjectsCar'
 import { RightClickHint } from './RightClickHint'
 import { SkillsGuideArrow } from './SkillsGuideArrow'
 import { TrafficLight } from './TrafficLight'
@@ -17,6 +18,7 @@ export function MapDecorations() {
       <RightClickHint />
       <Crosswalk />
       <TrafficLight />
+      <ProjectsCar />
     </Suspense>
   )
 }

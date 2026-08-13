@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { CROSSWALK_PLACEMENT } from '../scene/MapDecorations/Crosswalk/Crosswalk.constants'
+import { PROJECTS_CAR_PLACEMENT } from '../scene/MapDecorations/ProjectsCar/ProjectsCar.constants'
 import { RIGHT_CLICK_HINT_PLACEMENT } from '../scene/MapDecorations/RightClickHint/RightClickHint.constants'
 import { TRAFFIC_LIGHT_PLACEMENT } from '../scene/MapDecorations/TrafficLight/TrafficLight.constants'
 import { GUIDE_ARROW_PLACEMENT } from '../scene/MapDecorations/SkillsGuideArrow/SkillsGuideArrow.constants'
@@ -58,6 +59,40 @@ export interface TrafficLightPlacement {
   shadowOpacity: number
 }
 
+/** 프로젝트 구역으로 데려다주는 자동차의 배치·연출. */
+export interface ProjectsCarPlacement {
+  /** 차 길이(앞뒤)의 월드 크기. 가로·높이는 모델 비율에서 나온다. */
+  length: number
+  /** 등장 자리(월드 x, z). */
+  startX: number
+  startZ: number
+  /** 도착 자리(월드 x, z). */
+  endX: number
+  endZ: number
+  /** 차 중심에서 캐릭터가 타려고 서는 자리까지(월드 x, z). */
+  boardX: number
+  boardZ: number
+  /** 주행 속도(유닛/초). */
+  speed: number
+  /** 등장·퇴장 페이드 시간(초). */
+  fadeSeconds: number
+  /** 탑승할 때 눌리는 깊이(월드 단위)와 눌렸다 펴지는 데 걸리는 시간(초). */
+  bounce: number
+  bounceSeconds: number
+  /** 다 펴진 뒤 출발까지 쉬는 시간(초). */
+  boardPause: number
+  /** 바퀴 굴림 배수. 1이면 굴러간 거리 그대로이고 음수면 반대 방향이다. */
+  wheelSpin: number
+  /** 누르라는 표시(원뿔)의 끝이 놓일 높이(월드 y)와 원뿔 높이. */
+  markerY: number
+  markerSize: number
+  /** 표시가 위아래로 흔들리는 폭과 한 번 오르내리는 시간(초). */
+  markerBob: number
+  markerBobSeconds: number
+  /** 표시가 한 바퀴 도는 데 걸리는 시간(초). 0이면 돌지 않는다. */
+  markerSpinSeconds: number
+}
+
 interface MapDecorationsState {
   /** 바닥 화살표의 배치·연출. */
   guide: GuideArrowPlacement
@@ -76,6 +111,15 @@ interface MapDecorationsState {
   crosswalkDrawn: boolean
   /** 세워 두는 신호등의 배치·그림자. */
   trafficLight: TrafficLightPlacement
+  /** 프로젝트 구역으로 데려다주는 자동차의 배치·연출. */
+  car: ProjectsCarPlacement
+  /** 값이 바뀌면 자동차를 새로 마운트해 연출을 처음부터 재생한다(HUD 버튼). */
+  carRedraw: number
+  /**
+   * 자동차가 도착했는지. 프로젝트 구역에 놓일 것들이 기다리는 신호다.
+   * 주행 시간이 거리·속도에 따라 달라져 지연(delay) 상수로는 차례를 맞출 수 없다.
+   */
+  carArrived: boolean
   setGuide: (guide: GuideArrowPlacement) => void
   redrawGuide: () => void
   setHint: (hint: RightClickHintPlacement) => void
@@ -84,6 +128,10 @@ interface MapDecorationsState {
   /** 횡단보도를 다 그었음을 알린다. */
   markCrosswalkDrawn: () => void
   setTrafficLight: (trafficLight: TrafficLightPlacement) => void
+  setCar: (car: ProjectsCarPlacement) => void
+  redrawCar: () => void
+  /** 자동차가 도착했음을 알린다. */
+  markCarArrived: () => void
 }
 
 /**
@@ -99,6 +147,9 @@ export const useMapDecorationsStore = create<MapDecorationsState>((set, get) => 
   crosswalkRedraw: 0,
   crosswalkDrawn: false,
   trafficLight: { ...TRAFFIC_LIGHT_PLACEMENT },
+  car: { ...PROJECTS_CAR_PLACEMENT },
+  carRedraw: 0,
+  carArrived: false,
   setGuide: (guide) => set({ guide }),
   redrawGuide: () => set((s) => ({ guideRedraw: s.guideRedraw + 1 })),
   setHint: (hint) => set({ hint }),
@@ -111,4 +162,10 @@ export const useMapDecorationsStore = create<MapDecorationsState>((set, get) => 
     if (!get().crosswalkDrawn) set({ crosswalkDrawn: true })
   },
   setTrafficLight: (trafficLight) => set({ trafficLight }),
+  setCar: (car) => set({ car }),
+  // 다시 재생하면 아직 도착하지 않은 상태로 돌아간다 — 뒤이어 나올 것이 그동안 서 있으면 안 된다.
+  redrawCar: () => set((s) => ({ carRedraw: s.carRedraw + 1, carArrived: false })),
+  markCarArrived: () => {
+    if (!get().carArrived) set({ carArrived: true })
+  },
 }))
