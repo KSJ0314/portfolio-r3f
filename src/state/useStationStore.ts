@@ -60,7 +60,8 @@ export const useStationStore = create<StationState>((set, get) => ({
   // 사이트 첫 화면은 Intro가 활성인 상태다. 진입 애니메이션 없이 처음부터 정면뷰로 시작한다.
   activeId: 'about-intro',
   phase: 'active',
-  visited: {},
+  // 첫 화면 Intro는 `activate`를 거치지 않으므로 처음부터 열어본 것으로 둔다.
+  visited: { 'about-intro': true },
   setNear: (id) => {
     if (get().nearId !== id) set({ nearId: id })
     // 걸어서 멀어지는 것이 곧 닫기다. 값이 바뀌는 순간이 아니라 매번 확인한다 —

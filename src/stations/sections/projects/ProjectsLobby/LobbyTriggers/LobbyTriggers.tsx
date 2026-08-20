@@ -53,9 +53,12 @@ export function LobbyTriggers() {
       )
       _raycaster.setFromCamera(_pointer, camera)
 
-      const hit = _raycaster.intersectObjects(plates.children, true)[0]
-      const triggerId = hit?.object.userData.triggerId
-      if (typeof triggerId === 'string') useLobbyTriggerStore.getState().activate(triggerId)
+      // 판 앞에 뜬 클릭 표시도 레이에 걸리므로 첫 히트만 보면 안 된다. 표시는 처음 열기
+      // 전에만 있어, 정작 눌러야 할 때 그것이 판을 가린다.
+      const hit = _raycaster
+        .intersectObjects(plates.children, true)
+        .find((it) => typeof it.object.userData.triggerId === 'string')
+      if (hit) useLobbyTriggerStore.getState().activate(hit.object.userData.triggerId as string)
     }
 
     canvas.addEventListener('mousedown', onMouseDown)

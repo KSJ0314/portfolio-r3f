@@ -19,6 +19,14 @@ import {
 /** 목표점에 닿았다고 보는 거리. */
 const ARRIVE_EPSILON = 1e-4
 
+/**
+ * 한 프레임에 인정하는 최대 시간(초).
+ *
+ * 탭을 비웠다 돌아오면 프레임 간격이 통째로 밀려 들어와, 한 걸음이 벽 두께를 넘어선다.
+ * 밀어내기는 옮긴 자리만 보므로 그런 걸음은 벽을 지나쳐 버린다.
+ */
+const MAX_DELTA = 1 / 20
+
 const _next = new Vector3()
 
 /**
@@ -50,7 +58,7 @@ export function LobbyCharacter() {
     if (covered) {
       target.copy(position)
     } else if (dist > ARRIVE_EPSILON) {
-      const step = LOBBY_MOVE_SPEED * delta
+      const step = LOBBY_MOVE_SPEED * Math.min(delta, MAX_DELTA)
       const ratio = dist <= step ? 1 : step / dist
       _next.set(position.x + dx * ratio, position.y, position.z + dz * ratio)
       // 남쪽 한계에서 자른다. z만 되돌리므로 그 선을 따라 좌우로는 그대로 걸어진다.

@@ -21,7 +21,8 @@ export const LOBBY_PAGE_MESHES = { left: 'Book_Page_L', right: 'Book_Page_R' }
  * 페이지가 **책등 쪽과 바깥쪽에서 말려 들어가** 그 띠에는 면적이 거의 없는데 UV는 제 몫을
  * 그대로 갖는다. 그래서 그 자리에 그린 것은 좁은 띠에 눌려 늘어난다. 그만큼 비워 두고 쓴다.
  *
- * **좌우가 거울**이라 안쪽 여백이 서로 반대편에 있다. 값은 8칸 시험 텍스처로 읽은 것이다.
+ * 값은 8칸 시험 텍스처로 읽은 것이다. 좌우가 같은 값이라 페이지를 나눠 둘 이유는 없지만,
+ * 한쪽만 다시 재게 되는 날을 위해 페이지별로 둔다.
  */
 export const LOBBY_PAGE_MARGIN: Record<string, LobbyPageMargin> = {
   [LOBBY_PAGE_MESHES.left]: { left: 0.25, right: 0.25, top: 0.15, bottom: 0.05 },

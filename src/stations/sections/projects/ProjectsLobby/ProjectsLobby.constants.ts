@@ -212,7 +212,7 @@ export const LOBBY_ENV = { blur: 0.08, intensity: 0.6 }
  * 음영이 없어 재질이 납작해진다. 위(`sky`)와 아래(`ground`) 색을 갈라 두면 같은 비용에
  * 면 방향마다 밝기가 달라져 형태와 재질감이 산다. 그림자는 만들지 않아 부담도 없다.
  */
-export const LOBBY_FILL = { sky: '#beb377c1', ground: '#000000', intensity: 0.2 }
+export const LOBBY_FILL = { sky: '#beb377', ground: '#000000', intensity: 0.2 }
 
 /**
  * 벽등 빛 색. 모델에 담겨 온 색을 이것으로 덮어쓴다 —

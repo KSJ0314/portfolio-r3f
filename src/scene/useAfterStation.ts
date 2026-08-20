@@ -27,11 +27,22 @@ export function useAfterStation(stationId: string, delaySeconds = 0): boolean {
 
     // idle이면 activeId는 null이므로 "지금 그 스테이션인지"는 따로 보지 않아도 된다.
     const check = (state: StationSnapshot) => {
-      if (!state.visited[stationId] || state.phase !== 'idle') return
+      if (!state.visited[stationId] || state.phase !== 'idle') {
+        // 기다리는 중에 다시 들어갔다. 나오면 그때 다시 건다.
+        window.clearTimeout(timer)
+        timer = 0
+        return
+      }
       // 기다리는 중에 다시 들어오면 타이머가 겹치므로 한 번만 건다.
       if (timer) return
-      if (delaySeconds > 0) timer = window.setTimeout(() => setPassed(true), delaySeconds * 1000)
-      else setPassed(true)
+      if (delaySeconds > 0) {
+        timer = window.setTimeout(() => {
+          timer = 0
+          // 기다린 사이에 상태가 바뀌었을 수 있어 다시 본다.
+          const now = useStationStore.getState()
+          if (now.visited[stationId] && now.phase === 'idle') setPassed(true)
+        }, delaySeconds * 1000)
+      } else setPassed(true)
     }
 
     const unsubscribe = useStationStore.subscribe(check)

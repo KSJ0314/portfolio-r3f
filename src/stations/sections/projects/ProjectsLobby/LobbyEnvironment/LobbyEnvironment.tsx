@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { useThree } from '@react-three/fiber'
 import { PMREMGenerator } from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
@@ -19,29 +19,29 @@ export function LobbyEnvironment() {
   const gl = useThree((s) => s.gl)
   const scene = useThree((s) => s.scene)
 
-  const target = useMemo(() => {
+  // 굽는 것과 버리는 것을 한 이펙트에 둔다 — 굽기를 밖에 두면 정리된 뒤 다시 붙을 때
+  // 이미 버린 텍스처를 물린다(StrictMode에서 이펙트가 두 번 돈다).
+  useEffect(() => {
     const pmrem = new PMREMGenerator(gl)
     const room = new RoomEnvironment()
     const baked = pmrem.fromScene(room, LOBBY_ENV.blur)
     // 구운 뒤에는 원본 방과 굽는 도구가 필요 없다. 결과 텍스처는 남는다.
     room.dispose()
     pmrem.dispose()
-    return baked
-  }, [gl])
 
-  useEffect(() => {
     // 훅이 돌려준 값의 프로퍼티에 직접 대입하면 eslint가 막는다(PaperGround가 텍스처에 쓰는 것과 같은 우회).
     for (const target3D of [scene]) {
-      target3D.environment = target.texture
+      target3D.environment = baked.texture
       target3D.environmentIntensity = LOBBY_ENV.intensity
     }
     return () => {
       for (const target3D of [scene]) {
         target3D.environment = null
+        target3D.environmentIntensity = 1
       }
-      target.dispose()
+      baked.dispose()
     }
-  }, [scene, target])
+  }, [gl, scene])
 
   return null
 }
