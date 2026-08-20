@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { Experience } from './scene/Experience'
 import { SceneGate } from './ui/SceneGate'
 import { Minimap } from './ui/Minimap'
@@ -7,6 +7,7 @@ import { Credits } from './ui/Credits'
 import { DevHUD } from './ui/DevHUD'
 import { CrayonStudio } from './tools/CrayonStudio'
 import { StationLifecycle } from './stations'
+import { ensureOutsideBuilding } from './stations/sections/projects/ProjectsLobby'
 import { useStationStore } from './state/useStationStore'
 
 /** 메인 페이지(`/`) — 3D 포트폴리오. 테마·전역 스타일은 `Root`가 감싼다. */
@@ -14,6 +15,13 @@ function App() {
   // 스테이션이 열려 있는 동안에는 미니맵·구석 버튼을 두지 않는다. 완전히 닫힌 뒤(idle)에만 다시 나타난다.
   const idle = useStationStore((s) => s.phase === 'idle')
   const [worldMapOpen, setWorldMapOpen] = useState(false)
+
+  // 주소가 맵이면 건물 밖에 서 있어야 한다. 브라우저 뒤로가기는 주소만 되돌리고 앱 상태는
+  // 건드리지 않아, 그대로 두면 문이 다시 열리며 진입 연출이 통째로 재생된다.
+  // 첫 화면에서 그리기 전에 맞춰야 한 프레임도 어긋나 보이지 않는다.
+  useLayoutEffect(() => {
+    ensureOutsideBuilding()
+  }, [])
 
   return (
     <>

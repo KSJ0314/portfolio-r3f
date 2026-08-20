@@ -10,6 +10,7 @@ import { useProjectsPageStore } from '../../../../state/useProjectsPageStore'
 import { useProjectsSequenceStore } from '../../../../state/useProjectsSequenceStore'
 import { useStationStore } from '../../../../state/useStationStore'
 import type { StationInactiveProps } from '../../../registry'
+import { preloadLobbyModel } from '../ProjectsLobby/LobbyModel'
 import { DoorGlow } from './DoorGlow'
 import {
   PROJECTS_BLOCKER_ID,
@@ -53,6 +54,14 @@ export function ProjectsBuildingInactive({ station }: StationInactiveProps) {
   const setDoor = useProjectsDoorStore((s) => s.setDoor)
 
   const { scene } = useGLTF(PROJECTS_BUILDING_URL)
+
+  // 문 앞에 다가서면 건물 안(로비)을 미리 받아 둔다. 1.8MB라 앱이 뜰 때 받으면 첫 화면이 늦고,
+  // 전환을 시작한 뒤에 받기 시작하면 덮인 채로 오래 기다린다.
+  const nearDoor = useStationStore((s) => s.nearId === PROJECTS_ID)
+  useEffect(() => {
+    if (nearDoor) preloadLobbyModel()
+  }, [nearDoor])
+
   const setBlocker = useBlockersStore((s) => s.setBlocker)
   const removeBlocker = useBlockersStore((s) => s.removeBlocker)
 

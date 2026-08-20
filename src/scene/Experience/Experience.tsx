@@ -1,5 +1,6 @@
-import { Suspense } from 'react'
+import { Suspense, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
+import { AERIAL_OFFSET, useCameraStore } from '../../state/useCameraStore'
 import { useThemeStore } from '../../state/useThemeStore'
 import { themes } from '../../theme/themes'
 import { CameraRig } from '../CameraRig'
@@ -9,21 +10,37 @@ import { Stations } from '../Stations'
 import { SceneErrorBoundary } from '../SceneErrorBoundary'
 import { MapDecorations } from '../MapDecorations'
 import { AssetPreload } from '../AssetPreload'
+import { SceneArrival } from '../SceneArrival'
 import { ActiveStationScene } from '../../stations'
 
 export function Experience() {
   const mode = useThemeStore((s) => s.mode)
   const { scene } = themes[mode]
 
+  // 카메라 위치가 시점의 단일 소스다(CameraRig가 여기서 오프셋·미니맵 각도를 유도한다).
+  // 캐릭터를 비스듬히 내려다보는 항공뷰. 정확한 대각선(45°)을 피해 방위각을 살짝 틀었고,
+  // 고도각(약 42°)은 오프셋의 y가 정한다.
+  // **지금 캐릭터가 선 자리**에 오프셋을 더한다 — 상수로 박아 두면 로비에서 문 앞으로 돌아왔을 때
+  // 캐릭터는 저쪽에 있는데 카메라만 시작점 근처에 놓여 오프셋이 틀어진다.
+  // 마운트할 때 한 번만 잡는다. 이후 자리는 CameraRig가 매 프레임 맞춘다.
+  const camera = useMemo(() => {
+    const { position } = useCameraStore.getState()
+    return {
+      position: [
+        position.x + AERIAL_OFFSET[0],
+        AERIAL_OFFSET[1],
+        position.z + AERIAL_OFFSET[2],
+      ] as [number, number, number],
+      zoom: 85,
+      near: 0.1,
+      far: 100,
+    }
+  }, [])
+
   return (
     <Canvas
       orthographic
-      // 카메라 위치가 시점의 단일 소스다(CameraRig가 여기서 오프셋·미니맵 각도를 유도한다).
-      // 캐릭터를 비스듬히 내려다보는 항공뷰. 정확한 대각선(45°)을 피해 방위각을 살짝 틀었다.
-      // y는 내려다보는 고도각을 정한다(약 42°). 높일수록 위에서 내려다보는 시점이 된다.
-      // xz는 캐릭터 시작 위치(CHARACTER_START)에 오프셋 (-7, +12)를 더한 값이다.
-      // 캐릭터 시작점을 옮기면 여기도 같이 옮겨야 시점이 유지된다.
-      camera={{ position: [-7, 12.5, 17], zoom: 85, near: 0.1, far: 100 }}
+      camera={camera}
       // 스텐실 버퍼는 기본으로 꺼져 있다. 그림자 실루엣을 표시해 한 겹만 칠하는 데 쓴다(CareerTrophy).
       gl={{ stencil: true }}
       style={{ position: 'fixed', inset: 0 }}
@@ -58,6 +75,8 @@ export function Experience() {
         <MapDecorations />
         {/* 스테이션을 열 때 굽기 시작하지 않도록 에셋을 미리 굽는다(그리는 것은 없다). */}
         <AssetPreload />
+        {/* 로비에서 돌아온 경우, 이 씬이 그려졌음을 알려야 전환 덮개가 열린다. */}
+        <SceneArrival />
       </SceneErrorBoundary>
     </Canvas>
   )
