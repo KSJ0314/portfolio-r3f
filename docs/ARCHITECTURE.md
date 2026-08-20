@@ -8,12 +8,17 @@ _작성 예정_
 
 ## 라우팅
 
-`main.tsx` → `BrowserRouter` → `Root`(테마·전역 스타일 공유) → 라우트 두 개.
+`main.tsx` → `BrowserRouter` → `Root`(테마·전역 스타일 공유 + 장면 전환 덮개) → 라우트 셋.
 
 - `/` — 3D 포트폴리오(`App`). 아래 씬 그래프가 여기다.
+- `/projects` — 프로젝트 건물 **안**(`ProjectsLobbyPage`). 맵과 **다른 Canvas·다른 카메라(원근)** 다. 세계가 통째로 달라 이동 상태·판정·카메라를 맵과 나눠 갖는다. (DECISIONS 034)
 - `/crayon` — 크레파스 스튜디오 단독 페이지(`tools/CrayonStudio`). 맵 없이 그림판만 띄운다. 배포본에도 포함돼 방문자가 크레파스로 그려 PNG로 저장할 수 있다.
 
 `BrowserRouter`라 배포 후 `/crayon` 직접 접속이 404가 나지 않도록 `vercel.json`이 전 경로를 `index.html`로 rewrite한다. (DECISIONS 017)
+
+**장면 전환 덮개(`ui/SceneTransition`)는 라우트보다 위, `Root`에 있다.** 라우트가 갈리면 Canvas가 통째로 새로 서고 모델을 받는 동안 화면이 빈다. 덮개가 원형으로 조여들어 **다 덮인 뒤에 주소를 바꾸고**, 도착한 장면이 준비를 알리면(`scene/SceneArrival`) 연다. 조여드는 중심은 씬이 매 프레임 채우는 초점(건물 문 자리)이라, 문으로 빨려 들어가고 문에서 나오는 것으로 읽힌다. 덮개가 라우트 안에 있으면 그 자신이 언마운트되므로 이 자리라야 한다.
+
+`main.tsx`는 Draco 디코더 경로도 여기서 못 박는다 — 디코더는 앱 전체가 모듈 하나를 공유하므로 모델마다 지정하지 않고 기본값 자체를 바꾼다(`lib/draco`, DECISIONS 039).
 
 ## 씬 그래프 (3D)
 
@@ -28,18 +33,19 @@ _작성 예정_
       - `Stations` — 스테이션 배치 + 매 프레임 근접 판정(`nearId`) + 좌클릭 활성화(캔버스 `mousedown`을 직접 듣고 레이캐스트). 거리 재는 법은 스테이션이 등록한 `distanceTo`를 쓰고, 없으면 배치 좌표까지의 거리로 잰다. 배치 좌표가 없는 스테이션은 종이 위에 없으므로 근접 대상에서 빠진다.
         - `Station` — 레지스트리에 비활성 구현(`Inactive`)이 있으면 그것을 그리고, **없으면 아무것도 그리지 않는다**(종이 위에 놓을 그림이 정해지기 전이다). 배치 좌표가 없는 스테이션도 놓을 자리가 없어 그리지 않는다. 클릭 판정 대상은 `userData.stationId`를 실은 오브젝트이고 그것을 두는 것도 구현이다(판정은 `Stations`가 함). **경계는 스테이션마다 하나씩** 둬, 한 스테이션의 텍스처가 다른 스테이션을 붙잡지 않게 한다.
           - `AboutCareerInactive` — 클릭 판정 판 + 오려 붙인 종이 두 장(`CareerPaper` — 교육·자격증) + 트로피 모델(`CareerTrophy`). 종이끼리는 깊이를 쓰지 않고 `renderOrder`로 앞뒤를 못 박는다 — 반투명은 카메라 거리로 정렬돼, 아래쪽에 놓인 종이가 위로 올라온다. 트로피는 바닥 그림자를 따로 깐다(실루엣을 스텐실에 표시하고 그 자리만 한 겹 칠한다. DECISIONS 027). 셋은 활성 구현이 내는 차례 신호(`useCareerSequenceStore.logoTurn`)를 구독해 스스로 제 칸의 로고 자리로 물러난다.
-          - `ProjectsBuildingInactive` — 프로젝트 구역. **건물이 곧 스테이션**이고 전시대는 그 안의 내용이다(DECISIONS 031). 모델을 불러 앞문 한 장을 떼어 경첩에 매달고(`ProjectsBuilding.door`), 문간에 빛(`DoorGlow`)을 두며, 자기 발자국을 막는 사각형으로 올린다. 클릭 대상은 **문에 붙인 판 하나**뿐이고 건물 본체는 레이캐스트에서 뺀다. 문의 실제 자리·크기를 재서 `useProjectsDoorStore`에 올리므로 건물 크기를 바꿔도 판·표시·근접 구역이 따라온다(DECISIONS 033). 문 여닫힘은 `useProjectsSequenceStore`로 알린다.
+          - `ProjectsBuildingInactive` — 프로젝트 구역. **건물이 곧 스테이션**이고 전시대는 그 안의 내용이다(DECISIONS 031). 모델을 불러 앞문 한 장을 떼어 경첩에 매달고(`ProjectsBuilding.door`), 문간에 빛(`DoorGlow`)을 두며, 자기 발자국을 막는 사각형으로 올린다. 클릭 대상은 **문에 붙인 판 하나**뿐이고 건물 본체는 레이캐스트에서 뺀다. 문의 실제 자리·크기를 재서 `useProjectsDoorStore`에 올리므로 건물 크기를 바꿔도 판·표시·근접 구역이 따라온다(DECISIONS 033). 문 여닫힘은 `useProjectsSequenceStore`로 알린다. **문 앞에 서면 로비 모델을 미리 받아 둔다** — 들어갈 때 덮개가 오래 덮여 있지 않게.
           - `AboutSkillsInactive` — 클릭 판정 판 + 공구함 스티커(`SkillsBox`). 스티커는 차례를 알리는 신호(`useSkillsSequenceStore.logoTurn`)를 구독해 스스로 줄어들어 영역 좌상단으로 물러나 로고가 된다. 전환을 활성 구현에 두지 않는 이유는 같은 오브젝트가 이어서 변형돼야 하기 때문이다. (DECISIONS 020)
       - `ActiveStationScene` — 활성 스테이션의 3D 상세 마운트 자리(레지스트리에 등록된 `Scene`). 상세는 **다 준비된 뒤 한 번에** 보여준다 — 스테이션이 `useStationGate`로 건 열쇠가 남아 있으면 마운트한 채 감춰, 그동안 텍스처를 굽고 글자 크기를 재는 일이 끝난다.
         - `AboutCareerScene` — 캐릭터 이동과 카메라 각도 전환. 캐릭터가 **가장 가까운 영역 테두리**로 걸어간 뒤, 카메라 회전과 그림들의 로고 전환이 **동시에** 돈다(영역 안에서 열면 이동을 건너뛴다). 완전히 활성인 동안 페이지 내용을 함께 그린다. (DECISIONS 026)
           - `CareerTitles` — 로고 옆 손글씨 칸 이름(교육 · 수상내역 · 자격증). 고정이다.
           - `CareerColumns` — 세 칸을 채우는 목록. `education`·`awards`·`spec`을 읽어 `{ 제목, 본문, 좌/우 한 줄 }` 한 형태로 정규화하고(`CareerColumns.data`), 칸마다 위에서부터 항목(`CareerEntry`)을 쌓는다. 칸이 맞닿는 경계에 세로 구분선도 여기서 세운다. 컬렉션마다 필드가 달라도 그리는 쪽은 한 종류만 다룬다. (DECISIONS 028)
           - `CareerExit` — 우상단 나가기 자리. 아이콘은 공용 `ExitSticker`다.
-        - `ProjectsBuildingScene` — 캐릭터 이동과 카메라 전환. **다른 스테이션이 바닥을 수직으로 내려다보는 것과 달리 세워 둔 문을 눈높이에서 정면으로 본다.** 캐릭터가 문 앞으로 걷는 것과 카메라가 도는 것이 함께 돌고, 문이 다 열리면(`doorOpened`) 캐릭터가 안으로 걸어 들어가며 카메라가 문 쪽으로 당겨진다. 자세와 배율은 **한 진행도**에서 함께 나온다 — 따로 굴리면 배율만 오르고 화면 중앙은 건물에 남는다. 나올 때는 문이 다 닫혔다는 신호를 보고 돌며, 캐릭터는 문 앞자리로 순간이동시킨다(건물 안에 두면 막는 사각형에 갇힌다).
+        - `ProjectsBuildingScene` — 캐릭터 이동과 카메라 전환. **다른 스테이션이 바닥을 수직으로 내려다보는 것과 달리 세워 둔 문을 눈높이에서 정면으로 본다.** 캐릭터가 문 앞으로 걷는 것과 카메라가 도는 것이 함께 돌고, 문이 다 열리면(`doorOpened`) 캐릭터가 안으로 걸어 들어가며 카메라가 문 쪽으로 당겨진다. 자세와 배율은 **한 진행도**에서 함께 나온다 — 따로 굴리면 배율만 오르고 화면 중앙은 건물에 남는다. **캐릭터가 문 안으로 다 걸어 들어가면 전환을 시작한다**(`enterLobby`) — 그때부터 덮개가 맡고, 조여드는 초점으로 문 자리를 매 프레임 채운다. 나올 때는 문이 다 닫혔다는 신호를 보고 돌며, 캐릭터는 문 앞자리로 순간이동시킨다(건물 안에 두면 막는 사각형에 갇힌다).
         - `AboutSkillsScene` — 캐릭터 이동과 카메라 각도 전환. 세 연출이 **겹치지 않고 차례로** 돈다 — 캐릭터가 페이지 앞자리로 걸어간 뒤 카메라가 돌고, 그다음 공구함이 물러난다. 공구함에게 차례를 넘기는 신호와 라이프사이클 완료 신호를 낸다. 완전히 활성인 동안에는 페이지 내용을 함께 그린다.
           - `SkillsTitle` — 로고 옆 손글씨 제목. 고정이다.
           - `SkillsPages` — Firestore `skills`를 분류별 페이지로 나눠 그린다(`SkillItem` + 레벨 별 `SkillLevel`). 페이지를 넘기면 이 영역만 갈리고, 우측 하단 `SkillsPager`가 한 번에 하나(다음 또는 이전)만 낸다. (DECISIONS 021)
           - `SkillsExit` — 우상단 나가기 자리. 아이콘은 공용 `ExitSticker`다.
+    - `SceneArrival` — 이 장면이 그릴 준비를 마쳤다고 덮개에 알린다. 첫 프레임을 그린 뒤에 알려야 덮개가 걷힌 자리에 빈 화면이 남지 않는다. 로비도 같은 부품을 쓴다.
     - `AssetPreload` — 앱이 뜰 때 종이 스티커를 미리 구워 캐시에 넣는다(그리는 것 없음). 필요해진 순간에 굽기 시작하면 그때 서스펜드가 걸려 이미 떠 있던 것들이 사라졌다 돌아온다. 목록은 `content/assets.ts`이고, 에셋을 추가하면 거기 한 줄 넣는다.
     - `MapDecorations`(자체 `Suspense`) — 스테이션에 속하지 않는 맵 장식(길안내 화살표·조작 안내·표지판)의 마운트 자리. 영역·근접 판정·라이프사이클이 없어 마운트만 하고, 무엇을 언제 어떻게 그릴지는 요소가 각자 정한다. 특정 스테이션으로 유도하는 요소도 그 스테이션이 아니라 여기 속한다. Suspense를 요소마다 두지 않는 이유는 하나만 빠뜨려도 그 suspend가 씬 전체로 번지기 때문이다. (DECISIONS 018)
       - `useAfterIntro`(`MapDecorations.hooks`) — 장식이 공유하는 등장 조건. 라이프사이클이 처음 `idle`이 되는 시점(= Intro가 닫혀 카메라 전환이 끝난 뒤)이고, 지연 초를 주면 그만큼 더 기다린다. 첫 화면은 Intro가 활성이라 그 위에 장식을 얹으면 페이지를 가린다.
@@ -50,9 +56,11 @@ _작성 예정_
       - `ProjectsCar` — Career를 열었다 닫으면 나타나는 자동차. 눌러 타면 프로젝트 구역까지 데려다준다. 등장 직후에는 잠그지 않는다 — 눌러야 출발하는 구조라 그 전까지는 평소처럼 돌아다녀야 한다. 좌클릭은 `Stations`와 같이 캔버스 `mousedown`을 직접 듣는다. 주행은 캐릭터 이동에 얹지 않고 매 프레임 차를 전진시키며 캐릭터 위치를 차에 붙여 옮긴다(카메라 팔로우·미니맵이 그대로 돈다). 바퀴는 모델을 덩어리로 갈라 뽑는다(DECISIONS 032).
       - `TrafficLight` — 횡단보도 곁에 **세워 두는** 종이 스티커. 세운 종이는 그 자체로 서 있는지 읽히지 않으므로 바닥에 그림자를 따로 깐다(같은 그림을 검게 눌러 눕힌 판). 판이 향하는 방향은 `followOffset`에서 구해 화면을 정면으로 본다. 자리는 횡단보도 우상단 꼭지점 기준 상대 좌표이고, 등장은 `crosswalkDrawn`을 본다 — 걷는 시간이 거리마다 달라 지연으로는 차례를 맞출 수 없다.
 
-Canvas 밖(`App`): `SceneGate` — 첫 화면 가림막. 바닥·캐릭터·Intro(글씨·사진)가 모두 준비될 때까지 덮었다가 페이드로 걷는다. 글씨는 Firestore를 기다리므로 스테이션이 마운트됐다는 신호와 따로 확인한다(LEARNING 2026-08-07). 경계가 나뉘어 있어 준비되는 대로 하나씩 나타나면 순서가 뒤집혀 보이므로, 함께 보여야 하는 것만 골라 기다린다. 한 번 걷으면 다시 덮지 않고, 제 시간에 준비되지 않으면 새로고침으로 재시도하다 횟수를 넘기면 그냥 걷는다. `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) + ESC 종료 + 미구현 스테이션 fallback. `Minimap`(우상단, 누르면 월드맵이 열린다) · `WorldMap`(맵 전체를 보는 모달 — 스테이션을 고르면 그 스테이션이 등록한 자리로 순간이동하고 닫힌다. 활성화까지는 하지 않는다) · `CrayonStudio`(오른쪽 아래 크레파스 버튼 → 모달 그리기 도구, 제목을 누르면 단독 페이지로 간다. 코드 좌표 복사만 dev로 가려진다) · `Credits`(크레파스 버튼 왼쪽 CC 로고 버튼 → 에셋 출처 모달. 목록에서 고른 모델을 **메인 씬과 별개인 두 번째 Canvas**에 띄워 실물과 출처를 함께 보인다. 목록은 `content/credits.ts`. DECISIONS 030) · `DevHUD`(dev 전용 HUD 묶음 — `DebugHUD` 상태 표시 + `GridPaperHUD`·`IntroPageHUD`·`SkillsPageHUD`·`CareerPageHUD`·`ProjectsPageHUD`·`MapDecorationsHUD` leva 튜닝 패널. 패널 자체는 `GridPaperHUD`가 그리고 나머지는 폴더로 얹힌다). `DevHUD`만 App이 `import.meta.env.DEV`로 감싸 프로덕션 번들에서 빠진다. 크레파스 스튜디오는 `/crayon`에서 단독 페이지로도 뜬다.
+Canvas 밖(`App`): `SceneGate` — 첫 화면 가림막. **진짜 첫 방문에만** 뜬다 — 로비에서 돌아오면 이미 본 화면이고, 그때는 덮개가 덮고 있어 가림막까지 겹치면 두 겹으로 걷힌다. 바닥·캐릭터·Intro(글씨·사진)가 모두 준비될 때까지 덮었다가 페이드로 걷는다. 글씨는 Firestore를 기다리므로 스테이션이 마운트됐다는 신호와 따로 확인한다(LEARNING 2026-08-07). 경계가 나뉘어 있어 준비되는 대로 하나씩 나타나면 순서가 뒤집혀 보이므로, 함께 보여야 하는 것만 골라 기다린다. 한 번 걷으면 다시 덮지 않고, 제 시간에 준비되지 않으면 새로고침으로 재시도하다 횟수를 넘기면 그냥 걷는다. `StationLifecycle` — 2D 상세 마운트 자리(`Overlay`) + ESC 종료 + 미구현 스테이션 fallback. `Minimap`(우상단, 누르면 월드맵이 열린다) · `WorldMap`(맵 전체를 보는 모달 — 스테이션을 고르면 그 스테이션이 등록한 자리로 순간이동하고 닫힌다. 활성화까지는 하지 않는다) · `CrayonStudio`(오른쪽 아래 크레파스 버튼 → 모달 그리기 도구, 제목을 누르면 단독 페이지로 간다. 코드 좌표 복사만 dev로 가려진다) · `Credits`(크레파스 버튼 왼쪽 CC 로고 버튼 → 에셋 출처 모달. 목록에서 고른 모델을 **메인 씬과 별개인 두 번째 Canvas**에 띄워 실물과 출처를 함께 보인다. 목록은 `content/credits.ts`. DECISIONS 030) · `DevHUD`(dev 전용 HUD 묶음 — `DebugHUD` 상태 표시 + `GridPaperHUD`·`IntroPageHUD`·`SkillsPageHUD`·`CareerPageHUD`·`ProjectsPageHUD`·`MapDecorationsHUD` leva 튜닝 패널. 패널 자체는 `DevPanel`이 그리고 각 HUD는 폴더로 얹힌다. 패널이 좌상단 뒤로 가기 버튼을 덮지 않게 그 아래로 내려 둔다). `DevHUD`만 App이 `import.meta.env.DEV`로 감싸 프로덕션 번들에서 빠진다. 크레파스 스튜디오는 `/crayon`에서 단독 페이지로도 뜬다.
 
 **미니맵과 구석 버튼(크레파스·출처)은 `idle`에서만 둔다.** 스테이션이 열려 있는 동안에는 페이지를 읽는 화면이라 맵과 도구가 얹힐 자리가 아니고, 완전히 닫힌 뒤에 다시 나타난다. 그래서 미니맵 마커에는 근접·선택 강조를 두지 않는다 — 강조가 필요한 동안에는 미니맵 자체가 없다.
+
+**좌상단 뒤로 가기는 `ui/BackButton` 하나를 화면마다 다시 쓴다.** 자리와 화살표는 버튼이 갖고 **글씨와 색과 동작은 쓰는 쪽이 정한다** — 화면마다 돌아갈 곳이 다르고 배경도 달라 한 색으로는 읽히지 않는다. 어느 화면에서나 같은 자리·같은 모양이라 방문자가 나가는 곳을 다시 찾지 않는다. 전환 덮개보다 아래에 둬 오가는 동안에는 가려지고 눌리지도 않는다.
 
 **오른쪽 아래 구석 버튼은 `ui/CornerButton` 하나를 나눠 쓴다.** 자리는 `$slot`(오른쪽에서 몇 번째)으로 계산하므로 크기·간격을 바꿔도 서로 겹치지 않는다. 버튼마다 좌표를 직접 적으면 하나를 손볼 때 나머지가 어긋난다.
 
@@ -60,12 +68,30 @@ Canvas 밖(`App`): `SceneGate` — 첫 화면 가림막. 바닥·캐릭터·Intr
 
 예정: 나머지 스테이션의 비활성 상태·활성 연출(Phase 8) · 인쇄 문서(Phase 9).
 
+### 로비 씬 그래프 (`/projects`)
+
+건물 **안**이다. 맵과 라우트가 갈려 서로를 알지 못하므로, 오가며 정리할 것(스테이션 닫기·문 앞에 세우기·뒤로 가기 판단)은 `ProjectsLobby.travel.ts` 한자리에 모은다.
+
+- `ProjectsLobbyPage` (`<Canvas shadows>`) — **원근** 카메라다. 종이 위를 내려다보는 맵과 달리 실내는 깊이가 보여야 방으로 읽힌다. 첫 카메라 자리는 시작 자리에 팔로우 오프셋을 더해 만들고, 노출로 흰 대리석이 타는 것을 화면 안에 들인다. 들어올 때마다 이동·트리거 상태를 처음으로 되돌린다(주소 직접 입력·앞으로가기 대비).
+  - `LobbyEnvironment` — 실내의 룩을 만드는 주역. 금속과 광택은 빛이 아니라 **반사**에서 나온다. 어둡게 둘 재질에는 자기 환경맵을 따로 물려 씬 환경광 세기를 타지 않게 한다. (DECISIONS 035)
+  - `LobbyModel` — 모델(`lobby.glb`, Draco)을 불러 씬에 필요한 것을 한자리에서 가른다. 재질 교체·액자 사진·깊이 배율 제외·책 페이지 글씨를 얹고, 이름 규칙으로 **밟는 바닥·막는 것(`Collider_*`)·트리거(`Trigger_*`)·계단 단**을 모아 각각의 자리로 넘긴다. 방을 깊이 방향으로 늘리되 책·연단은 원래 비율로 두는데, 회전된 자식이라 배율을 **회전보다 위에 감싸는 그룹**에 건다.
+  - `LobbyCharacter` — 실내 캐릭터. 매 프레임 목표점으로 고정 속도 이동하고, 밟는 바닥에 레이캐스트해 높이를 정한다. 막는 것에 겹치면 밀려난다.
+  - `LobbyCameraRig` — 제한된 기준점을 따라간다. 좌우는 시작 자리에서 정해진 폭까지만, 앞뒤는 계단 중턱을 넘어선 뒤 그 몫의 절반만. 트리거를 열면 **한 진행도**로 기준점·오프셋·비켜 놓기를 함께 보간한다. 자세를 다 잡은 뒤 월드 행렬을 마무리한다 — `lookAt`이 행렬을 굳혀, 그 뒤의 비켜 놓기가 같은 프레임의 조준에 반영되지 않는다. (DECISIONS 037)
+  - `LobbyInput` — 우클릭 홀드 이동(맵과 조작 규칙이 같다). 밟는 바닥을 맞히면 그 지점, 못 맞히면 캐릭터 높이의 평면으로 받는다. 계단을 찍으면 **가장 가까운 단 중앙**에 선다. 전환 중이거나 트리거를 보고 있는 동안에는 입력을 받지 않는다.
+  - `LobbyTriggers` — 모델에서 잰 자리에 누를 판을 세운다. 마우스 커서·클릭 표시(맵과 같은 둥둥 뜨는 표시)를 붙이고, **한 번이라도 연 트리거에는 표시를 걷는다.** 문에는 표시를 두지 않는다.
+  - `LobbyBook/` — 연단 위 펼친 책. 페이지 메시를 **글 쓰는 면과 옆면**으로 갈라 앞쪽에만 캔버스 텍스처를 얹는다. 왼쪽은 전시관 소개, 오른쪽은 Firestore `projects`를 `order`순으로 흘려 넣는다. (DECISIONS 038)
+  - `LobbyColliderView` — 개발용. 막는 것을 단색으로 그려 눈으로 확인한다.
+
+Canvas 밖: `BackButton`(좌상단 — 책을 보고 있으면 `Back`, 아니면 `Go home`) · `LobbyPageHUD`(dev 전용 튜닝 패널). ESC도 버튼과 같은 판단(`goBack`)을 탄다.
+
+**막는 판정(`ProjectsLobby.collision.ts`)** — 축 정렬 상자가 아니라 콜라이더의 **바깥 면(평면)들**로 "모든 면의 안쪽인가"를 본다. 기울여 둔 난간이 계단을 침범하지 않는다. 감는 방향은 믿지 않고 정점 평균으로 바로잡으며, 캐릭터를 기둥으로 쳐 면을 그 두께만큼 밀어 두고 점 하나로 검사한다. 모델에 빠진 계단 옆면은 난간 면을 **아래로 늘려** 메운다. (DECISIONS 036)
+
 ## 상태 관리 (zustand)
 
 - `useThemeStore` — 테마 모드(light/dark) + toggle, 2D·3D 동시 전환.
-- `useCameraStore` — 이동 상태: `position`(현재 위치, 좌표만 변경) · `target`(목표점, 경계 clamp) · `setTarget(point)` · `walking`/`walkTo(point, speed?)`/`walkSpeed`/`endWalk()`(스테이션 연출이 지정한 이동 — 잠금 중에도 그 자리로는 걸어가고, 도착하면 `Character`가 끈다. 속도를 주면 그 걸음으로 가고 주지 않으면 평소 속도다) · `hidden`(캐릭터를 감출지 — 탈것에 탄 동안처럼 화면에 없어야 하는 구간. 위치는 그대로 돌아 카메라·미니맵은 평소와 같다) · `teleportTo(point)`(월드맵에서 고른 자리로 즉시 옮김) · `viewAngle`(CameraRig가 유도, 미니맵이 사용) · `followOffset`(카메라 − 캐릭터, CameraRig가 기록) · `motion.speed`(디버그용) · `hasMoved`/`markMoved()`(우클릭 이동 입력을 받은 적 있는지 — 조작 안내를 걷는 신호. 잠금을 통과한 입력만 세고 처음 한 번만 `set`한다) · `locks`/`lockMovement()`/`unlockMovement()`(스테이션 밖 연출이 거는 이동 잠금. 개수로 세어 연출이 겹쳐도 각자 걸고 각자 푼다) · 상수 `CAMERA_BOUNDS` · `CHARACTER_START`.
+- `useCameraStore` — 이동 상태: `position`(현재 위치, 좌표만 변경) · `target`(목표점, 경계 clamp) · `setTarget(point)` · `walking`/`walkTo(point, speed?)`/`walkSpeed`/`endWalk()`(스테이션 연출이 지정한 이동 — 잠금 중에도 그 자리로는 걸어가고, 도착하면 `Character`가 끈다. 속도를 주면 그 걸음으로 가고 주지 않으면 평소 속도다) · `hidden`(캐릭터를 감출지 — 탈것에 탄 동안처럼 화면에 없어야 하는 구간. 위치는 그대로 돌아 카메라·미니맵은 평소와 같다) · `teleportTo(point)`(월드맵에서 고른 자리로 즉시 옮김) · `viewAngle`(CameraRig가 유도, 미니맵이 사용) · `followOffset`(카메라 − 캐릭터, CameraRig가 기록) · `motion.speed`(디버그용) · `hasMoved`/`markMoved()`(우클릭 이동 입력을 받은 적 있는지 — 조작 안내를 걷는 신호. 잠금을 통과한 입력만 세고 처음 한 번만 `set`한다) · `locks`/`lockMovement()`/`unlockMovement()`(스테이션 밖 연출이 거는 이동 잠금. 개수로 세어 연출이 겹쳐도 각자 걸고 각자 푼다) · 상수 `CAMERA_BOUNDS` · `CHARACTER_START` · `AERIAL_OFFSET`(항공뷰 팔로우 오프셋 — Canvas의 첫 카메라 자리를 캐릭터 위치에 이것을 더해 만든다. 좌표로 박아 두면 로비에서 문 앞으로 돌아왔을 때 시점이 어긋난다).
   **잠금은 두 갈래로 쓰인다.** 입력을 받는 `World`는 `isMovementBlocked()`(스테이션 진입 + 맵 연출)를 보고 목표점 갱신을 멈추고, 목표점을 현재 위치로 스냅해 즉시 멈추는 `Character`는 **진입 잠금만** 본다. 맵 연출 잠금까지 스냅에 걸면 잠그는 순간 캐릭터가 굳어, 연출이 지정한 자리로 걸어가지 못한다.
-- `useStationStore` — 스테이션 상호작용: `nearId`(근접) · `activeId` · `phase`(`idle`/`entering`/`active`/`exiting`) · `setNear` · `activate` · `enterComplete` · `requestClose` · `exitComplete`. 초기값은 `about-intro`가 `active`인 상태다(사이트 첫 화면). `setNear`는 활성 스테이션에서 멀어지면 그대로 종료를 건다. 이동 잠금 여부는 `isMovementLocked(phase)`로 판단(진입 애니메이션 중에만 잠김).
+- `useStationStore` — 스테이션 상호작용: `nearId`(근접) · `activeId` · `phase`(`idle`/`entering`/`active`/`exiting`) · `visited`(한 번이라도 열어본 스테이션 — 맵 장식의 등장 조건이자 클릭 표시를 걷는 기준. **라우트가 갈려 맵이 다시 마운트돼도 남아야 해서** 컴포넌트가 아니라 여기 둔다) · `setNear` · `activate` · `enterComplete` · `requestClose` · `exitComplete` · `closeImmediately`(연출 없이 곧바로 닫기 — 로비로 넘어가면 완료를 알릴 화면이 이미 없다). 초기값은 `about-intro`가 `active`인 상태다(사이트 첫 화면). `setNear`는 활성 스테이션에서 멀어지면 그대로 종료를 건다. 이동 잠금 여부는 `isMovementLocked(phase)`로 판단(진입 애니메이션 중에만 잠김).
 - 스테이션 게이트(`stations/useStationGate`) — 활성 상세가 아직 준비되지 않았음을 알리는 열쇠 모음. 공통층(`ActiveStationScene`)이 이를 보고 상세를 감췄다 보여준다.
 - `useSceneReadyStore` — 첫 화면에 필요한 것들의 준비 여부(`markReady(key)`). 바닥·캐릭터·스테이션·Intro 사진이 마운트되며 자기 이름을 올리고, `SceneGate`가 이를 보고 가림막을 걷는다.
 - `useIntroPageStore` — Intro 페이지의 개발용 튜닝 상태(영역·배치·테두리 표시). 프로덕션에는 HUD가 없어 항상 기본값이다.
@@ -78,6 +104,11 @@ Canvas 밖(`App`): `SceneGate` — 첫 화면 가림막. 바닥·캐릭터·Intr
 - `useProjectsPageStore` — 프로젝트 구역의 개발용 튜닝 상태(건물 배치 · 근접 구역 · 클릭 판 · 클릭 표시 · 문 여닫이 · 문간 빛 · 정면뷰 · 들어가기). 프로덕션에서는 항상 기본값이다.
 - `useProjectsDoorStore` — **모델에서 잰 문**의 자리·크기·향하는 쪽·배율. 튜닝 값이 아니라 측정값이라 페이지 스토어와 나눠 둔다. 클릭 판·표시·근접 구역·서는 자리가 이것을 보므로 건물 크기를 바꿔도 어긋나지 않는다. (DECISIONS 033)
 - `useProjectsSequenceStore` — 문이 다 열렸는지·닫혔는지(`doorOpened`·`doorClosed`). 들어가기와 카메라 복귀가 이 신호를 보고 차례를 잡는다. 여닫는 시간은 HUD로 바뀔 수 있어 지연 상수로는 맞출 수 없다.
+- `useSceneTransitionStore` — 장면 전환 덮개의 단계(`idle`/`closing`/`covered`/`opening`) · 다 덮인 뒤 갈 경로 · 도착 신호 · 조여드는 초점. 덮개(`Root`)와 페이지 사이의 **유일한 연결**이다. 초점은 매 프레임 갱신되므로 `set` 없이 좌표만 바꾼다(`useCameraStore.position`과 같은 방식).
+- `useLobbyStore` — 로비 안에서의 이동 상태(`position`·`target`·`setTarget`·`reset`). 맵의 `useCameraStore`를 그대로 쓰지 않는 것은 그쪽에 경계 clamp와 y=0 고정이 규칙으로 박혀 있어 층이 있는 실내와 맞지 않기 때문이다. 조작 규칙(고정 속도 한 걸음·우클릭 홀드)은 같게 옮긴다.
+- `useLobbyGeometryStore` — **모델에서 잰** 트리거(연단 위 책·북쪽 통로)의 중심과 크기. 상수로 박으면 모델을 다시 내보낼 때마다 어긋난다. `useProjectsDoorStore`와 같은 자리다. (DECISIONS 033)
+- `useLobbyTriggerStore` — 지금 보고 있는 트리거(`activeId`)와 **한 번이라도 연 적 있는지**(`seen` — 클릭 표시를 걷는 기준). 잰 값과 성격이 달라 나눠 둔다.
+- `useLobbyPageStore` — 로비의 개발용 튜닝 상태(팔로우 오프셋·화각·구도 비켜 놓기 · 클릭 표시 · 책을 볼 때 카메라 자리와 시간). 프로덕션에서는 항상 기본값이다.
 - `useMapDecorationsStore` — 맵 장식의 개발용 튜닝 상태(안내 화살표 배치·연출 · 우클릭 안내 배치 · 횡단보도 배치·연출 · 신호등 배치·그림자 · 자동차 배치·주행·탑승·바퀴·클릭 표시). 장식은 스테이션 소속이 아니므로 페이지 스토어와 나눠 둔다. 튜닝 값이 아닌 `crosswalkDrawn`·`carArrived`도 여기 둔다 — 뒤이어 나오는 장식이 차례를 기다리는 신호다.
 
 ## 데이터 흐름 (Firestore → UI)
