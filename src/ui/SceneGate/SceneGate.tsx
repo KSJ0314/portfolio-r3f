@@ -45,6 +45,10 @@ function clearReloadCount() {
  *
  * 제 시간에 준비되지 않으면 새로고침해 다시 시도하고, 정해진 횟수를 넘기면 그냥 걷는다.
  * 무한정 기다려 흰 화면에 갇히는 것도, 새로고침을 반복하는 것도 막기 위함이다.
+ *
+ * **첫 화면일 때만 필요하다.** 로비에서 맵으로 돌아오면 이 컴포넌트가 다시 마운트되지만
+ * 준비는 이미 끝나 있다. 그때는 아예 그리지 않는다 — 덮은 채로 마운트하면 걷을 전환이 일어나지 않아
+ * 그대로 남는다.
  */
 const allReady = (ready: Record<string, boolean>) => REQUIRED_KEYS.every((key) => ready[key])
 
@@ -52,6 +56,8 @@ export function SceneGate() {
   // 준비 상태를 그대로 구독한다. 이름은 올라가기만 하고 내려가지 않으므로 한 번 참이 되면 그대로다 —
   // 따로 잠글 필요가 없고, 구독을 거는 사이에 마지막 신호를 놓치는 일도 없다.
   const ready = useSceneReadyStore((s) => allReady(s.ready))
+  // 마운트하는 순간 이미 준비돼 있었는지. 첫 화면인지 되돌아온 화면인지를 이것으로 가른다.
+  const [needed] = useState(() => !allReady(useSceneReadyStore.getState().ready))
   const [forced, setForced] = useState(false)
   const [visible, setVisible] = useState(true)
   const uncovered = ready || forced
@@ -76,7 +82,7 @@ export function SceneGate() {
     return () => clearTimeout(timer)
   }, [uncovered])
 
-  if (!visible) return null
+  if (!needed || !visible) return null
 
   return (
     <Cover

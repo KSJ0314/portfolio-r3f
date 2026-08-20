@@ -14,6 +14,14 @@ export const CAMERA_BOUNDS = 50
  */
 export const CHARACTER_START: [number, number, number] = [0, 0, 5]
 
+/**
+ * 항공뷰 팔로우 오프셋(카메라 − 캐릭터).
+ *
+ * Canvas의 첫 카메라 자리를 **캐릭터 위치에 이것을 더해** 만든다. 상수 좌표로 박아 두면
+ * 로비에서 문 앞으로 돌아왔을 때 `CameraRig`가 잡는 오프셋이 틀어져 시점이 어긋난다.
+ */
+export const AERIAL_OFFSET: readonly [number, number, number] = [-7, 12.5, 12]
+
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
 
 interface CameraState {

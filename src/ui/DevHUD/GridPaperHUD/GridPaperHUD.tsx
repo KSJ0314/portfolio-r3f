@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
-import type { CSSProperties } from 'react'
-import { Leva, button, folder, useControls } from 'leva'
+import { button, folder, useControls } from 'leva'
 import { DEFAULT_GRID_PAPER_PARAMS } from '../../../lib/gridPaper'
 import type { GridPaperParams } from '../../../lib/gridPaper'
 import { useGridPaperStore } from '../../../state/useGridPaperStore'
+import { DevPanel } from '../DevPanel'
 import type { FlatParams } from './GridPaperHUD.types'
 
 const D = DEFAULT_GRID_PAPER_PARAMS
@@ -29,15 +29,6 @@ function isDefault(params: GridPaperParams): boolean {
   return (Object.keys(b) as (keyof FlatParams)[]).every((key) => a[key] === b[key])
 }
 
-/** 패널을 좌상단 구석에 고정. 접힌 상태의 제목 표시줄만 보인다. */
-const PANEL_CONTAINER_STYLE: CSSProperties = {
-  position: 'fixed',
-  left: 16,
-  top: 16,
-  width: 360,
-  zIndex: 1000,
-}
-
 /** 툴팁 문구 — 설명 뒤에 기본값을 붙인다. 조절하다 원래 값이 뭐였는지 확인할 수 있어야 한다. */
 function hint(description: string, value: number | string) {
   return `${description}\n기본값: ${value}`
@@ -45,7 +36,7 @@ function hint(description: string, value: number | string) {
 
 /**
  * 모눈종이 바닥 텍스처를 마우스로 조절하는 개발용 HUD(dev에서만 렌더된다).
- * 패널(`<Leva>`) 자체도 여기서 그리며, 다른 개발용 HUD들이 이 패널에 폴더로 얹힌다.
+ * 맵 라우트의 튜닝 패널(`DevPanel`)도 여기서 그리며, 다른 개발용 HUD들이 그 패널에 폴더로 얹힌다.
  *
  * 값을 바꾸면 바닥 텍스처가 브라우저에서 즉시 다시 구워진다.
  * 마음에 드는 값이 나오면 "값 복사"로 JSON을 얻어
@@ -219,23 +210,5 @@ export function GridPaperHUD() {
     setParams(params)
   }, [values, setParams, reset])
 
-  return (
-    // leva 기본 위치는 우상단이라 미니맵을 가린다.
-    // fill로 부모 크기를 따르게 하고, 부모를 우하단에 고정한다.
-    <div style={PANEL_CONTAINER_STYLE}>
-      <Leva
-        fill
-        // 펼쳐두면 화면을 크게 차지하므로 접힌 채로 시작한다.
-        collapsed
-        // 기본 폭(280px)에서는 라벨이 잘려 "..."로 표시된다. 넓혀서 잘림 자체를 줄인다.
-        // 그래도 잘리는 라벨은 호버하면 hint 툴팁에 설명이 뜬다.
-        theme={{
-          sizes: { rootWidth: '360px', controlWidth: '150px' },
-          // 툴팁 기본색은 반투명(그래서 뒤의 3D 씬이 비쳐 글씨가 안 읽힌다) → 불투명하게 덮는다.
-          colors: { toolTipBackground: '#12131a', toolTipText: '#f2f2f5' },
-        }}
-        titleBar={{ title: '개발 튜닝' }}
-      />
-    </div>
-  )
+  return <DevPanel />
 }

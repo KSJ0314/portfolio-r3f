@@ -21,6 +21,17 @@ export const PROJECTS_BUILDING_PLACEMENT = {
   rotation: 180,
 }
 
+/**
+ * 문을 아직 재지 못했을 때 대신 쓰는 문 앞자리(월드 x, z).
+ *
+ * 로비에서 새로고침한 뒤 맵으로 나오면 건물이 마운트된 적이 없어 문 자리를 모른다.
+ * 그때 캐릭터를 원점에 두면 지도 반대편에서 시작하므로, 건물 앞 어림값으로 보낸다.
+ */
+export const PROJECTS_DOOR_FALLBACK_STAND: readonly [number, number] = [
+  PROJECTS_BUILDING_PLACEMENT.x,
+  PROJECTS_BUILDING_PLACEMENT.z + 4,
+]
+
 /** 건물이 놓인 자리(월드 x, z). `stations.ts`의 배치 좌표로 쓴다. */
 export const PROJECTS_CENTER: readonly [number, number] = [
   PROJECTS_BUILDING_PLACEMENT.x,

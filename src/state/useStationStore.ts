@@ -28,6 +28,14 @@ interface StationState {
   /** 활성화된(또는 진입·종료 중인) 스테이션. idle이면 null. */
   activeId: string | null
   phase: StationPhase
+  /**
+   * 한 번이라도 열어본 스테이션.
+   *
+   * 맵 장식이 "앞 스테이션을 보고 나온 뒤"에 나타나는 조건으로 쓰고, 스테이션은 이것을 뒤집어
+   * "아직 열어본 적 없는지"(클릭 표시를 낼지)로 쓴다. 세션 동안의 기록이라 컴포넌트가 아니라
+   * 여기 둔다 — 라우트가 갈려 맵이 다시 마운트돼도 남아야 장식이 사라지지 않는다.
+   */
+  visited: Record<string, boolean>
   /** 근접 스테이션 갱신. 활성 스테이션에서 멀어지면 그대로 종료를 건다. */
   setNear: (id: string | null) => void
   /** 근접한 스테이션을 활성화한다(idle에서만). 진입 애니메이션이 시작되고 이동이 잠긴다. */
@@ -38,6 +46,13 @@ interface StationState {
   requestClose: () => void
   /** 스테이션 구현이 종료 애니메이션을 마쳤음을 알린다 → idle 복귀. */
   exitComplete: () => void
+  /**
+   * 애니메이션 없이 곧바로 닫는다.
+   *
+   * 장면이 통째로 갈릴 때(로비처럼 다른 라우트로 넘어갈 때) 쓴다 — 연출을 재생할 화면이 이미
+   * 없으므로 완료를 알릴 주체도 없고, 그대로 두면 다음에 돌아왔을 때 열린 채로 되살아난다.
+   */
+  closeImmediately: () => void
 }
 
 export const useStationStore = create<StationState>((set, get) => ({
@@ -45,6 +60,7 @@ export const useStationStore = create<StationState>((set, get) => ({
   // 사이트 첫 화면은 Intro가 활성인 상태다. 진입 애니메이션 없이 처음부터 정면뷰로 시작한다.
   activeId: 'about-intro',
   phase: 'active',
+  visited: {},
   setNear: (id) => {
     if (get().nearId !== id) set({ nearId: id })
     // 걸어서 멀어지는 것이 곧 닫기다. 값이 바뀌는 순간이 아니라 매번 확인한다 —
@@ -54,9 +70,13 @@ export const useStationStore = create<StationState>((set, get) => ({
     if (phase === 'active' && activeId !== null && id !== activeId) get().requestClose()
   },
   activate: (id) => {
-    const { phase, nearId } = get()
+    const { phase, nearId, visited } = get()
     if (phase !== 'idle' || nearId !== id) return
-    set({ activeId: id, phase: 'entering' })
+    set({
+      activeId: id,
+      phase: 'entering',
+      visited: visited[id] ? visited : { ...visited, [id]: true },
+    })
   },
   enterComplete: () => {
     if (get().phase === 'entering') set({ phase: 'active' })
@@ -67,6 +87,10 @@ export const useStationStore = create<StationState>((set, get) => ({
   },
   exitComplete: () => {
     if (get().phase !== 'exiting') return
+    set({ activeId: null, phase: 'idle' })
+  },
+  closeImmediately: () => {
+    if (get().phase === 'idle' && get().activeId === null) return
     set({ activeId: null, phase: 'idle' })
   },
 }))
