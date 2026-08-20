@@ -11,7 +11,7 @@
 - `about-intro` → profile
 - `about-skills` → skills
 - `about-career` → education · awards · spec
-- `projects` → projects
+- `projects` → projects (건물 **안**에서도 읽는다 — 로비 책 오른쪽 페이지가 `order`순으로 목록을 싣는다)
 - `guestbook` → guestbook
 
 `awards`는 원래 `about-award` 몫이었으나 Career의 칸 구성이 교육·수상내역·자격증이라 그쪽으로 옮기고
@@ -87,6 +87,8 @@ Career의 칸 셋에 자리가 없어 미뤄 뒀고, 어디에 담을지는 이�
 | `date` | string ("YYYY-MM") | 취득일 |
 
 **projects** (프로젝트 1개 = 문서 1개). **문서 개수가 곧 건물 안 전시대 개수**다 — 프로젝트마다 스테이션을 두지 않으므로 문서를 더하는 것으로 프로젝트가 늘어난다. ([DECISIONS 031])
+
+**로비 책 오른쪽 페이지**가 같은 컬렉션을 `order`순으로 읽어 `title`·`summary`를 싣는다 — 전시대에 들어가기 전 목차 노릇이다.
 
 | 필드 | 타입 | 설명 |
 |---|---|---|

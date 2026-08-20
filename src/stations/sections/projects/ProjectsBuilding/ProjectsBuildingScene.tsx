@@ -6,8 +6,10 @@ import { useCameraStore } from '../../../../state/useCameraStore'
 import { useProjectsDoorStore } from '../../../../state/useProjectsDoorStore'
 import { useProjectsPageStore } from '../../../../state/useProjectsPageStore'
 import { useProjectsSequenceStore } from '../../../../state/useProjectsSequenceStore'
+import { useSceneTransitionStore } from '../../../../state/useSceneTransitionStore'
 import { useStationStore } from '../../../../state/useStationStore'
 import { type StationDetailProps, walkToStand } from '../../../registry'
+import { enterLobby } from '../ProjectsLobby/ProjectsLobby.travel'
 import {
   PROJECTS_ID,
   PROJECTS_TURN_EASE,
@@ -21,6 +23,7 @@ const WORLD_UP = new Vector3(0, 1, 0)
 const _matrix = new Matrix4()
 const _look = new Vector3()
 const _point = new Vector3()
+const _screen = new Vector3()
 const _frontPosition = new Vector3()
 const _frontQuaternion = new Quaternion()
 
@@ -32,7 +35,7 @@ const _frontQuaternion = new Quaternion()
  * 다른 스테이션은 바닥에 그려진 내용을 수직으로 내려다보지만, 여기서 볼 것은 **세워 둔 문**이라
  * 눈높이에서 정면으로 본다. 닫으면 항공뷰로 돌아간다. 배율은 건드리지 않는다.
  *
- * 건물 안으로 들어가는 장면 전환은 아직 없다 — 이 전환 위에 얹을 자리다.
+ * 다 걸어 들어가면 장면이 통째로 로비(`/projects`)로 갈린다.
  */
 export function ProjectsBuildingScene({ phase }: StationDetailProps) {
   const camera = useThree((s) => s.camera)
@@ -56,6 +59,8 @@ export function ProjectsBuildingScene({ phase }: StationDetailProps) {
   const closeUp = useRef({ value: 0 })
   /** 평소 배율. 처음 한 프레임에서 잡아 두고 그것에 배수를 곱한다. */
   const baseZoom = useRef(0)
+  /** 문 한가운데(월드). 전환 덮개가 여기로 모이도록 매 프레임 화면 좌표로 바꿔 알린다. */
+  const doorCenter = useRef(new Vector3())
 
   /** 두 자세를 섞어 카메라에 적용한다. 0이면 항공뷰, 1이면 문 정면뷰. */
   const applyPose = useCallback(
@@ -87,6 +92,7 @@ export function ProjectsBuildingScene({ phase }: StationDetailProps) {
   useLayoutEffect(() => {
     const doorX = building.x + door.x
     const doorZ = building.z + door.z
+    doorCenter.current.set(doorX, door.centerY, doorZ)
 
     frontPosition.current.set(
       doorX + door.facingX * view.distance,
@@ -130,6 +136,18 @@ export function ProjectsBuildingScene({ phase }: StationDetailProps) {
       cam.zoom = next
       cam.updateProjectionMatrix()
     }
+
+    // 장면 전환 덮개는 Canvas 밖에 있어 카메라를 모른다. 문이 화면 어디에 있는지 알려
+    // 한가운데가 아니라 **캐릭터가 들어가는 문 쪽으로** 조여들게 한다.
+    //
+    // 투영은 **방금 쓴 자세를 행렬에 반영한 뒤에** 해야 한다. `project`가 보는 것은 렌더러가
+    // 관리하는 행렬이라 위에서 옮긴 카메라가 아직 반영돼 있지 않고, 그대로 쓰면 초기 자세 기준으로
+    // 재서 화면 밖 엉뚱한 자리를 가리킨다.
+    cam.updateMatrixWorld()
+    _screen.copy(doorCenter.current).project(cam)
+    const focus = useSceneTransitionStore.getState().focus
+    focus.x = _screen.x * 0.5 + 0.5
+    focus.y = -_screen.y * 0.5 + 0.5
   })
 
   // 문이 다 열리면 캐릭터가 건물 안으로 걸어 들어가고, 그와 함께 카메라가 확대된다.
@@ -153,6 +171,11 @@ export function ProjectsBuildingScene({ phase }: StationDetailProps) {
         duration: view.zoomSeconds,
         ease: PROJECTS_TURN_EASE,
       })
+
+      // 장면 전환도 여기서 함께 시작한다 — 들어가는 것과 어두워지는 것이 한 동작으로 보여야 한다.
+      // 도착을 기다렸다 시작하면 걷기가 끝난 뒤에 덮개가 따로 도는 두 동작이 된다.
+      // 걷기와 확대는 덮개 밑에서 계속 돌고, 다 덮이면 그 위에서 라우트가 갈린다.
+      enterLobby()
     }
 
     if (useProjectsSequenceStore.getState().doorOpened) {
