@@ -95,6 +95,17 @@ export const LOBBY_START: readonly [number, number] = [0, -1.2]
  */
 export const LOBBY_SOUTH_LIMIT = LOBBY_START[1]
 
+/** 북쪽 통로 트리거. 이름을 여기 두어 쓰는 쪽이 문자열을 박지 않게 한다. */
+export const LOBBY_PASSAGE_TRIGGER = 'Trigger_Passage'
+
+/**
+ * 통로 앞에 서는 자리(월드 x, z). 전시 공간을 오갈 때 이 자리에 선다.
+ *
+ * z는 **모델 좌표에 깊이 배율을 곱해** 둔다. 방을 늘리면 통로도 함께 멀어지므로 월드 값으로
+ * 박아 두면 어긋난다. 통로 바닥(모델 z −5.1~−3.8) 안쪽이다.
+ */
+export const LOBBY_PASSAGE_STAND: readonly [number, number] = [0, -3.92 * LOBBY_MODEL_DEPTH_SCALE]
+
 /**
  * 실내 팔로우 오프셋(카메라 − 캐릭터).
  *

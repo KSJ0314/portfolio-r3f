@@ -9,7 +9,7 @@ import {
   PROJECTS_ID,
 } from '../ProjectsBuilding/ProjectsBuilding.constants'
 import { projectsBuildingStand } from '../ProjectsBuilding/ProjectsBuilding.distance'
-import { LOBBY_ROUTE } from './ProjectsLobby.constants'
+import { LOBBY_PASSAGE_STAND, LOBBY_ROUTE, LOBBY_START } from './ProjectsLobby.constants'
 
 /**
  * 맵과 로비를 오가는 일.
@@ -19,6 +19,26 @@ import { LOBBY_ROUTE } from './ProjectsLobby.constants'
  */
 
 const _point = new Vector3()
+
+/**
+ * 다음에 로비에 들어설 자리. 전시 공간에서 돌아오면 입구가 아니라 **통로 앞**이다.
+ *
+ * 로비가 언마운트되면 잰 값도 함께 사라져, 돌아온 쪽이 통로 자리를 물어볼 데가 없다.
+ * 떠나는 쪽이 남겨 두고 들어서는 쪽이 한 번 쓰고 비운다.
+ */
+let nextEntry: readonly [number, number] | null = null
+
+/** 전시 공간이 로비로 나올 때 부른다 — 통로 앞에서 시작하도록 자리를 남긴다. */
+export function enterLobbyFromGallery(): void {
+  nextEntry = LOBBY_PASSAGE_STAND
+}
+
+/** 로비가 들어설 자리를 가져간다. 남겨진 것이 없으면 건물 문 안쪽(입구)이다. */
+export function takeLobbyEntry(): readonly [number, number] {
+  const entry = nextEntry ?? LOBBY_START
+  nextEntry = null
+  return entry
+}
 
 /**
  * 맵에서 볼 화면을 **건물 밖 문 앞에 선 상태**로 맞춘다.
