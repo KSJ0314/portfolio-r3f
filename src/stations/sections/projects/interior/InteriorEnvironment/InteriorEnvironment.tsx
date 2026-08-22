@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useThree } from '@react-three/fiber'
 import { PMREMGenerator } from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
-import { LOBBY_ENV } from '../ProjectsLobby.constants'
+import type { InteriorEnvironmentProps } from './InteriorEnvironment.types'
 
 /**
  * 실내 환경광(IBL).
@@ -13,9 +13,9 @@ import { LOBBY_ENV } from '../ProjectsLobby.constants'
  * 블렌더의 World·HDRI는 glb에 담기지 않으므로 `RoomEnvironment`로 대신한다.
  * 방 모양을 코드로 세워 굽는 것이라 **받아 올 파일이 없다** — 외부 CDN 요청도 없다(DESIGN).
  *
- * 세기를 따로 두는 이유는, 굽는 밝기는 고정이라 이것 없이는 조절할 방법이 없기 때문이다.
+ * 세기를 방에서 받는 이유는, 굽는 밝기는 고정이라 이것 없이는 조절할 방법이 없기 때문이다.
  */
-export function LobbyEnvironment() {
+export function InteriorEnvironment({ blur, intensity }: InteriorEnvironmentProps) {
   const gl = useThree((s) => s.gl)
   const scene = useThree((s) => s.scene)
 
@@ -24,7 +24,7 @@ export function LobbyEnvironment() {
   useEffect(() => {
     const pmrem = new PMREMGenerator(gl)
     const room = new RoomEnvironment()
-    const baked = pmrem.fromScene(room, LOBBY_ENV.blur)
+    const baked = pmrem.fromScene(room, blur)
     // 구운 뒤에는 원본 방과 굽는 도구가 필요 없다. 결과 텍스처는 남는다.
     room.dispose()
     pmrem.dispose()
@@ -32,7 +32,7 @@ export function LobbyEnvironment() {
     // 훅이 돌려준 값의 프로퍼티에 직접 대입하면 eslint가 막는다(PaperGround가 텍스처에 쓰는 것과 같은 우회).
     for (const target3D of [scene]) {
       target3D.environment = baked.texture
-      target3D.environmentIntensity = LOBBY_ENV.intensity
+      target3D.environmentIntensity = intensity
     }
     return () => {
       for (const target3D of [scene]) {
@@ -41,7 +41,7 @@ export function LobbyEnvironment() {
       }
       baked.dispose()
     }
-  }, [gl, scene])
+  }, [gl, scene, blur, intensity])
 
   return null
 }

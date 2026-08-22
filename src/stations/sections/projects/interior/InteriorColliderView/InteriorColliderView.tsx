@@ -1,30 +1,29 @@
 import { Matrix4 } from 'three'
-import { useLobbyPageStore } from '../../../../../state/useLobbyPageStore'
 import {
-  LOBBY_COLLIDER_COLOR,
-  LOBBY_COLLIDER_DEPTH_BIAS,
-  LOBBY_COLLIDER_EXTEND_STEP,
-} from './LobbyColliderView.constants'
-import type { LobbyColliderKind, LobbyColliderViewProps } from './LobbyColliderView.types'
+  INTERIOR_COLLIDER_COLOR,
+  INTERIOR_COLLIDER_DEPTH_BIAS,
+  INTERIOR_COLLIDER_EXTEND_STEP,
+} from './InteriorColliderView.constants'
+import type { InteriorColliderKind, InteriorColliderViewProps } from './InteriorColliderView.types'
 
 /** 늘린 몫을 그릴 때 한 장씩 내린 자리. 그리는 동안만 쓰는 값이라 한 개를 돌려 쓴다. */
 const _lowered = new Matrix4()
 
 /** 역할 색을 입힌 단색 재질. 조명을 받지 않아 지정한 색이 화면에 그대로 나온다. */
-function ColliderMaterial({ kind }: { kind: LobbyColliderKind }) {
+function ColliderMaterial({ kind }: { kind: InteriorColliderKind }) {
   return (
     <meshBasicMaterial
-      color={LOBBY_COLLIDER_COLOR[kind]}
+      color={INTERIOR_COLLIDER_COLOR[kind]}
       toneMapped={false}
       polygonOffset
-      polygonOffsetFactor={LOBBY_COLLIDER_DEPTH_BIAS}
-      polygonOffsetUnits={LOBBY_COLLIDER_DEPTH_BIAS}
+      polygonOffsetFactor={INTERIOR_COLLIDER_DEPTH_BIAS}
+      polygonOffsetUnits={INTERIOR_COLLIDER_DEPTH_BIAS}
     />
   )
 }
 
 /** 아래로 늘린 몫을 몇 장으로 나눠 그릴지. */
-const layerCount = (extendDown: number) => Math.ceil(extendDown / LOBBY_COLLIDER_EXTEND_STEP)
+const layerCount = (extendDown: number) => Math.ceil(extendDown / INTERIOR_COLLIDER_EXTEND_STEP)
 
 /**
  * 콜라이더를 눈으로 보는 개발용 표시(HUD 스위치로 켠다).
@@ -36,8 +35,7 @@ const layerCount = (extendDown: number) => Math.ceil(extendDown / LOBBY_COLLIDER
  * 알아채지 못한다. 아래로 늘린 콜라이더는 늘어난 것이 메시가 아니라 규칙이라, 같은 메시를
  * 조금씩 내려 겹쳐 이어진 모양으로 보인다.
  */
-export function LobbyColliderView({ parts }: LobbyColliderViewProps) {
-  const show = useLobbyPageStore((s) => s.showColliders)
+export function InteriorColliderView({ parts, show }: InteriorColliderViewProps) {
   if (!show) return null
 
   return (
@@ -49,7 +47,7 @@ export function LobbyColliderView({ parts }: LobbyColliderViewProps) {
           </mesh>
 
           {Array.from({ length: layerCount(extendDown) }, (_, layer) => {
-            const drop = Math.min((layer + 1) * LOBBY_COLLIDER_EXTEND_STEP, extendDown)
+            const drop = Math.min((layer + 1) * INTERIOR_COLLIDER_EXTEND_STEP, extendDown)
             _lowered.makeTranslation(0, -drop, 0).multiply(mesh.matrixWorld)
             return (
               <mesh

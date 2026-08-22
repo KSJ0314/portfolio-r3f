@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Plane, Raycaster, Vector2, Vector3 } from 'three'
-import { useLobbyStore } from '../../../../../state/useLobbyStore'
-import { useLobbyTriggerStore } from '../../../../../state/useLobbyTriggerStore'
+import { useInteriorStore } from '../../../../../state/useInteriorStore'
 import {
   isSceneCovered,
   useSceneTransitionStore,
 } from '../../../../../state/useSceneTransitionStore'
-import { getLobbyWalkables, snapToLobbyStepZ } from '../ProjectsLobby.collision'
-import { LOBBY_STAIR_NAMES } from '../ProjectsLobby.constants'
+import { getInteriorWalkables, snapToInteriorStepZ } from '../Interior.collision'
+import type { InteriorInputProps } from './InteriorInput.types'
 
 /** 클릭과 홀드를 구분하는 임계 시간(ms). 맵과 같은 값이라 조작감이 이어진다. */
 const HOLD_THRESHOLD = 180
@@ -20,15 +19,7 @@ const _plane = new Plane(new Vector3(0, 1, 0), 0)
 const _hit = new Vector3()
 
 /**
- * 지금 이동 입력을 받지 않는 상태인지.
- * 화면이 덮여 있거나, 트리거를 보고 있어 카메라가 캐릭터를 떠나 있을 때다.
- */
-const isMovementBlocked = () =>
-  isSceneCovered(useSceneTransitionStore.getState().phase) ||
-  useLobbyTriggerStore.getState().activeId !== null
-
-/**
- * 로비의 이동 입력 — 맵과 같이 **우클릭 홀드**다.
+ * 실내의 이동 입력 — 맵과 같이 **우클릭 홀드**다.
  *
  * 맵은 바닥 판 하나에 R3F 포인터 핸들러를 걸지만, 여기서는 밟는 바닥이 모델 안에 흩어진
  * 콜라이더 여럿이라 캔버스 이벤트를 직접 듣고 그 목록에 쏜다.
@@ -36,30 +27,41 @@ const isMovementBlocked = () =>
  * 바닥만 조준 대상으로 두면 홀드 중 목표점이 얼어붙는다.
  * 갈 수 없는 곳은 걷는 쪽이 맡는다 — 허공이면 걸음을 물리고, 벽·난간은 밀려나며 따라 미끄러진다.
  *
+ * 화면이 덮여 있는 동안에는 어느 방에서나 받지 않고, 그 밖에 입력을 막을 사정(트리거를 보는 중
+ * 등)은 방마다 달라 `blocked`로 받는다.
+ *
+ * `snapStairs`를 주면 그 이름의 바닥을 찍었을 때 가장 가까운 단 가운데에 선다.
+ *
  * 그리는 것은 없다.
  */
-export function LobbyInput() {
+export function InteriorInput({ blocked, snapStairs }: InteriorInputProps) {
   const { camera, gl } = useThree()
-  const position = useLobbyStore((s) => s.position)
-  const setTarget = useLobbyStore((s) => s.setTarget)
+  const position = useInteriorStore((s) => s.position)
+  const setTarget = useInteriorStore((s) => s.setTarget)
   const holding = useRef(false)
   const pressTime = useRef(0)
+
+  /** 지금 입력을 받지 않는 상태인지. 덮여 있는 동안은 공통이고 나머지는 방이 정한다. */
+  const isBlocked = useCallback(
+    () => isSceneCovered(useSceneTransitionStore.getState().phase) || (blocked?.() ?? false),
+    [blocked],
+  )
 
   /** 지금 커서가 가리키는 지점을 목표로 삼는다. 밟을 바닥이 먼저이고, 없으면 평면으로 방향만 잡는다. */
   const aim = useCallback(() => {
     _raycaster.setFromCamera(_pointer, camera)
-    const walkable = _raycaster.intersectObjects(getLobbyWalkables(), false)[0]
+    const walkable = _raycaster.intersectObjects(getInteriorWalkables(), false)[0]
     if (walkable) {
       _hit.copy(walkable.point)
       // 계단에서는 찍은 자리 그대로가 아니라 가장 가까운 단 가운데에 선다. 좌우는 찍은 그대로다.
-      if (LOBBY_STAIR_NAMES.includes(walkable.object.name)) _hit.z = snapToLobbyStepZ(_hit.z)
+      if (snapStairs?.includes(walkable.object.name)) _hit.z = snapToInteriorStepZ(_hit.z)
       setTarget(_hit)
       return
     }
     // 평면식이 `법선·점 + constant = 0`이라, y = 발밑 높이인 평면의 상수는 그 높이의 음수다.
     _plane.constant = -position.y
     if (_raycaster.ray.intersectPlane(_plane, _hit)) setTarget(_hit)
-  }, [camera, position, setTarget])
+  }, [camera, position, setTarget, snapStairs])
 
   useEffect(() => {
     const canvas = gl.domElement
@@ -74,7 +76,7 @@ export function LobbyInput() {
 
     const onPointerDown = (e: PointerEvent) => {
       if (e.button !== 2) return
-      if (isMovementBlocked()) return
+      if (isBlocked()) return
       track(e)
       holding.current = true
       pressTime.current = performance.now()
@@ -95,14 +97,14 @@ export function LobbyInput() {
       canvas.removeEventListener('pointermove', track)
       window.removeEventListener('pointerup', stop)
     }
-  }, [aim, gl])
+  }, [aim, gl, isBlocked])
 
   // 누르고 있는 동안 커서 밑을 계속 따라간다.
   // 임계 시간 전에는 다시 조준하지 않는다 — 짧은 클릭에서 캐릭터가 움직이며 커서 밑 지점이 밀려
   // 목표점이 클릭 지점을 넘어서는 것을 막는다.
   useFrame(() => {
     if (!holding.current) return
-    if (isMovementBlocked()) return
+    if (isBlocked()) return
     if (performance.now() - pressTime.current < HOLD_THRESHOLD) return
     aim()
   })

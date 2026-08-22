@@ -57,6 +57,15 @@ export function leaveLobby(): void {
 }
 
 /**
+ * 지금 로비에서 이동 입력을 받지 않을 사정이 있는지.
+ * 트리거를 보고 있으면 카메라가 캐릭터를 떠나 있어 조준할 화면이 아니다.
+ * (화면이 덮여 있는 동안 받지 않는 것은 실내 공통이라 여기서 보지 않는다.)
+ */
+export function isLobbyMovementBlocked(): boolean {
+  return useLobbyTriggerStore.getState().activeId !== null
+}
+
+/**
  * 뒤로 가기 — 열어 둔 트리거가 있으면 닫고, 없으면 로비를 나간다.
  *
  * 좌상단 버튼과 ESC가 함께 쓴다. 각자 판단하면 나중에 한쪽만 고쳐져 어긋난다.
