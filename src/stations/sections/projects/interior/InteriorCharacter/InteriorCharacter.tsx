@@ -48,7 +48,7 @@ export function InteriorCharacter({ southLimit }: InteriorCharacterProps) {
   const target = useInteriorStore((s) => s.target)
 
   useFrame((_, delta) => {
-    // 덮여 있는 동안에는 세워 둔다. 보이지도 않는 화면에서 걸어가면 열렸을 때 엉뚱한 자리에 서 있다.
+    const walk = useInteriorStore.getState()
     const covered = isSceneCovered(useSceneTransitionStore.getState().phase)
 
     _next.copy(position)
@@ -56,10 +56,15 @@ export function InteriorCharacter({ southLimit }: InteriorCharacterProps) {
     const dz = target.z - position.z
     const dist = Math.hypot(dx, dz)
 
-    if (covered) {
+    // 덮여 있는 동안에는 세워 둔다. 보이지도 않는 화면에서 걸어가면 열렸을 때 엉뚱한 자리에 서 있다.
+    // **연출 이동은 예외로 이어 간다** — 화면이 좁아지는 동안에도 걸음이 계속돼야
+    // 들어가는 것과 덮이는 것이 한 동작으로 보인다.
+    if (covered && !walk.walking) {
       target.copy(position)
     } else if (dist > ARRIVE_EPSILON) {
-      const step = INTERIOR_MOVE_SPEED * Math.min(delta, MAX_DELTA)
+      // 연출 이동은 걸음 속도를 따로 줄 수 있다. 주지 않았으면 평소 속도다.
+      const speed = walk.walkSpeed ?? INTERIOR_MOVE_SPEED
+      const step = speed * Math.min(delta, MAX_DELTA)
       const ratio = dist <= step ? 1 : step / dist
       _next.set(position.x + dx * ratio, position.y, position.z + dz * ratio)
       // 남쪽 한계에서 자른다. z만 되돌리므로 그 선을 따라 좌우로는 그대로 걸어진다.
@@ -76,6 +81,11 @@ export function InteriorCharacter({ southLimit }: InteriorCharacterProps) {
     } else {
       position.set(_next.x, ground, _next.z)
     }
+
+    // 연출 이동은 **도착 판정을 여기서** 한다. 기다리는 쪽은 신호가 꺼지는 것만 보면 된다.
+    // 더 갈 수 없어 목표점을 거둔 경우도 끝으로 친다 — 그러지 않으면 영영 기다린다.
+    const left = Math.hypot(target.x - position.x, target.z - position.z)
+    if (walk.walking && left <= ARRIVE_EPSILON) walk.endWalk()
 
     ref.current?.position.set(position.x, position.y + INTERIOR_CHARACTER_SIZE[1] / 2, position.z)
   })

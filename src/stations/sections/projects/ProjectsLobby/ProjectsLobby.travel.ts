@@ -1,5 +1,7 @@
 import { Vector3 } from 'three'
 import { useCameraStore } from '../../../../state/useCameraStore'
+import { useInteriorStore } from '../../../../state/useInteriorStore'
+import { useLobbyGeometryStore } from '../../../../state/useLobbyGeometryStore'
 import { useLobbyTriggerStore } from '../../../../state/useLobbyTriggerStore'
 import { useProjectsSequenceStore } from '../../../../state/useProjectsSequenceStore'
 import { useSceneTransitionStore } from '../../../../state/useSceneTransitionStore'
@@ -9,7 +11,14 @@ import {
   PROJECTS_ID,
 } from '../ProjectsBuilding/ProjectsBuilding.constants'
 import { projectsBuildingStand } from '../ProjectsBuilding/ProjectsBuilding.distance'
-import { LOBBY_PASSAGE_STAND, LOBBY_ROUTE, LOBBY_START } from './ProjectsLobby.constants'
+import {
+  LOBBY_GROUND_LEVEL_MAX_Y,
+  LOBBY_PASSAGE_ENTER,
+  LOBBY_PASSAGE_STAND,
+  LOBBY_PASSAGE_WALK_SPEED,
+  LOBBY_ROUTE,
+  LOBBY_START,
+} from './ProjectsLobby.constants'
 
 /**
  * 맵과 로비를 오가는 일.
@@ -74,6 +83,31 @@ export function leaveLobby(): void {
   if (useSceneTransitionStore.getState().phase !== 'idle') return
   standOutsideDoor()
   useSceneTransitionStore.getState().close('/')
+}
+
+/**
+ * 통로로 걸어갈 수 있는 자리에 서 있는지.
+ *
+ * **1층에서 계단 난간 사이에 있을 때만** 받는다. 2층이나 계단 위에서 누르면 캐릭터가 난간을
+ * 헤집으며 돌아가고, 그 길은 보여 줄 만한 그림이 아니다.
+ * 난간 안쪽 폭은 모델에서 잰 값이라 아직 재지 않았으면(방이 뜨기 전) 어디에 서 있든 아니다.
+ */
+export function canWalkToPassage(): boolean {
+  const { position, walking } = useInteriorStore.getState()
+  if (walking) return false
+  if (position.y > LOBBY_GROUND_LEVEL_MAX_Y) return false
+  const { minX, maxX } = useLobbyGeometryStore.getState().corridor
+  return position.x >= minX && position.x <= maxX
+}
+
+/**
+ * 통로 안으로 걸어 들어가게 한다. 도착 뒤에 무엇을 할지는 기다리는 쪽(`LobbyPassage`)이 정한다.
+ * 들어가는 구간이라 평소보다 빠른 걸음이다.
+ */
+export function walkIntoPassage(): void {
+  useInteriorStore
+    .getState()
+    .walkTo(LOBBY_PASSAGE_ENTER[0], LOBBY_PASSAGE_ENTER[1], LOBBY_PASSAGE_WALK_SPEED)
 }
 
 /**

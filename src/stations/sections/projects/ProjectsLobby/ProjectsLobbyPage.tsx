@@ -9,6 +9,7 @@ import { LobbyPageHUD } from '../../../../ui/DevHUD/LobbyPageHUD'
 import { InteriorCharacter, InteriorEnvironment, InteriorInput } from '../interior'
 import { LobbyCameraRig } from './LobbyCameraRig'
 import { LobbyModel } from './LobbyModel'
+import { LobbyPassage } from './LobbyPassage'
 import { LobbyTriggers } from './LobbyTriggers'
 import {
   LOBBY_BACKGROUND,
@@ -103,6 +104,9 @@ export function ProjectsLobbyPage() {
           <InteriorInput blocked={isLobbyMovementBlocked} snapStairs={LOBBY_STAIR_NAMES} />
           {/* 누를 판은 모델에서 잰 트리거 자리에 서므로 모델이 준비된 뒤에 붙는다. */}
           <LobbyTriggers />
+          {/* 통로 앞에 다 걸어가면 전시 공간으로 넘긴다. 리그가 자세를 마무리한 뒤에 돌아야
+              덮개의 초점이 이번 프레임 화면과 맞으므로 리그보다 아래에 둔다. */}
+          <LobbyPassage />
         </SceneErrorBoundary>
       </Canvas>
       {/* 로비는 밝은 대리석이라 검정, 책을 볼 때는 화면이 어두워져 흰색이다. */}

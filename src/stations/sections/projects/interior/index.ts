@@ -8,7 +8,11 @@ export {
   applyInteriorOwnEnv,
   ensureInteriorTangents,
 } from './Interior.material'
-export type { InteriorMaterialOverrides, InteriorTrigger } from './Interior.types'
+export type {
+  InteriorFrontTaper,
+  InteriorMaterialOverrides,
+  InteriorTrigger,
+} from './Interior.types'
 export {
   clearInteriorCollision,
   getInteriorWalkables,

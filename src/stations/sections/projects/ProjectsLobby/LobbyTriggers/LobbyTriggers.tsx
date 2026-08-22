@@ -6,7 +6,8 @@ import { usePointerCursor } from '../../../../../scene/usePointerCursor'
 import { useLobbyGeometryStore } from '../../../../../state/useLobbyGeometryStore'
 import { useLobbyPageStore } from '../../../../../state/useLobbyPageStore'
 import { useLobbyTriggerStore } from '../../../../../state/useLobbyTriggerStore'
-import { LOBBY_MARKED_TRIGGERS } from '../ProjectsLobby.constants'
+import { LOBBY_MARKED_TRIGGERS, LOBBY_TRAVEL_TRIGGERS } from '../ProjectsLobby.constants'
+import { canWalkToPassage, walkIntoPassage } from '../ProjectsLobby.travel'
 import {
   LOBBY_TRIGGER_MARKER_BOB_SECONDS,
   LOBBY_TRIGGER_MARKER_FADE_SECONDS,
@@ -25,6 +26,11 @@ const _pointer = new Vector2()
  * **얹기는 R3F 이벤트, 누르기는 캔버스 `mousedown`**으로 나뉜다. 우클릭 홀드 중에는
  * `pointerdown`이 발생하지 않아 R3F 클릭이 잡히지 않지만(LEARNING 2026-07-13),
  * 얹기는 `pointermove`에서 나오므로 버튼을 누른 채여도 정상이다.
+ *
+ * **가는 트리거는 그 자리에서 보는 트리거와 갈린다**(`LOBBY_TRAVEL_TRIGGERS`).
+ * 카메라를 돌리는 대신 캐릭터를 그 앞으로 걸려 보내고, 넘어가는 것은 도착을 지켜보는
+ * `LobbyPassage`가 맡는다. 갈 수 없는 자리에서는 손가락 커서도 두지 않는다 —
+ * 누를 수 있어 보이는데 아무 일도 없는 편이 더 나쁘다.
  */
 export function LobbyTriggers() {
   const { camera, gl } = useThree()
@@ -35,6 +41,14 @@ export function LobbyTriggers() {
   const tuning = useLobbyPageStore((s) => s.trigger)
   // 트리거를 보는 동안에는 손가락 커서를 걷는다. 이미 연 것을 다시 누르라고 할 이유가 없다.
   const cursor = usePointerCursor(activeId === null)
+  // 가는 트리거는 설 수 있는 자리에서만 누를 수 있다고 보인다. 조건은 지금 위치를 봐야 알므로
+  // 얹히는 순간에 확인한다. 되돌리는 일과 정리는 공용 훅이 그대로 맡는다.
+  const travelCursor = {
+    ...cursor,
+    onPointerOver: () => {
+      if (canWalkToPassage()) cursor.onPointerOver?.()
+    },
+  }
 
   useEffect(() => {
     const canvas = gl.domElement
@@ -58,7 +72,14 @@ export function LobbyTriggers() {
       const hit = _raycaster
         .intersectObjects(plates.children, true)
         .find((it) => typeof it.object.userData.triggerId === 'string')
-      if (hit) useLobbyTriggerStore.getState().activate(hit.object.userData.triggerId as string)
+      if (!hit) return
+
+      const id = hit.object.userData.triggerId as string
+      if (LOBBY_TRAVEL_TRIGGERS[id]) {
+        if (canWalkToPassage()) walkIntoPassage()
+        return
+      }
+      useLobbyTriggerStore.getState().activate(id)
     }
 
     canvas.addEventListener('mousedown', onMouseDown)
@@ -70,7 +91,10 @@ export function LobbyTriggers() {
       {Object.entries(triggers).map(([name, trigger]) => (
         <group key={name} position={[trigger.x, trigger.y, trigger.z]}>
           {/* 누를 판. 그림이 아니라 판정용이라 투명하게 두고 깊이도 쓰지 않는다. */}
-          <mesh userData={{ triggerId: name }} {...cursor}>
+          <mesh
+            userData={{ triggerId: name }}
+            {...(LOBBY_TRAVEL_TRIGGERS[name] ? travelCursor : cursor)}
+          >
             <boxGeometry args={[trigger.width, trigger.height, trigger.depth]} />
             <meshBasicMaterial transparent opacity={0} depthWrite={false} />
           </mesh>
