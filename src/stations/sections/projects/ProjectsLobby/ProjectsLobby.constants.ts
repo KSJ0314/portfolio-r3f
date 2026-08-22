@@ -21,10 +21,6 @@ export const LOBBY_ARTWORK: Record<string, string> = {
   M_Artwork_Right: '/images/lobby/right.jpg',
 }
 
-/** 블렌더에서 붙인 이름 접두. 콜라이더·트리거는 화면에 그리지 않고 판정에만 쓴다. */
-export const LOBBY_COLLIDER_PREFIX = 'Collider_'
-export const LOBBY_TRIGGER_PREFIX = 'Trigger_'
-
 /**
  * 밟고 다니는 콜라이더. 나머지 콜라이더는 막는 것으로 다룬다.
  * `Collider_Stair_*`는 계단 모양이 아니라 1층에서 2층까지 이어진 **경사 슬래브**라,
@@ -98,32 +94,6 @@ export const LOBBY_START: readonly [number, number] = [0, -1.2]
  * 남쪽 면은 벽이 없어 바닥도 여기서 끝나고, 그 너머는 보여 줄 것도 없다.
  */
 export const LOBBY_SOUTH_LIMIT = LOBBY_START[1]
-
-/** 걸음 속도(유닛/초). 방이 좁아 맵(4)보다 느리다. */
-export const LOBBY_MOVE_SPEED = 2.2
-
-/**
- * 한 걸음에 오를 수 있는 높이. 바닥을 찾는 레이가 지금 발밑에서 이만큼 위에서 시작한다.
- *
- * **하늘에서 쏘면 안 된다** — 통로가 2층 바로 밑이라, 통로를 걸을 때 2층 바닥을 먼저 맞는다.
- * 경사면이 한 걸음에 오르는 높이보다 넉넉하고 층간 높이(1.7)보다는 작아야 한다.
- */
-export const LOBBY_STEP_UP = 0.6
-
-/** 바닥을 찾는 레이가 훑는 길이. 방 높이보다 넉넉하면 된다. */
-export const LOBBY_FLOOR_RAY_LENGTH = 20
-
-/**
- * 막는 상자 판정에서 빼는 발밑 몫(캐릭터 높이 대비 비율).
- * 바닥 슬래브처럼 밟고 선 면과 윗면이 같은 상자가 발에 걸려 옆으로 미는 것을 막는다.
- */
-export const LOBBY_BLOCKER_FOOT_RATIO = 0.3
-
-/** 캐릭터 반폭. 막는 상자에서 이만큼 떨어져 선다. */
-export const LOBBY_CHARACTER_RADIUS = 0.25
-
-/** 캐릭터 박스 크기 — 맵의 임시 캐릭터와 같은 비율로 두되 실내 축척에 맞춘다. */
-export const LOBBY_CHARACTER_SIZE: readonly [number, number, number] = [0.4, 0.55, 0.4]
 
 /**
  * 실내 팔로우 오프셋(카메라 − 캐릭터).

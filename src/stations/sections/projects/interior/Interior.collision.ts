@@ -1,15 +1,15 @@
 import { Box3, type Mesh, Plane, Raycaster, Vector3 } from 'three'
 import {
-  LOBBY_BLOCKER_FOOT_RATIO,
-  LOBBY_FLOOR_RAY_LENGTH,
-  LOBBY_STEP_UP,
-} from './ProjectsLobby.constants'
+  INTERIOR_BLOCKER_FOOT_RATIO,
+  INTERIOR_FLOOR_RAY_LENGTH,
+  INTERIOR_STEP_UP,
+} from './Interior.constants'
 
 /**
- * 로비의 걷는 바닥과 막는 것.
+ * 실내의 걷는 바닥과 막는 것.
  *
  * 모델이 콜라이더를 따로 갖고 있으므로 판정은 그것에 맡긴다 — 무엇이 바닥이고 무엇이 벽인지는
- * **모델을 읽는 쪽**(`LobbyModel`)이 이름으로 갈라 여기에 올리고, 걷는 쪽은 목록만 본다.
+ * **모델을 읽는 쪽**이 이름으로 갈라 여기에 올리고, 걷는 쪽은 목록만 본다.
  * 맵의 `useBlockersStore`와 달리 막는 것을 사각형이 아니라 **면 여럿을 가진 볼록체**로 둔다.
  * 블렌더에서 기울여 놓은 난간·벽을 축 정렬 상자로 재면 기울기가 사라져 계단을 침범한다.
  *
@@ -17,7 +17,7 @@ import {
  */
 
 /** 막는 것 하나. */
-export interface LobbyBlocker {
+export interface InteriorBlocker {
   /** 바깥을 향하는 면. 모든 면의 안쪽이면 그 안에 있는 것이다. */
   planes: Plane[]
   /** 면 검사에 들어가기 전에 걸러내는 경계 상자. */
@@ -31,7 +31,7 @@ const PLANE_EPSILON = 1e-4
 const MIN_HORIZONTAL = 1e-3
 
 let walkables: Mesh[] = []
-let blockers: LobbyBlocker[] = []
+let blockers: InteriorBlocker[] = []
 let stepCenters: number[] = []
 
 const _raycaster = new Raycaster()
@@ -58,7 +58,7 @@ const _inside = new Vector3()
  * `extendDown`을 주면 그만큼 **아래로 늘린다.** 모델에 없는 면을 새 상자로 만들면 기울기가 사라지므로,
  * 기울어진 난간 아래를 메울 때처럼 있는 것을 그대로 내리는 편이 낫다.
  */
-export function makeLobbyBlocker(mesh: Mesh, extendDown = 0): LobbyBlocker | null {
+export function makeInteriorBlocker(mesh: Mesh, extendDown = 0): InteriorBlocker | null {
   const position = mesh.geometry.getAttribute('position')
   if (!position || position.count === 0) return null
 
@@ -111,24 +111,24 @@ export function makeLobbyBlocker(mesh: Mesh, extendDown = 0): LobbyBlocker | nul
 }
 
 /** 모델을 읽은 쪽이 갈라낸 것을 올린다. */
-export function setLobbyCollision(nextWalkables: Mesh[], nextBlockers: LobbyBlocker[]): void {
+export function setInteriorCollision(nextWalkables: Mesh[], nextBlockers: InteriorBlocker[]): void {
   walkables = nextWalkables
   blockers = nextBlockers
 }
 
 /**
- * 눈에 보이는 계단에서 잰 단 중앙 z를 올린다.
+ * 눈에 보이는 계단에서 잰 단 중앙 z를 올린다. 계단이 없는 방은 부르지 않는다.
  *
  * 판정용 계단은 단이 아니라 경사 슬래브 하나라 코드에 단 개념이 없다.
  * 단마다 따로 있는 그림 쪽을 재서 자리를 얻는다.
  * 좌우 계단은 같은 깊이에 놓이므로 한 목록으로 합쳐 둔다.
  */
-export function setLobbyStepCenters(centers: number[]): void {
+export function setInteriorStepCenters(centers: number[]): void {
   stepCenters = centers
 }
 
 /** 가장 가까운 단 중앙 z. 잰 것이 없으면 그대로 돌려준다. */
-export function snapToLobbyStepZ(z: number): number {
+export function snapToInteriorStepZ(z: number): number {
   let best = z
   let bestGap = Infinity
   for (const center of stepCenters) {
@@ -141,15 +141,15 @@ export function snapToLobbyStepZ(z: number): number {
   return best
 }
 
-/** 로비를 떠날 때 비운다 — 남겨 두면 다음에 들어올 때 낡은 메시를 붙든다. */
-export function clearLobbyCollision(): void {
+/** 방을 떠날 때 비운다 — 남겨 두면 다음에 들어올 때 낡은 메시를 붙든다. */
+export function clearInteriorCollision(): void {
   walkables = []
   blockers = []
   stepCenters = []
 }
 
 /** 목표점을 정할 때 쏘는 대상. 걷는 바닥만 맞아야 벽·난간을 눌러도 그리로 가지 않는다. */
-export function getLobbyWalkables(): Mesh[] {
+export function getInteriorWalkables(): Mesh[] {
   return walkables
 }
 
@@ -159,11 +159,11 @@ export function getLobbyWalkables(): Mesh[] {
  * **지금 발밑에서 오름 한계만큼 위에서** 아래로 쏜다. 하늘에서 쏘면 2층 밑을 걸을 때
  * 위층 바닥을 잡고, 발밑에서 쏘면 경사면을 한 걸음도 오르지 못한다.
  */
-export function lobbyFloorHeight(x: number, z: number, fromY: number): number | null {
+export function interiorFloorHeight(x: number, z: number, fromY: number): number | null {
   if (walkables.length === 0) return null
-  _origin.set(x, fromY + LOBBY_STEP_UP, z)
+  _origin.set(x, fromY + INTERIOR_STEP_UP, z)
   _raycaster.set(_origin, DOWN)
-  _raycaster.far = LOBBY_FLOOR_RAY_LENGTH
+  _raycaster.far = INTERIOR_FLOOR_RAY_LENGTH
   // 거리순으로 정렬돼 오므로 첫 번째가 그 자리에서 가장 높은 바닥면이다.
   const hit = _raycaster.intersectObjects(walkables, false)[0]
   return hit ? hit.point.y : null
@@ -180,8 +180,8 @@ export function lobbyFloorHeight(x: number, z: number, fromY: number): number | 
  * **발밑 몫은 빼고 잰다** — 밟고 선 면과 윗면이 같은 상자가 발에 걸리면 빈 바닥에서 옆으로 밀린다.
  * 미는 방향은 **수평 성분만** 쓴다. 높이는 밟는 바닥이 따로 정하므로 여기서 건드리면 서로 싸운다.
  */
-export function pushOutOfLobbyBlockers(point: Vector3, radius: number, height: number): void {
-  const low = height * LOBBY_BLOCKER_FOOT_RATIO
+export function pushOutOfInteriorBlockers(point: Vector3, radius: number, height: number): void {
+  const low = height * INTERIOR_BLOCKER_FOOT_RATIO
   const high = height
 
   for (const blocker of blockers) {

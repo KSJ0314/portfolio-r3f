@@ -2,27 +2,28 @@ import { Suspense, useEffect, useLayoutEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { SceneArrival } from '../../../../scene/SceneArrival'
 import { SceneErrorBoundary } from '../../../../scene/SceneErrorBoundary'
-import { useLobbyStore } from '../../../../state/useLobbyStore'
+import { useInteriorStore } from '../../../../state/useInteriorStore'
 import { useLobbyTriggerStore } from '../../../../state/useLobbyTriggerStore'
 import { BackButton } from '../../../../ui/BackButton'
 import { LobbyPageHUD } from '../../../../ui/DevHUD/LobbyPageHUD'
+import { InteriorCharacter, InteriorEnvironment, InteriorInput } from '../interior'
 import { LobbyCameraRig } from './LobbyCameraRig'
-import { LobbyCharacter } from './LobbyCharacter'
-import { LobbyEnvironment } from './LobbyEnvironment'
-import { LobbyInput } from './LobbyInput'
 import { LobbyModel } from './LobbyModel'
 import { LobbyTriggers } from './LobbyTriggers'
 import {
   LOBBY_BACKGROUND,
   LOBBY_CAMERA_FAR,
   LOBBY_CAMERA_FOV,
+  LOBBY_ENV,
   LOBBY_EXPOSURE,
   LOBBY_CAMERA_NEAR,
   LOBBY_CAMERA_OFFSET,
   LOBBY_FILL,
+  LOBBY_SOUTH_LIMIT,
+  LOBBY_STAIR_NAMES,
   LOBBY_START,
 } from './ProjectsLobby.constants'
-import { goBack } from './ProjectsLobby.travel'
+import { goBack, isLobbyMovementBlocked } from './ProjectsLobby.travel'
 
 /** 시작 자리에 팔로우 오프셋을 더한 것이 첫 카메라 자리다 — 그래야 첫 프레임부터 자세가 맞다. */
 const CAMERA_POSITION: [number, number, number] = [
@@ -47,7 +48,7 @@ export function ProjectsLobbyPage() {
   // 들어올 때마다 입구에서 시작한다. 앞으로가기나 주소 직접 입력으로 들어오면 이동 상태가
   // 지난번 그대로다. 카메라 첫 자리도 시작 자리 기준이라 어긋나 있으면 화면이 튄다.
   useLayoutEffect(() => {
-    useLobbyStore.getState().reset()
+    useInteriorStore.getState().reset(LOBBY_START)
     useLobbyTriggerStore.getState().reset()
   }, [])
 
@@ -81,7 +82,7 @@ export function ProjectsLobbyPage() {
       >
         <color attach="background" args={[LOBBY_BACKGROUND]} />
         {/* 금속·광택이 보이게 하는 주역. 빛이 아니라 반사가 있어야 금속이 드러난다. */}
-        <LobbyEnvironment />
+        <InteriorEnvironment blur={LOBBY_ENV.blur} intensity={LOBBY_ENV.intensity} />
         {/* 환경광이 못 채우는 몫을 메우는 전체 등. */}
         <hemisphereLight
           color={LOBBY_FILL.sky}
@@ -96,9 +97,10 @@ export function ProjectsLobbyPage() {
             {/* 모델과 같은 경계에 둔다 — 모델이 준비된 뒤에야 세기 시작해야 덮개가 빈 방을 보이지 않는다. */}
             <SceneArrival />
           </Suspense>
-          <LobbyCharacter />
+          {/* 남쪽 면은 벽이 없어 바닥도 거기서 끝난다. 시작 자리보다 앞으로는 나오지 않는다. */}
+          <InteriorCharacter southLimit={LOBBY_SOUTH_LIMIT} />
           <LobbyCameraRig />
-          <LobbyInput />
+          <InteriorInput blocked={isLobbyMovementBlocked} snapStairs={LOBBY_STAIR_NAMES} />
           {/* 누를 판은 모델에서 잰 트리거 자리에 서므로 모델이 준비된 뒤에 붙는다. */}
           <LobbyTriggers />
         </SceneErrorBoundary>
