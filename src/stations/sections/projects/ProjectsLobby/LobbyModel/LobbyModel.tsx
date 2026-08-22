@@ -11,18 +11,22 @@ import {
   type Texture,
   Vector3,
 } from 'three'
-import { useLobbyGeometryStore, type LobbyTrigger } from '../../../../../state/useLobbyGeometryStore'
+import { useLobbyGeometryStore } from '../../../../../state/useLobbyGeometryStore'
 import { useLobbyPageStore } from '../../../../../state/useLobbyPageStore'
 import {
   INTERIOR_COLLIDER_PREFIX,
   INTERIOR_TRIGGER_PREFIX,
   InteriorColliderView,
+  applyInteriorMaterial,
+  applyInteriorOwnEnv,
   clearInteriorCollision,
+  ensureInteriorTangents,
   makeInteriorBlocker,
   setInteriorCollision,
   setInteriorStepCenters,
   type InteriorBlocker,
   type InteriorColliderPart,
+  type InteriorTrigger,
 } from '../../interior'
 import {
   LOBBY_ARTWORK,
@@ -47,48 +51,12 @@ import {
 } from '../ProjectsLobby.constants'
 import { applyPageText, useLobbyBookPages } from '../LobbyBook'
 
-/** 금속으로 보는 기준. 이 위는 환경 반사가 있어야 보이므로 덮어쓰지 않는다. */
-const METAL_THRESHOLD = 0.5
-
 /**
  * 액자 재질 이름과 사진 경로. **모듈에 굳혀 둔다** — 렌더 안에서 만들면 매번 새 값이 되어
  * 텍스처 훅도 새 값을 돌려주고, 모델을 자르고 콜라이더를 만드는 일이 렌더마다 다시 돈다.
  */
 const ARTWORK_NAMES = Object.keys(LOBBY_ARTWORK)
 const ARTWORK_PATHS = Object.values(LOBBY_ARTWORK)
-
-/**
- * 재질이 원래 갖고 있던 값. 재질은 캐시와 공유되므로 한 번 덮어쓰면 원본이 사라진다.
- * 기억해 두지 않으면 `LOBBY_MATERIAL`을 되돌려도 새로고침 전에는 돌아오지 않는다.
- */
-const originalRoughness = new WeakMap<MeshStandardMaterial, { value: number; map: Texture | null }>()
-
-/**
- * 불러온 재질을 `LOBBY_MATERIAL` 값으로 덮어쓴다.
- *
- * 대리석·바닥의 광택은 **환경 반사**에서 나온다 — 반사할 환경(`InteriorEnvironment`)이 있고
- * 표면이 매끈해야(`roughness`가 낮아야) 생긴다. 둘 중 하나만 빠져도 무광이 된다.
- *
- * **금속은 건드리지 않는다** — 확산광이 없어 환경 반사가 빠지면 검게 죽는다.
- * 재질은 원본 캐시와 공유되므로 같은 값을 여러 번 넣어도 결과가 같다.
- */
-function applyMaterialOverrides(mesh: Mesh): void {
-  const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material
-  const standard = material as MeshStandardMaterial
-  if (!standard?.isMeshStandardMaterial) return
-
-  if (standard.metalness >= METAL_THRESHOLD) return
-
-  if (!originalRoughness.has(standard)) {
-    originalRoughness.set(standard, { value: standard.roughness, map: standard.roughnessMap })
-  }
-  const original = originalRoughness.get(standard)!
-  standard.roughnessMap = LOBBY_MATERIAL.dropRoughnessMap ? null : original.map
-  standard.roughness = LOBBY_MATERIAL.roughness ?? original.value
-  standard.envMapIntensity = LOBBY_MATERIAL.envMapIntensity
-  standard.normalScale.set(LOBBY_MATERIAL.normalScale, LOBBY_MATERIAL.normalScale)
-  standard.needsUpdate = true
-}
 
 /**
  * 액자 뒷판에 사진을 물린다. 모델이 액자마다 전용 재질을 갖고 있어 그것으로 짚는다.
@@ -106,25 +74,6 @@ function applyArtwork(mesh: Mesh, artworks: Record<string, Texture>): void {
   standard.map = texture
   standard.color.set('#ffffff')
   standard.needsUpdate = true
-}
-
-/**
- * 노멀맵을 쓰는 메시에 접선(TANGENT)을 채워 준다.
- *
- * 이 모델에는 접선이 하나도 들어 있지 않다. 그러면 three는 노멀맵을 읽을 기준 축을 **화면 공간
- * 미분으로 추정**하는데, 그 추정은 카메라에 딸려 있어 멀거나 스치는 각도에서 무너진다.
- *
- * 노멀맵이 없는 메시는 접선을 쓰지 않으니 그냥 둔다.
- */
-function ensureTangents(mesh: Mesh): void {
-  const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material
-  if (!(material as MeshStandardMaterial)?.normalMap) return
-
-  const geometry = mesh.geometry
-  if (geometry.getAttribute('tangent')) return
-  // index·position·normal·uv가 다 있어야 계산된다. 없으면 three가 콘솔로 알린다.
-  if (!geometry.index || !geometry.getAttribute('uv')) return
-  geometry.computeTangents()
 }
 
 /**
@@ -216,7 +165,7 @@ export function LobbyModel() {
 
     const walkables: Mesh[] = []
     const blockers: InteriorBlocker[] = []
-    const triggers: Record<string, LobbyTrigger> = {}
+    const triggers: Record<string, InteriorTrigger> = {}
     // 계단 단 중앙 z. 좌우 계단이 같은 깊이라 값이 겹치지만 가장 가까운 것을 고르는 데는 무관하다.
     const stepCenters: number[] = []
     // 눈으로 볼 때 쓸 목록. 무엇이 어느 역할로 갈렸는지 여기서만 알 수 있다.
@@ -253,8 +202,8 @@ export function LobbyModel() {
       const mesh = object as Mesh
       if (!mesh.isMesh) return
 
-      ensureTangents(mesh)
-      applyMaterialOverrides(mesh)
+      ensureInteriorTangents(mesh)
+      applyInteriorMaterial(mesh, LOBBY_MATERIAL)
       applyArtwork(mesh, artworks)
       // 글 쓰는 면에만 얹는다 — 옆면(종이 겹친 단면)까지 나오면 안 된다.
       applyPageText(mesh, pageTextures)
@@ -342,17 +291,7 @@ export function LobbyModel() {
     const env = sceneRoot.environment
     if (!env) return
     ownEnvDone.current = true
-    model.traverse((object) => {
-      const mesh = object as Mesh
-      if (!mesh.isMesh) return
-      const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material
-      const standard = material as MeshStandardMaterial
-      if (!standard?.isMeshStandardMaterial) return
-      if (!LOBBY_OWN_ENV.materials.includes(standard.name)) return
-      standard.envMap = env
-      standard.envMapIntensity = LOBBY_OWN_ENV.intensity
-      standard.needsUpdate = true
-    })
+    applyInteriorOwnEnv(model, env, LOBBY_OWN_ENV.materials, LOBBY_OWN_ENV.intensity)
   })
 
   // 판정에 쓸 것을 올린다. 떠날 때 비우지 않으면 다음에 들어올 때 낡은 메시를 붙든다.

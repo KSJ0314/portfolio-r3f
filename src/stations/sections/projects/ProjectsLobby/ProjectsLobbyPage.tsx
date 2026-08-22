@@ -23,7 +23,7 @@ import {
   LOBBY_STAIR_NAMES,
   LOBBY_START,
 } from './ProjectsLobby.constants'
-import { goBack, isLobbyMovementBlocked } from './ProjectsLobby.travel'
+import { goBack, isLobbyMovementBlocked, takeLobbyEntry } from './ProjectsLobby.travel'
 
 /** 시작 자리에 팔로우 오프셋을 더한 것이 첫 카메라 자리다 — 그래야 첫 프레임부터 자세가 맞다. */
 const CAMERA_POSITION: [number, number, number] = [
@@ -45,10 +45,10 @@ export function ProjectsLobbyPage() {
   // 책을 보고 있으면 책을 닫는 버튼, 아니면 맵으로 나가는 버튼이다.
   const activeId = useLobbyTriggerStore((s) => s.activeId)
 
-  // 들어올 때마다 입구에서 시작한다. 앞으로가기나 주소 직접 입력으로 들어오면 이동 상태가
-  // 지난번 그대로다. 카메라 첫 자리도 시작 자리 기준이라 어긋나 있으면 화면이 튄다.
+  // 들어올 때마다 정해진 자리에서 시작한다. 앞으로가기나 주소 직접 입력으로 들어오면 이동 상태가
+  // 지난번 그대로다. 전시 공간에서 돌아왔으면 입구가 아니라 통로 앞이다.
   useLayoutEffect(() => {
-    useInteriorStore.getState().reset(LOBBY_START)
+    useInteriorStore.getState().reset(takeLobbyEntry())
     useLobbyTriggerStore.getState().reset()
   }, [])
 

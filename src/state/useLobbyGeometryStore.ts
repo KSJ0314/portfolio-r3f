@@ -1,19 +1,10 @@
 import { create } from 'zustand'
-
-/** 모델에서 잰 트리거 하나 — 중심(월드)과 크기. */
-export interface LobbyTrigger {
-  x: number
-  y: number
-  z: number
-  width: number
-  height: number
-  depth: number
-}
+import type { InteriorTrigger } from '../stations/sections/projects/interior'
 
 interface LobbyGeometryState {
   /** 트리거 이름(`Trigger_Book` 등) → 잰 값. */
-  triggers: Record<string, LobbyTrigger>
-  setTriggers: (triggers: Record<string, LobbyTrigger>) => void
+  triggers: Record<string, InteriorTrigger>
+  setTriggers: (triggers: Record<string, InteriorTrigger>) => void
   clearTriggers: () => void
 }
 

@@ -1,0 +1,1 @@
+export { GalleryTriggers } from './GalleryTriggers'

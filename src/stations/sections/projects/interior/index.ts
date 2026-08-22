@@ -4,6 +4,12 @@ export type { InteriorColliderKind, InteriorColliderPart } from './InteriorColli
 export { InteriorEnvironment } from './InteriorEnvironment'
 export { InteriorInput } from './InteriorInput'
 export {
+  applyInteriorMaterial,
+  applyInteriorOwnEnv,
+  ensureInteriorTangents,
+} from './Interior.material'
+export type { InteriorMaterialOverrides, InteriorTrigger } from './Interior.types'
+export {
   clearInteriorCollision,
   getInteriorWalkables,
   interiorFloorHeight,
