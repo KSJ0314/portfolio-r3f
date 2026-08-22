@@ -41,9 +41,15 @@ export function InteriorInput({ blocked, snapStairs }: InteriorInputProps) {
   const holding = useRef(false)
   const pressTime = useRef(0)
 
-  /** 지금 입력을 받지 않는 상태인지. 덮여 있는 동안은 공통이고 나머지는 방이 정한다. */
+  /**
+   * 지금 입력을 받지 않는 상태인지.
+   * 덮여 있는 동안과 연출 이동 중에는 어느 방에서나 받지 않고, 나머지는 방이 정한다.
+   */
   const isBlocked = useCallback(
-    () => isSceneCovered(useSceneTransitionStore.getState().phase) || (blocked?.() ?? false),
+    () =>
+      isSceneCovered(useSceneTransitionStore.getState().phase) ||
+      useInteriorStore.getState().walking ||
+      (blocked?.() ?? false),
     [blocked],
   )
 

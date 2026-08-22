@@ -11,7 +11,10 @@ import {
   type Texture,
   Vector3,
 } from 'three'
-import { useLobbyGeometryStore } from '../../../../../state/useLobbyGeometryStore'
+import {
+  useLobbyGeometryStore,
+  type LobbyPassageOpening,
+} from '../../../../../state/useLobbyGeometryStore'
 import { useLobbyPageStore } from '../../../../../state/useLobbyPageStore'
 import {
   INTERIOR_COLLIDER_PREFIX,
@@ -31,6 +34,7 @@ import {
 import {
   LOBBY_ARTWORK,
   LOBBY_BLOCKER_EXTEND_DOWN,
+  LOBBY_BLOCKER_TAPER_FRONT,
   LOBBY_DRACO_PATH,
   LOBBY_FIXTURE_PART,
   LOBBY_KEEP_DEPTH_GROUPS,
@@ -45,6 +49,10 @@ import {
   LOBBY_MODEL_URL,
   LOBBY_MODEL_WIDTH_SCALE,
   LOBBY_OVERHEAD_NAMES,
+  LOBBY_PASSAGE_CEILING,
+  LOBBY_PASSAGE_FLOOR,
+  LOBBY_RAIL_LEFT,
+  LOBBY_RAIL_RIGHT,
   LOBBY_SHADOW,
   LOBBY_STEP_MESH,
   LOBBY_WALKABLE_NAMES,
@@ -132,8 +140,8 @@ export function LobbyModel() {
   const { scene } = useGLTF(LOBBY_MODEL_URL, LOBBY_DRACO_PATH)
   const loaded = useTexture(ARTWORK_PATHS)
   const sceneRoot = useThree((s) => s.scene)
-  const setTriggers = useLobbyGeometryStore((s) => s.setTriggers)
-  const clearTriggers = useLobbyGeometryStore((s) => s.clearTriggers)
+  const setGeometry = useLobbyGeometryStore((s) => s.setGeometry)
+  const clearGeometry = useLobbyGeometryStore((s) => s.clearGeometry)
   const showColliders = useLobbyPageStore((s) => s.showColliders)
 
   // 훅이 돌려준 것은 캐시에 든 것이라 직접 고치지 않고 복제해서 설정을 건다.
@@ -154,7 +162,7 @@ export function LobbyModel() {
   // 여기서는 텍스처만 받아 물려 두면 된다.
   const pageTextures = useLobbyBookPages()
 
-  const { model, walkables, blockers, triggers, parts, stepCenters } = useMemo(() => {
+  const { model, walkables, blockers, triggers, parts, stepCenters, corridor, passage } = useMemo(() => {
     const model = scene.clone(true)
     // 늘어나면 안 되는 것을 먼저 골라 둔다. 배율을 걸기 전이라 여기서 잰 값이 곧 모델 좌표다.
     model.updateMatrixWorld(true)
@@ -170,6 +178,10 @@ export function LobbyModel() {
     const stepCenters: number[] = []
     // 눈으로 볼 때 쓸 목록. 무엇이 어느 역할로 갈렸는지 여기서만 알 수 있다.
     const parts: InteriorColliderPart[] = []
+    // 통로로 곧장 갈 수 있는 좌우 폭. 난간 안쪽 면에서 잰다.
+    const corridor = { minX: 1, maxX: -1 }
+    // 통로 입구. 바닥에서 좌우 폭과 뚫린 자리를, 천장에서 높이를 얻는다.
+    const opening = { minX: 0, maxX: 0, floorY: 0, topY: 0, mouthZ: 0, measured: 0 }
     const box = new Box3()
     const size = new Vector3()
     const center = new Vector3()
@@ -227,6 +239,20 @@ export function LobbyModel() {
       mesh.castShadow = false
       mesh.receiveShadow = false
 
+      // 통로 입구는 가림 면을 세울 자리다. 상수로 박으면 모델을 다시 내보낼 때 어긋난다.
+      if (mesh.name === LOBBY_PASSAGE_FLOOR || mesh.name === LOBBY_PASSAGE_CEILING) {
+        box.setFromObject(mesh)
+        opening.measured += 1
+        if (mesh.name === LOBBY_PASSAGE_FLOOR) {
+          opening.minX = box.min.x
+          opening.maxX = box.max.x
+          opening.floorY = box.max.y
+          opening.mouthZ = box.max.z
+        } else {
+          opening.topY = box.min.y
+        }
+      }
+
       if (isTrigger) {
         // 트리거는 자리와 크기를 알리는 용도라 경계 상자면 충분하다.
         box.setFromObject(mesh)
@@ -241,7 +267,7 @@ export function LobbyModel() {
           depth: size.z,
         }
         // 누를 자리이면서 막는 것이기도 하다 — 연단·통로 입구를 뚫고 지나가지 않게 한다.
-        const trigger = makeInteriorBlocker(mesh)
+        const trigger = makeInteriorBlocker(mesh, 0, LOBBY_BLOCKER_TAPER_FRONT[mesh.name])
         if (trigger) blockers.push(trigger)
         parts.push({ mesh, kind: 'trigger' })
         return
@@ -258,6 +284,13 @@ export function LobbyModel() {
         return
       }
 
+      // 난간 안쪽 면이 통로로 곧장 갈 수 있는 폭이다. 상수로 박으면 모델을 다시 내보낼 때 어긋난다.
+      if (mesh.name === LOBBY_RAIL_LEFT || mesh.name === LOBBY_RAIL_RIGHT) {
+        box.setFromObject(mesh)
+        if (mesh.name === LOBBY_RAIL_LEFT) corridor.minX = box.max.x
+        else corridor.maxX = box.min.x
+      }
+
       // 경계 상자로 뭉개지 않고 면으로 읽는다 — 기울여 놓은 난간·벽이 그대로 살아난다.
       // 아래가 뚫린 콜라이더는 그대로 내려 메운다.
       const extendDown = LOBBY_BLOCKER_EXTEND_DOWN[mesh.name] ?? 0
@@ -268,7 +301,19 @@ export function LobbyModel() {
 
     stepCenters.sort((a, b) => a - b)
 
-    return { model, walkables, blockers, triggers, parts, stepCenters }
+    // 둘 다 재지 못했으면 세울 자리를 모르는 것이라 가림 면을 두지 않는다.
+    const passage: LobbyPassageOpening | null =
+      opening.measured === 2
+        ? {
+            x: (opening.minX + opening.maxX) / 2,
+            y: (opening.floorY + opening.topY) / 2,
+            z: opening.mouthZ,
+            width: opening.maxX - opening.minX,
+            height: opening.topY - opening.floorY,
+          }
+        : null
+
+    return { model, walkables, blockers, triggers, parts, stepCenters, corridor, passage }
   }, [scene, artworks, pageTextures])
 
   // 그림자를 **한 번만 굽고 얼린다.** 방은 정지해 있어 다시 그릴 이유가 없고,
@@ -302,9 +347,9 @@ export function LobbyModel() {
   }, [walkables, blockers, stepCenters])
 
   useEffect(() => {
-    setTriggers(triggers)
-    return () => clearTriggers()
-  }, [triggers, setTriggers, clearTriggers])
+    setGeometry(triggers, corridor, passage)
+    return () => clearGeometry()
+  }, [triggers, corridor, passage, setGeometry, clearGeometry])
 
   return (
     <>

@@ -1,0 +1,1 @@
+export { LobbyPassage } from './LobbyPassage'

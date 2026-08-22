@@ -1,9 +1,10 @@
-import { Box3, type Mesh, Plane, Raycaster, Vector3 } from 'three'
+import { Box3, type Mesh, MathUtils, Plane, Raycaster, Vector3 } from 'three'
 import {
   INTERIOR_BLOCKER_FOOT_RATIO,
   INTERIOR_FLOOR_RAY_LENGTH,
   INTERIOR_STEP_UP,
 } from './Interior.constants'
+import type { InteriorFrontTaper } from './Interior.types'
 
 /**
  * 실내의 걷는 바닥과 막는 것.
@@ -30,6 +31,9 @@ const PLANE_EPSILON = 1e-4
 /** 수평으로 밀 수 없다고 보는 면. 법선의 수평 성분이 이보다 작으면 밀 방향으로 고르지 않는다. */
 const MIN_HORIZONTAL = 1e-3
 
+/** 앞(카메라 쪽)을 보는 면으로 치는 기준. 뾰족하게 깎을 때 이 면들을 걷어낸다. */
+const FRONT_FACING = 0.5
+
 let walkables: Mesh[] = []
 let blockers: InteriorBlocker[] = []
 let stepCenters: number[] = []
@@ -42,6 +46,8 @@ const _a = new Vector3()
 const _b = new Vector3()
 const _c = new Vector3()
 const _inside = new Vector3()
+const _normal = new Vector3()
+const _corner = new Vector3()
 
 /**
  * 콜라이더 메시를 볼록체로 읽는다. 삼각형마다 월드로 옮겨 면을 만들고 같은 면은 합치므로,
@@ -57,8 +63,14 @@ const _inside = new Vector3()
  *
  * `extendDown`을 주면 그만큼 **아래로 늘린다.** 모델에 없는 면을 새 상자로 만들면 기울기가 사라지므로,
  * 기울어진 난간 아래를 메울 때처럼 있는 것을 그대로 내리는 편이 낫다.
+ *
+ * `taperFront`를 주면 **카메라 쪽(+z) 앞모서리를 깎아** 위에서 본 모양을 오각형으로 만든다.
  */
-export function makeInteriorBlocker(mesh: Mesh, extendDown = 0): InteriorBlocker | null {
+export function makeInteriorBlocker(
+  mesh: Mesh,
+  extendDown = 0,
+  taperFront?: InteriorFrontTaper,
+): InteriorBlocker | null {
   const position = mesh.geometry.getAttribute('position')
   if (!position || position.count === 0) return null
 
@@ -99,6 +111,8 @@ export function makeInteriorBlocker(mesh: Mesh, extendDown = 0): InteriorBlocker
   // 면이 넷보다 적으면 닫힌 덩어리가 아니라 판이나 조각이다. 안팎을 가릴 수 없어 막는 것으로 쓰지 않는다.
   if (planes.length < 4) return null
 
+  if (taperFront) addFrontTaper(planes, bounds, taperFront)
+
   if (extendDown > 0) {
     // 아래로 늘리는 것은 **아래를 보는 면만** 그만큼 바깥으로 미는 일이다(캐릭터 기둥만큼 부풀리는 것과 같은 계산).
     // 안쪽이 음수인 평면식이라 바깥으로 미는 것은 상수를 빼는 것이다.
@@ -108,6 +122,46 @@ export function makeInteriorBlocker(mesh: Mesh, extendDown = 0): InteriorBlocker
   }
 
   return { planes, bounds }
+}
+
+/**
+ * 앞(+z)이 뾰족해지도록 **앞면을 걷어내고 경사면 두 장으로 갈아 끼운다.**
+ *
+ * 앞을 정면으로 만나면 사각형은 좌우 어느 쪽으로도 확실히 밀어내지 못해 길을 막지만,
+ * 뾰족하면 닿는 순간 옆으로 미끄러진다.
+ *
+ * **앞면을 남겨 두면 소용이 없다.** 모양은 경사면이 이미 깎아 오각형이 되지만, 밀어내기는
+ * 빠져나가는 데 가장 덜 움직이는 면을 고르고 **정면에서는 늘 축에 나란한 앞면이 가장 얕다.**
+ * 그러면 걸음과 정반대로 되밀려 그 자리에 멎는다.
+ *
+ * 좌표는 잰 경계 상자에서 비율로 끌어낸다. 모델을 다시 내보내도 따라온다.
+ * 경계는 그대로 둔다 — 빠른 제외에 쓰는 값이라 넓은 쪽이 안전하다.
+ * 경사면을 경계 상자로 세우므로 **축에 나란한 상자**를 전제한다.
+ */
+function addFrontTaper(planes: Plane[], bounds: Box3, taper: InteriorFrontTaper): void {
+  const centerX = (bounds.min.x + bounds.max.x) / 2
+  const halfWidth = (bounds.max.x - bounds.min.x) / 2
+  // 좁아지기 시작하는 깊이. 비율이 1이면 뒷면에서부터, 0.5면 옆면 중앙에서부터 모인다.
+  const taperDepth = (bounds.max.z - bounds.min.z) * Math.min(taper.depth, 1)
+  if (halfWidth <= 0 || taperDepth <= 0) return
+
+  // 앞을 보는 면을 걷어낸다. 남겨 두면 밀어내기가 늘 그것을 골라 정면으로 되민다.
+  for (let i = planes.length - 1; i >= 0; i -= 1) {
+    if (planes[i].normal.z > FRONT_FACING) planes.splice(i, 1)
+  }
+
+  const startZ = bounds.max.z - taperDepth
+  const midZ = (bounds.min.z + bounds.max.z) / 2
+  // 꼭짓점은 가운데에서 비켜 둔다. 대칭이면 정면으로 마주 선 캐릭터가 어느 쪽으로도 밀리지 못한다.
+  const tipX = MathUtils.clamp(centerX + halfWidth * taper.tip, bounds.min.x, bounds.max.x)
+
+  // 두 변은 기울기가 서로 다르다(꼭짓점이 비켜 있다). 감는 방향 대신 **안쪽인 점**으로 바깥을 가린다.
+  for (const startX of [bounds.min.x, bounds.max.x]) {
+    _normal.set(-taperDepth, 0, tipX - startX).normalize()
+    if (_normal.x * (centerX - startX) + _normal.z * (midZ - startZ) > 0) _normal.negate()
+    _corner.set(startX, bounds.min.y, startZ)
+    planes.push(new Plane().setFromNormalAndCoplanarPoint(_normal, _corner))
+  }
 }
 
 /** 모델을 읽은 쪽이 갈라낸 것을 올린다. */

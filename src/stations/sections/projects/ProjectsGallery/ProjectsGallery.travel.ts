@@ -10,9 +10,12 @@ import { GALLERY_ROUTE } from './ProjectsGallery.constants'
  * 옮기는 것 자체는 덮개(`SceneTransition`)가 **다 덮인 뒤에** 한다.
  */
 
-/** 로비 → 전시 공간. 통로 앞에 다 걸어간 뒤에 부른다. */
-export function enterGallery(): void {
-  useSceneTransitionStore.getState().close(GALLERY_ROUTE)
+/**
+ * 로비 → 전시 공간. 통로로 걸어 들어가기 시작할 때 부른다.
+ * 조여드는 시간은 그 걸음에 맞춰 부르는 쪽이 준다.
+ */
+export function enterGallery(seconds?: number): void {
+  useSceneTransitionStore.getState().close(GALLERY_ROUTE, seconds)
 }
 
 /**
