@@ -1,5 +1,11 @@
 import { DRACO_DECODER_PATH } from '../../../../lib/draco'
 import type { InteriorMaterialOverrides } from '../interior'
+import {
+  GALLERY_NAMEPLATE_ENV_INTENSITY,
+  GALLERY_NAMEPLATE_FRONT_ENV_INTENSITY,
+  GALLERY_NAMEPLATE_FRONT_MATERIAL,
+  GALLERY_NAMEPLATE_PLATE_MATERIAL,
+} from './GalleryNameplates/GalleryNameplates.constants'
 
 /** 전시 공간 라우트. 로비(`/projects`) 안쪽이라 그 아래에 둔다. */
 export const GALLERY_ROUTE = '/projects/gallery'
@@ -126,10 +132,26 @@ export const GALLERY_MATERIAL: InteriorMaterialOverrides = {
 }
 
 /**
- * **자기 환경맵을 갖게** 할 재질. 씬 전체 환경광과 무관해져, 방을 밝혀도 이것만 어둡게 남고
- * 반사 계산은 살아 있어 광택이 유지된다. 바닥이 이 재질이다.
+ * **자기 환경맵을 갖게** 할 재질 — 항목마다 세기를 따로 준다.
+ *
+ * 재질이 자기 환경맵을 가지면 씬 전체 환경광 세기를 타지 않으므로, 방보다 어둡게도 밝게도
+ * 둘 수 있다. 반사 계산은 살아 있어 광택은 그대로다. 항목을 나눈 것은 어둡게 둘 것과 밝힐 것이
+ * 함께 있기 때문이다.
  */
-export const GALLERY_OWN_ENV = { materials: ['M_DarkMarble.001'], intensity: 0.3 }
+export const GALLERY_OWN_ENV: readonly { materials: readonly string[]; intensity: number }[] = [
+  // 바닥. 방을 밝혀도 여기만 어둡게 남는다.
+  { materials: ['M_DarkMarble.001'], intensity: 0.3 },
+  // 이름판. 벽등이 닿지 않는 자리라 방 밝기로는 글씨가 묻힌다.
+  {
+    materials: [GALLERY_NAMEPLATE_PLATE_MATERIAL],
+    intensity: GALLERY_NAMEPLATE_ENV_INTENSITY,
+  },
+  // 이름판 앞면. 정면에서 비추는 쪽이 어두워 옆면보다 훨씬 어둡게 나오므로 여기만 더 올린다.
+  {
+    materials: [GALLERY_NAMEPLATE_FRONT_MATERIAL],
+    intensity: GALLERY_NAMEPLATE_FRONT_ENV_INTENSITY,
+  },
+]
 
 /** 벽등 빛. 모델에 담겨 온 색·세기를 덮어쓴다. */
 export const GALLERY_LIGHT_COLOR = '#ffcd88'
@@ -139,7 +161,7 @@ export const GALLERY_LIGHT_INTENSITY = 15
  * 벽등 빛이 닿는 거리. glb에는 이 값이 없어 무한대로 들어오므로 여기서 잘라 준다.
  * 광원의 닿는 거리는 부모 배율을 타지 않는 월드 값이라, 방을 크게 늘리면 상대적으로 좁아진다.
  */
-export const GALLERY_LIGHT_RANGE = 18
+export const GALLERY_LIGHT_RANGE = 30
 
 /** 거리에 따라 빛이 죽는 정도. 규격의 물리값은 2(역제곱)이고, 내리면 멀리까지 퍼진다. */
 export const GALLERY_LIGHT_DECAY = 1.4

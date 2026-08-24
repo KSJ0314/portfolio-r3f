@@ -32,6 +32,7 @@ import {
   GALLERY_OWN_ENV,
   GALLERY_WALKABLE_NAMES,
 } from '../ProjectsGallery.constants'
+import { splitNameplateFront } from '../GalleryNameplates'
 import { assembleGallery } from './GalleryModel.assemble'
 import type { GalleryModelProps } from './GalleryModel.types'
 
@@ -52,8 +53,8 @@ export function GalleryModel({ bays }: GalleryModelProps) {
   const clearGeometry = useGalleryGeometryStore((s) => s.clear)
   const showColliders = useGalleryPageStore((s) => s.showColliders)
 
-  const { model, walkables, blockers, triggers, parts, bounds } = useMemo(() => {
-    const { root, minX, maxX } = assembleGallery(scene.clone(true), bays)
+  const { model, walkables, blockers, triggers, parts, bounds, plates } = useMemo(() => {
+    const { root, minX, maxX, plates } = assembleGallery(scene.clone(true), bays)
 
     const walkables: Mesh[] = []
     const blockers: InteriorBlocker[] = []
@@ -87,6 +88,8 @@ export function GalleryModel({ bays }: GalleryModelProps) {
 
       ensureInteriorTangents(mesh)
       applyInteriorMaterial(mesh, GALLERY_MATERIAL)
+      // 이름판은 앞면만 따로 밝히므로 여기서 면을 갈라 둔다. 재질로 짚어 겹쳐 있는 것까지 함께 간다.
+      splitNameplateFront(mesh)
 
       const isCollider = mesh.name.startsWith(INTERIOR_COLLIDER_PREFIX)
       const isTrigger = mesh.name.startsWith(INTERIOR_TRIGGER_PREFIX)
@@ -128,7 +131,7 @@ export function GalleryModel({ bays }: GalleryModelProps) {
       parts.push({ mesh, kind: blocker ? 'blocker' : 'none' })
     })
 
-    return { model: root, walkables, blockers, triggers, parts, bounds: { minX, maxX } }
+    return { model: root, walkables, blockers, triggers, parts, bounds: { minX, maxX }, plates }
   }, [scene, bays])
 
   // 지정한 재질에 **자기 환경맵**을 물린다. 그러면 씬 환경광 세기를 타지 않으면서 반사 계산은
@@ -139,7 +142,7 @@ export function GalleryModel({ bays }: GalleryModelProps) {
     const env = sceneRoot.environment
     if (!env) return
     ownEnvDone.current = true
-    applyInteriorOwnEnv(model, env, GALLERY_OWN_ENV.materials, GALLERY_OWN_ENV.intensity)
+    for (const own of GALLERY_OWN_ENV) applyInteriorOwnEnv(model, env, own.materials, own.intensity)
   })
 
   // 판정에 쓸 것을 올린다. 떠날 때 비우지 않으면 다음에 들어올 때 낡은 메시를 붙든다.
@@ -150,9 +153,9 @@ export function GalleryModel({ bays }: GalleryModelProps) {
   }, [walkables, blockers])
 
   useEffect(() => {
-    setGeometry(triggers, bounds)
+    setGeometry(triggers, bounds, plates)
     return () => clearGeometry()
-  }, [triggers, bounds, setGeometry, clearGeometry])
+  }, [triggers, bounds, plates, setGeometry, clearGeometry])
 
   return (
     <>

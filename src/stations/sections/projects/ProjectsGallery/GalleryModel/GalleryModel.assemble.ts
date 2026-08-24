@@ -1,4 +1,5 @@
 import { Box3, Group, type Object3D, Vector3 } from 'three'
+import { GALLERY_NAMEPLATE_MESH, type GalleryNameplateSpot } from '../GalleryNameplates'
 import { GALLERY_MODEL_SCALE, GALLERY_PART } from '../ProjectsGallery.constants'
 
 /** 조립한 방. 방을 이루는 뿌리와, 배치가 결정한 값들. */
@@ -9,6 +10,8 @@ export interface GalleryAssembly {
   /** 방의 좌우 끝(월드 x). 카메라가 방 밖을 비추지 않도록 여기까지만 따라간다. */
   minX: number
   maxX: number
+  /** 칸 순서대로의 이름판 자리(월드). 그 앞에 이름을 적은 판을 세운다. */
+  plates: GalleryNameplateSpot[]
 }
 
 /**
@@ -45,11 +48,15 @@ export function assembleGallery(scene: Object3D, bays: number): GalleryAssembly 
   const bayWidth = size.x
 
   // 전시 칸. 첫 칸이 x = 0에서 시작하도록 모델 그대로 두고 나머지를 오른쪽으로 민다.
+  // 칸마다 이름판을 하나씩 챙겨 둔다. 칸은 모두 같은 부품의 복제라 순서가 곧 칸 번호다.
+  const plateMeshes: Object3D[] = []
   if (bay) {
     for (let index = 0; index < bays; index += 1) {
       const copy = bay.clone(true)
       copy.position.x += index * bayWidth
       root.add(copy)
+      const plate = copy.getObjectByName(GALLERY_NAMEPLATE_MESH)
+      if (plate) plateMeshes.push(plate)
     }
   }
 
@@ -78,6 +85,17 @@ export function assembleGallery(scene: Object3D, bays: number): GalleryAssembly 
   root.scale.set(GALLERY_MODEL_SCALE.x, GALLERY_MODEL_SCALE.y, GALLERY_MODEL_SCALE.z)
   root.updateMatrixWorld(true)
   box.setFromObject(root)
+  const minX = box.min.x
+  const maxX = box.max.x
 
-  return { root, bayWidth, minX: box.min.x, maxX: box.max.x }
+  // 이름판도 배율을 건 뒤에 잰다. z는 앞면이라 글씨 판을 그 앞으로 띄워 세울 수 있다.
+  const center = new Vector3()
+  const plates = plateMeshes.map((mesh) => {
+    box.setFromObject(mesh)
+    box.getSize(size)
+    box.getCenter(center)
+    return { x: center.x, y: center.y, z: box.max.z, width: size.x, height: size.y }
+  })
+
+  return { root, bayWidth, minX, maxX, plates }
 }

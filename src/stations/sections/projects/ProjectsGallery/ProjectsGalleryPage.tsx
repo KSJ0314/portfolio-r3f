@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useLayoutEffect } from 'react'
+import { Suspense, useEffect, useLayoutEffect, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { useCollection } from '../../../../lib/firebase/hooks'
 import { SceneArrival } from '../../../../scene/SceneArrival'
@@ -9,6 +9,7 @@ import { GalleryPageHUD } from '../../../../ui/DevHUD/GalleryPageHUD'
 import { InteriorCharacter, InteriorEnvironment, InteriorInput } from '../interior'
 import { GalleryCameraRig } from './GalleryCameraRig'
 import { GalleryModel } from './GalleryModel'
+import { GalleryNameplates, type GalleryProject } from './GalleryNameplates'
 import { GalleryTriggers } from './GalleryTriggers'
 import {
   GALLERY_BACKGROUND,
@@ -42,10 +43,19 @@ const CAMERA_POSITION: [number, number, number] = [
  * 반쯤 지어진 방이 보이지 않는다 — 그동안 화면은 덮개가 덮고 있고, 도착도 알리지 않는다.
  */
 export function ProjectsGalleryPage() {
-  const { data: projects, loading } = useCollection('projects')
+  const { data: projects, loading } = useCollection<GalleryProject>('projects')
+
+  // 칸을 세우는 순서이자 이름판에 적는 순서다. 로비 책의 목록과 같은 순서로 읽힌다.
+  const titles = useMemo(
+    () =>
+      [...projects]
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .map((project) => project.title),
+    [projects],
+  )
 
   // 읽기가 실패해도 방은 서야 한다 — 빈 방은 방이 아니다.
-  const bays = Math.max(projects.length, GALLERY_FALLBACK_BAYS)
+  const bays = Math.max(titles.length, GALLERY_FALLBACK_BAYS)
 
   // 들어올 때마다 문 안쪽에서 시작한다. 주소 직접 입력·앞으로가기로 들어오면 이동 상태가
   // 지난번 그대로다. 카메라 첫 자리도 시작 자리 기준이라 어긋나 있으면 화면이 튄다.
@@ -99,8 +109,9 @@ export function ProjectsGalleryPage() {
           <InteriorCharacter />
           <GalleryCameraRig />
           <InteriorInput />
-          {/* 누를 판은 조립한 방에서 잰 자리에 서므로 모델이 준비된 뒤에 붙는다. */}
+          {/* 누를 판과 이름판 글씨는 조립한 방에서 잰 자리에 서므로 모델이 준비된 뒤에 붙는다. */}
           <GalleryTriggers />
+          <GalleryNameplates titles={titles} />
         </SceneErrorBoundary>
       </Canvas>
       {/* 전시실은 밝은 대리석이라 검정. */}

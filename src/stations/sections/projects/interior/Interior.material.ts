@@ -18,6 +18,18 @@ function standardMaterialOf(mesh: Mesh): MeshStandardMaterial | null {
 }
 
 /**
+ * 메시가 쓰는 표준 재질 **전부**. 면을 갈라 재질을 둘 이상 문 메시가 있어,
+ * 이름으로 골라 거는 쪽은 첫 번째만 봐서는 안 된다.
+ */
+function standardMaterialsOf(mesh: Mesh): MeshStandardMaterial[] {
+  const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+  return materials.filter(
+    (material): material is MeshStandardMaterial =>
+      (material as MeshStandardMaterial)?.isMeshStandardMaterial,
+  )
+}
+
+/**
  * 불러온 재질을 방이 정한 값으로 덮어쓴다.
  *
  * 대리석·바닥의 광택은 **환경 반사**에서 나온다 — 반사할 환경(`InteriorEnvironment`)이 있고
@@ -76,11 +88,11 @@ export function applyInteriorOwnEnv(
   root.traverse((object) => {
     const mesh = object as Mesh
     if (!mesh.isMesh) return
-    const standard = standardMaterialOf(mesh)
-    if (!standard) return
-    if (!materials.includes(standard.name)) return
-    standard.envMap = env
-    standard.envMapIntensity = intensity
-    standard.needsUpdate = true
+    for (const standard of standardMaterialsOf(mesh)) {
+      if (!materials.includes(standard.name)) continue
+      standard.envMap = env
+      standard.envMapIntensity = intensity
+      standard.needsUpdate = true
+    }
   })
 }
