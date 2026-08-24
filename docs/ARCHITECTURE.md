@@ -12,6 +12,7 @@ _작성 예정_
 
 - `/` — 3D 포트폴리오(`App`). 아래 씬 그래프가 여기다.
 - `/projects` — 프로젝트 건물 **안**(`ProjectsLobbyPage`). 맵과 **다른 Canvas·다른 카메라(원근)** 다. 세계가 통째로 달라 이동 상태·판정·카메라를 맵과 나눠 갖는다. (DECISIONS 034)
+- `/projects/gallery` — 로비 통로 안쪽 전시 공간(`ProjectsGalleryPage`). 로비와도 **다른 Canvas**다. 밟는 바닥·막는 것·카메라 규칙이 로비와 다르고, 모델은 완성된 방이 아니라 부품이라 Firestore `projects` 개수만큼 코드에서 조립한다.
 - `/crayon` — 크레파스 스튜디오 단독 페이지(`tools/CrayonStudio`). 맵 없이 그림판만 띄운다. 배포본에도 포함돼 방문자가 크레파스로 그려 PNG로 저장할 수 있다.
 
 `BrowserRouter`라 배포 후 `/crayon` 직접 접속이 404가 나지 않도록 `vercel.json`이 전 경로를 `index.html`로 rewrite한다. (DECISIONS 017)
@@ -86,6 +87,20 @@ Canvas 밖: `BackButton`(좌상단 — 책을 보고 있으면 `Back`, 아니면
 
 **막는 판정(`ProjectsLobby.collision.ts`)** — 축 정렬 상자가 아니라 콜라이더의 **바깥 면(평면)들**로 "모든 면의 안쪽인가"를 본다. 기울여 둔 난간이 계단을 침범하지 않는다. 감는 방향은 믿지 않고 정점 평균으로 바로잡으며, 캐릭터를 기둥으로 쳐 면을 그 두께만큼 밀어 두고 점 하나로 검사한다. 모델에 빠진 계단 옆면은 난간 면을 **아래로 늘려** 메운다. (DECISIONS 036)
 
+### 전시 공간 씬 그래프 (`/projects/gallery`)
+
+로비 통로 안쪽이다. 이동·캐릭터·환경광·콜라이더 보기는 로비와 `interior/` 공용 부품을 그대로 쓰고, 판정 결과를 잰 값 형태로 올리는 자리(`useGalleryGeometryStore`)와 카메라 리그·트리거만 따로 둔다.
+
+- `ProjectsGalleryPage` (`<Canvas>`) — 원근 카메라. 칸 수가 정해지기 전(Firestore 읽기 중)에는 방을 세우지 않아 반쯤 지어진 방이 보이지 않는다.
+  - `GalleryModel` — 모델(`gallery.glb`, Draco)에서 전시 칸 하나·양 끝 마감·벽등 한 벌을 갈라 Firestore `projects` 개수만큼 조립한다(`GalleryModel.assemble.ts`). 벽등은 액자 사이 경계와 문 위에만 세우고, 방 배율이 비균등해 벽등에는 그 배율을 적용하지 않는다(DECISIONS 032 갱신). 밟는 바닥·막는 것은 `interior/`가 그대로 판정한다.
+  - `GalleryNameplates` — 칸마다 이름판 앞에 프로젝트 이름을 적은 판을 세운다. 재질을 공유하는 복제 부품이라 재질이 아니라 앞에 세운 별도 판에 얹는다(DECISIONS 043).
+  - `GalleryArtworks` — 같은 방식으로 액자 앞에 프로젝트 사진 판을 세운다. 폴더나 파일이 없으면 그 칸은 원래 회색 판으로 남는다.
+  - `GalleryFrames` — 액자와 그 아래 이름판을 감싼 사각형을 눌러 그 칸을 확대해 본다.
+  - `GalleryCameraRig` — 좌우로만 캐릭터를 따라가고 앞뒤·높이는 고정이다. 액자를 확대할 때는 진행도 하나로 평소 자세와 확대 자세를 섞고, 거리는 상수가 아니라 화각·화면비에서 구한다(DECISIONS 044).
+  - `GalleryTriggers` — 왼쪽 마감의 문을 누르면 로비로 돌아간다.
+
+Canvas 밖: `BackButton`(좌상단) · `GalleryPageHUD`(dev 전용).
+
 ## 상태 관리 (zustand)
 
 - `useThemeStore` — 테마 모드(light/dark) + toggle, 2D·3D 동시 전환.
@@ -105,7 +120,10 @@ Canvas 밖: `BackButton`(좌상단 — 책을 보고 있으면 `Back`, 아니면
 - `useProjectsDoorStore` — **모델에서 잰 문**의 자리·크기·향하는 쪽·배율. 튜닝 값이 아니라 측정값이라 페이지 스토어와 나눠 둔다. 클릭 판·표시·근접 구역·서는 자리가 이것을 보므로 건물 크기를 바꿔도 어긋나지 않는다. (DECISIONS 033)
 - `useProjectsSequenceStore` — 문이 다 열렸는지·닫혔는지(`doorOpened`·`doorClosed`). 들어가기와 카메라 복귀가 이 신호를 보고 차례를 잡는다. 여닫는 시간은 HUD로 바뀔 수 있어 지연 상수로는 맞출 수 없다.
 - `useSceneTransitionStore` — 장면 전환 덮개의 단계(`idle`/`closing`/`covered`/`opening`) · 다 덮인 뒤 갈 경로 · 도착 신호 · 조여드는 초점. 덮개(`Root`)와 페이지 사이의 **유일한 연결**이다. 초점은 매 프레임 갱신되므로 `set` 없이 좌표만 바꾼다(`useCameraStore.position`과 같은 방식).
-- `useLobbyStore` — 로비 안에서의 이동 상태(`position`·`target`·`setTarget`·`reset`). 맵의 `useCameraStore`를 그대로 쓰지 않는 것은 그쪽에 경계 clamp와 y=0 고정이 규칙으로 박혀 있어 층이 있는 실내와 맞지 않기 때문이다. 조작 규칙(고정 속도 한 걸음·우클릭 홀드)은 같게 옮긴다.
+- `useInteriorStore` — 실내(로비·전시 공간 공용)에서의 이동 상태(`position`·`target`·`setTarget`·`reset`). 맵의 `useCameraStore`를 그대로 쓰지 않는 것은 그쪽에 경계 clamp와 y=0 고정이 규칙으로 박혀 있어 층이 있는 실내와 맞지 않기 때문이다. 조작 규칙(고정 속도 한 걸음·우클릭 홀드)은 같게 옮긴다. 라우트로 갈려 두 방이 동시에 뜨지 않으므로 하나의 스토어를 돌려쓴다.
+- `useGalleryGeometryStore` — 전시 공간에서 **잰** 것(트리거·방 좌우 끝·이름판·액자 자리). 방을 코드에서 조립하므로 칸 수에 따라 값이 달라져 상수로 둘 수 없다.
+- `useGalleryPageStore` — 전시 공간의 개발용 튜닝 상태(카메라·콜라이더 보기). 프로덕션에서는 항상 기본값이다.
+- `useGalleryFocusStore` — 지금 확대해 보고 있는 칸(`focusedBay`). 잰 값·튜닝 값과 성격이 달라 나눠 둔다.
 - `useLobbyGeometryStore` — **모델에서 잰** 트리거(연단 위 책·북쪽 통로)의 중심과 크기. 상수로 박으면 모델을 다시 내보낼 때마다 어긋난다. `useProjectsDoorStore`와 같은 자리다. (DECISIONS 033)
 - `useLobbyTriggerStore` — 지금 보고 있는 트리거(`activeId`)와 **한 번이라도 연 적 있는지**(`seen` — 클릭 표시를 걷는 기준). 잰 값과 성격이 달라 나눠 둔다.
 - `useLobbyPageStore` — 로비의 개발용 튜닝 상태(팔로우 오프셋·화각·구도 비켜 놓기 · 클릭 표시 · 책을 볼 때 카메라 자리와 시간). 프로덕션에서는 항상 기본값이다.
