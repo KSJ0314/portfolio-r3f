@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
 import { type Group, Raycaster, Vector2 } from 'three'
 import { usePointerCursor } from '../../../../../scene/usePointerCursor'
@@ -8,41 +8,49 @@ import {
   isSceneCovered,
   useSceneTransitionStore,
 } from '../../../../../state/useSceneTransitionStore'
-import { leaveGallery } from '../ProjectsGallery.travel'
+import { frameRect } from './GalleryFrames.bounds'
+import { GALLERY_FRAME_HIT_LIFT } from './GalleryFrames.constants'
 
 const _raycaster = new Raycaster()
 const _pointer = new Vector2()
 
 /**
- * 누를 수 있는 트리거 — 지금은 로비로 돌아가는 문 하나다.
+ * 전시 칸을 눌러 확대해 보는 자리.
  *
- * 판은 모델 메시가 아니라 **잰 값으로 직접 세운다**(`useGalleryGeometryStore`). 자기 그룹만
- * 레이캐스트하므로 바닥·벽과 섞이지 않는다.
+ * 누를 것은 액자와 그 아래 이름판을 **함께 감싼 사각형** 하나다. 판은 모델 메시가 아니라
+ * 잰 값으로 직접 세우고(`useGalleryGeometryStore`) 자기 그룹만 레이캐스트하므로 벽·바닥과
+ * 섞이지 않는다. 문 트리거(`GalleryTriggers`)와 같은 방식이다.
  *
  * **얹기는 R3F 이벤트, 누르기는 캔버스 `mousedown`**으로 나뉜다. 우클릭 홀드 중에는
  * `pointerdown`이 발생하지 않아 R3F 클릭이 잡히지 않지만(LEARNING 2026-07-13),
  * 얹기는 `pointermove`에서 나오므로 버튼을 누른 채여도 정상이다.
  *
- * **누를 수 있다는 표시는 두지 않는다.** 문틀 그대로라 나가는 곳으로 읽힌다(DESIGN).
+ * 이미 확대해 보고 있는 동안에는 누를 수 없고 손가락 커서도 걷는다 — 닫는 것은 좌상단
+ * 뒤로 가기와 ESC가 맡는다.
  */
-export function GalleryTriggers() {
+export function GalleryFrames() {
   const { camera, gl } = useThree()
   const group = useRef<Group>(null)
-  const triggers = useGalleryGeometryStore((s) => s.triggers)
+  const artworks = useGalleryGeometryStore((s) => s.artworks)
+  const plates = useGalleryGeometryStore((s) => s.plates)
   const focusedBay = useGalleryFocusStore((s) => s.focusedBay)
-  // 액자를 확대해 보는 동안에는 문도 누를 수 없다. 닫는 것은 좌상단 뒤로 가기와 ESC가 맡는다.
   const cursor = usePointerCursor(focusedBay === null)
+
+  const rects = useMemo(
+    () => artworks.map((artwork, index) => frameRect(artwork, plates[index])),
+    [artworks, plates],
+  )
 
   useEffect(() => {
     const canvas = gl.domElement
 
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return
-      // 이미 넘어가는 중이면 받지 않는다. 연타해도 가던 곳이 바뀌지 않아야 한다.
+      // 넘어가는 중이거나 이미 보고 있는 동안에는 받지 않는다.
       if (isSceneCovered(useSceneTransitionStore.getState().phase)) return
       if (useGalleryFocusStore.getState().focusedBay !== null) return
-      const plates = group.current
-      if (!plates) return
+      const hits = group.current
+      if (!hits) return
 
       const rect = canvas.getBoundingClientRect()
       _pointer.set(
@@ -52,9 +60,9 @@ export function GalleryTriggers() {
       _raycaster.setFromCamera(_pointer, camera)
 
       const hit = _raycaster
-        .intersectObjects(plates.children, true)
-        .find((it) => typeof it.object.userData.triggerId === 'string')
-      if (hit) leaveGallery()
+        .intersectObjects(hits.children, true)
+        .find((it) => typeof it.object.userData.bay === 'number')
+      if (hit) useGalleryFocusStore.getState().focus(hit.object.userData.bay as number)
     }
 
     canvas.addEventListener('mousedown', onMouseDown)
@@ -63,15 +71,15 @@ export function GalleryTriggers() {
 
   return (
     <group ref={group}>
-      {Object.entries(triggers).map(([name, trigger]) => (
+      {rects.map((rect, index) => (
         <mesh
-          key={name}
-          position={[trigger.x, trigger.y, trigger.z]}
-          userData={{ triggerId: name }}
+          key={index}
+          position={[rect.x, rect.y, rect.z + GALLERY_FRAME_HIT_LIFT]}
+          userData={{ bay: index }}
           {...cursor}
         >
           {/* 누를 판. 그림이 아니라 판정용이라 투명하게 두고 깊이도 쓰지 않는다. */}
-          <boxGeometry args={[trigger.width, trigger.height, trigger.depth]} />
+          <planeGeometry args={[rect.width, rect.height]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
       ))}

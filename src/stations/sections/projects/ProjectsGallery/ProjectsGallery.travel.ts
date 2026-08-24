@@ -1,3 +1,4 @@
+import { useGalleryFocusStore } from '../../../../state/useGalleryFocusStore'
 import { useSceneTransitionStore } from '../../../../state/useSceneTransitionStore'
 import { LOBBY_ROUTE } from '../ProjectsLobby/ProjectsLobby.constants'
 import { enterLobbyFromGallery } from '../ProjectsLobby/ProjectsLobby.travel'
@@ -28,4 +29,19 @@ export function leaveGallery(): void {
   if (useSceneTransitionStore.getState().phase !== 'idle') return
   enterLobbyFromGallery()
   useSceneTransitionStore.getState().close(LOBBY_ROUTE)
+}
+
+/**
+ * 좌상단 뒤로 가기와 ESC가 타는 길.
+ *
+ * 액자를 확대해 보고 있으면 **그것부터 닫고**, 아니면 로비로 나간다.
+ * 나가는 문이 하나뿐이라 어느 쪽이든 같은 자리·같은 키로 되돌아간다.
+ */
+export function goBackFromGallery(): void {
+  const focus = useGalleryFocusStore.getState()
+  if (focus.focusedBay !== null) {
+    focus.close()
+    return
+  }
+  leaveGallery()
 }

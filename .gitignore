@@ -23,6 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 
-# 로컬 도구 설정·훅
-.claude/settings.json
-.claude/hooks/
+# 로컬 도구 설정·훅·스킬
+.claude/

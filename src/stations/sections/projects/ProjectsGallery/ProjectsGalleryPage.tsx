@@ -1,13 +1,16 @@
-import { Suspense, useEffect, useLayoutEffect, useMemo } from 'react'
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { useCollection } from '../../../../lib/firebase/hooks'
 import { SceneArrival } from '../../../../scene/SceneArrival'
 import { SceneErrorBoundary } from '../../../../scene/SceneErrorBoundary'
+import { useGalleryFocusStore } from '../../../../state/useGalleryFocusStore'
 import { useInteriorStore } from '../../../../state/useInteriorStore'
 import { BackButton } from '../../../../ui/BackButton'
 import { GalleryPageHUD } from '../../../../ui/DevHUD/GalleryPageHUD'
 import { InteriorCharacter, InteriorEnvironment, InteriorInput } from '../interior'
+import { GalleryArtworks } from './GalleryArtworks'
 import { GalleryCameraRig } from './GalleryCameraRig'
+import { GalleryFrames } from './GalleryFrames'
 import { GalleryModel } from './GalleryModel'
 import { GalleryNameplates, type GalleryProject } from './GalleryNameplates'
 import { GalleryTriggers } from './GalleryTriggers'
@@ -23,7 +26,7 @@ import {
   GALLERY_FILL,
   GALLERY_START,
 } from './ProjectsGallery.constants'
-import { leaveGallery } from './ProjectsGallery.travel'
+import { goBackFromGallery } from './ProjectsGallery.travel'
 
 /** 시작 자리에 팔로우 오프셋을 더한 것이 첫 카메라 자리다 — 그래야 첫 프레임부터 자세가 맞다. */
 const CAMERA_POSITION: [number, number, number] = [
@@ -54,6 +57,9 @@ export function ProjectsGalleryPage() {
     [projects],
   )
 
+  // 확대해 보는 동안 막을 것들이 보는 판정. 매 프레임 불리므로 구독하지 않고 그때 읽는다.
+  const isFocused = useCallback(() => useGalleryFocusStore.getState().focusedBay !== null, [])
+
   // 읽기가 실패해도 방은 서야 한다 — 빈 방은 방이 아니다.
   const bays = Math.max(titles.length, GALLERY_FALLBACK_BAYS)
 
@@ -61,12 +67,13 @@ export function ProjectsGalleryPage() {
   // 지난번 그대로다. 카메라 첫 자리도 시작 자리 기준이라 어긋나 있으면 화면이 튄다.
   useLayoutEffect(() => {
     useInteriorStore.getState().reset(GALLERY_START)
+    useGalleryFocusStore.getState().reset()
   }, [])
 
   // ESC는 좌상단 버튼과 같은 길을 탄다.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') leaveGallery()
+      if (e.key === 'Escape') goBackFromGallery()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -108,14 +115,20 @@ export function ProjectsGalleryPage() {
           )}
           <InteriorCharacter />
           <GalleryCameraRig />
-          <InteriorInput />
+          {/* 액자를 확대해 보는 동안에는 걸어 다니지 않는다. */}
+          <InteriorInput blocked={isFocused} />
           {/* 누를 판과 이름판 글씨는 조립한 방에서 잰 자리에 서므로 모델이 준비된 뒤에 붙는다. */}
           <GalleryTriggers />
           <GalleryNameplates titles={titles} />
+          <GalleryFrames />
+          {/* 액자 사진은 파일을 받는 동안 서스펜드하므로 자기 경계를 갖는다. */}
+          <Suspense fallback={null}>
+            <GalleryArtworks titles={titles} />
+          </Suspense>
         </SceneErrorBoundary>
       </Canvas>
       {/* 전시실은 밝은 대리석이라 검정. */}
-      <BackButton label="Back" color="#000000" onClick={leaveGallery} />
+      <BackButton label="Back" color="#000000" onClick={goBackFromGallery} />
 
       {/* leva 튜닝 패널은 dev 전용이라 프로덕션 번들에서 빠진다. 라우트마다 하나씩 둔다. */}
       {import.meta.env.DEV && <GalleryPageHUD />}

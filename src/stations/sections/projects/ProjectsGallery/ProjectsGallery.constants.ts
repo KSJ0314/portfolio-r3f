@@ -44,6 +44,15 @@ export const GALLERY_MODEL_SCALE = { x: 0.7, y: 0.7, z: 1.5 }
 /** 로비로 돌아가는 문. 왼쪽 마감에 달려 있다. */
 export const GALLERY_TO_LOBBY_TRIGGER = 'Trigger_ToLobby'
 
+/** 그 문의 문틀. 문 위에 세우는 벽등이 이것을 재서 자리를 잡는다. */
+export const GALLERY_DOOR_CASING_MESH = 'CapL_DoorCasing'
+
+/**
+ * 문틀 위에서 문 위 벽등 가운데까지의 거리(모델 좌표).
+ * 등이 문틀에 닿지 않으면서 천장까지 뜨지도 않을 만큼만 띄운다.
+ */
+export const GALLERY_DOOR_SCONCE_GAP = 0.6
+
 /** 밟고 다니는 콜라이더. 나머지 콜라이더는 막는 것으로 다룬다. 계단이 없어 전부 평평하다. */
 export const GALLERY_WALKABLE_NAMES = [
   'Collider_Bay_Floor',
@@ -97,6 +106,17 @@ export const GALLERY_CAMERA_ANCHOR = { y: 3.0, z: 2 }
  * y·z의 비가 올려다보는 각도다.
  */
 export const GALLERY_CAMERA_OFFSET: readonly [number, number, number] = [0, 1.5, 10]
+
+/**
+ * 액자를 확대해 볼 때 액자 둘레에 남기는 여백(액자 크기 대비 비율).
+ *
+ * 거리는 상수로 박지 않고 이 여백만큼 넓힌 액자가 화면에 담기도록 화각·화면비에서 구한다.
+ * 액자 크기나 방 배율이 바뀌어도 알아서 맞는다.
+ */
+export const GALLERY_FOCUS_MARGIN = 0.12
+
+/** 확대해 들어가고 되돌아오는 데 걸리는 시간(초). */
+export const GALLERY_FOCUS_SECONDS = 0.9
 
 /** 세로 화각(도). 복도라 깊이가 얕아 로비와 같은 값으로 둔다. */
 export const GALLERY_CAMERA_FOV = 25
@@ -161,7 +181,7 @@ export const GALLERY_LIGHT_INTENSITY = 15
  * 벽등 빛이 닿는 거리. glb에는 이 값이 없어 무한대로 들어오므로 여기서 잘라 준다.
  * 광원의 닿는 거리는 부모 배율을 타지 않는 월드 값이라, 방을 크게 늘리면 상대적으로 좁아진다.
  */
-export const GALLERY_LIGHT_RANGE = 30
+export const GALLERY_LIGHT_RANGE = 50
 
 /** 거리에 따라 빛이 죽는 정도. 규격의 물리값은 2(역제곱)이고, 내리면 멀리까지 퍼진다. */
 export const GALLERY_LIGHT_DECAY = 1.4

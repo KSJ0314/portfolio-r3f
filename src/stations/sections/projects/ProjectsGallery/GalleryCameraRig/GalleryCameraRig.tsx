@@ -1,9 +1,16 @@
+import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { MathUtils, type PerspectiveCamera, Vector3 } from 'three'
+import gsap from 'gsap'
+import { useGalleryFocusStore } from '../../../../../state/useGalleryFocusStore'
 import { useGalleryGeometryStore } from '../../../../../state/useGalleryGeometryStore'
 import { useGalleryPageStore } from '../../../../../state/useGalleryPageStore'
 import { useInteriorStore } from '../../../../../state/useInteriorStore'
-import { GALLERY_MODEL_SCALE } from '../ProjectsGallery.constants'
+import {
+  GALLERY_FOCUS_MARGIN,
+  GALLERY_FOCUS_SECONDS,
+  GALLERY_MODEL_SCALE,
+} from '../ProjectsGallery.constants'
 
 /** 화면 기준 오른쪽·위를 구할 때 쓰는 기준 축. */
 const WORLD_UP = new Vector3(0, 1, 0)
@@ -13,6 +20,8 @@ const DEGENERATE = 1e-6
 
 const _anchor = new Vector3()
 const _offset = new Vector3()
+const _focusPoint = new Vector3()
+const _focusOffset = new Vector3()
 const _forward = new Vector3()
 const _right = new Vector3()
 const _up = new Vector3()
@@ -29,6 +38,10 @@ const _up = new Vector3()
  * 상수로 둘 수 없다 — 지금 화각·거리에서 화면이 덮는 폭을 재 그만큼 안쪽까지만 따라간다.
  * 방이 화면보다 좁으면 가운데에 세워 둔다.
  *
+ * **액자를 누르면 그 액자를 확대해 본다.** 진행도 하나를 굴려 평소 자세와 확대 자세를 섞으므로,
+ * 자리와 바라보는 점이 함께 움직여 도는 도중에도 구도가 어긋나지 않는다(로비가 책을 볼 때와
+ * 같은 방식이다). 확대 거리는 상수가 아니라 **액자가 화면에 담기는 거리**를 그때그때 구한다.
+ *
  * **화각도 여기서 맞춘다.** Canvas의 `camera` prop은 만들 때 한 번만 먹으므로,
  * 그러지 않으면 개발용 HUD에서 화각만 조절이 안 된다.
  *
@@ -39,6 +52,27 @@ export function GalleryCameraRig() {
   const position = useInteriorStore((s) => s.position)
   const camera = useGalleryPageStore((s) => s.camera)
   const bounds = useGalleryGeometryStore((s) => s.bounds)
+  const artworks = useGalleryGeometryStore((s) => s.artworks)
+  const focusedBay = useGalleryFocusStore((s) => s.focusedBay)
+
+  /** 확대로 넘어간 정도(0~1). 자리와 바라보는 점을 이 하나로 섞는다. */
+  const blend = useRef({ value: 0 })
+  /** 보고 있는 액자. 닫히는 동안에도 남아 있어야 되돌아가는 길이 이어진다. */
+  const focused = useRef(artworks[0])
+
+  useEffect(() => {
+    const artwork = focusedBay === null ? undefined : artworks[focusedBay]
+    if (artwork) focused.current = artwork
+
+    const tween = gsap.to(blend.current, {
+      value: artwork ? 1 : 0,
+      duration: GALLERY_FOCUS_SECONDS,
+      ease: 'power2.inOut',
+    })
+    return () => {
+      tween.kill()
+    }
+  }, [focusedBay, artworks])
 
   useFrame((state) => {
     const cam = state.camera as PerspectiveCamera
@@ -71,19 +105,45 @@ export function GalleryCameraRig() {
       camera.anchorZ * GALLERY_MODEL_SCALE.z,
     )
 
+    // 확대한 만큼 기준점과 오프셋을 액자 쪽으로 섞는다. 둘을 같은 진행도로 굴려야
+    // 도는 도중에 바라보는 점만 앞서가거나 하지 않는다.
+    const focus = blend.current.value
+    const artwork = focused.current
+    if (focus > 0 && artwork) {
+      _focusPoint.set(artwork.x, artwork.y, artwork.z)
+      _anchor.lerp(_focusPoint, focus)
+      // 액자를 정면에서 본다. 여백만큼 넓힌 액자가 화면에 담기는 거리까지 물러난다 —
+      // 세로로도 가로로도 넘치지 않아야 하므로 둘 중 먼 쪽을 쓴다.
+      const margin = 1 + GALLERY_FOCUS_MARGIN
+      const tangent = Math.tan(MathUtils.degToRad(cam.fov) / 2)
+      const byHeight = (artwork.height * margin) / 2 / tangent
+      const byWidth = (artwork.width * margin) / 2 / (tangent * cam.aspect)
+      _focusOffset.set(0, 0, Math.max(byHeight, byWidth))
+      _offset.lerp(_focusOffset, focus)
+    }
+
     // 자세는 **바라보는 점을 향한** 자리에서 잡는다. 비켜 놓기는 그 뒤에 얹어야
     // 각도는 건드리지 않고 구도만 바뀐다.
     cam.position.copy(_anchor).add(_offset)
     cam.lookAt(_anchor)
 
-    if (distance >= DEGENERATE && (camera.shiftX !== 0 || camera.shiftY !== 0)) {
-      _forward.copy(_offset).negate().divideScalar(distance)
+    // 비켜 놓기는 평소 구도를 위한 것이라, 확대한 만큼 걷는다 — 액자는 화면 한가운데에 둔다.
+    const shift = 1 - focus
+    const offsetLength = _offset.length()
+    if (
+      shift > 0 &&
+      offsetLength >= DEGENERATE &&
+      (camera.shiftX !== 0 || camera.shiftY !== 0)
+    ) {
+      _forward.copy(_offset).negate().divideScalar(offsetLength)
       _right.crossVectors(_forward, WORLD_UP)
       if (_right.lengthSq() >= DEGENERATE) {
         _right.normalize()
         _up.crossVectors(_right, _forward).normalize()
-        cam.position.addScaledVector(_right, -camera.shiftX * halfWidth)
-        cam.position.addScaledVector(_up, -camera.shiftY * halfHeight)
+        // 옮길 거리는 **지금 거리에서의** 화면 반크기다. 확대하면 거리가 달라진다.
+        const half = Math.tan(MathUtils.degToRad(cam.fov) / 2) * offsetLength
+        cam.position.addScaledVector(_right, -camera.shiftX * half * cam.aspect * shift)
+        cam.position.addScaledVector(_up, -camera.shiftY * half * shift)
       }
     }
 

@@ -53,8 +53,8 @@ export function GalleryModel({ bays }: GalleryModelProps) {
   const clearGeometry = useGalleryGeometryStore((s) => s.clear)
   const showColliders = useGalleryPageStore((s) => s.showColliders)
 
-  const { model, walkables, blockers, triggers, parts, bounds, plates } = useMemo(() => {
-    const { root, minX, maxX, plates } = assembleGallery(scene.clone(true), bays)
+  const { model, walkables, blockers, triggers, parts, bounds, plates, artworks } = useMemo(() => {
+    const { root, minX, maxX, plates, artworks } = assembleGallery(scene.clone(true), bays)
 
     const walkables: Mesh[] = []
     const blockers: InteriorBlocker[] = []
@@ -77,9 +77,10 @@ export function GalleryModel({ bays }: GalleryModelProps) {
         light.decay = GALLERY_LIGHT_DECAY
         light.castShadow = false
         // 벽에 파묻힌 광원을 방 안쪽으로 떼어 놓는다. 붙어 있으면 웅덩이가 얇은 띠가 된다.
-        // 벽등이 모두 북쪽 벽에 붙어 남쪽을 향하므로 z로만 민다.
-        // 미는 것은 로컬 좌표라 방 배율로 나눠야 떼어 놓는 거리가 월드 값 그대로다.
-        light.position.z += GALLERY_LIGHT_STANDOFF / GALLERY_MODEL_SCALE.z
+        // 미는 것은 등의 로컬 좌표라, z가 곧 등이 튀어나오는 쪽이다. 벽등은 방 배율에서 빼내
+        // 세 축이 모두 방의 좌우 배율(`x`)만큼만 늘어나므로, 그것으로 나눠야 떼어 놓는 거리가
+        // 월드 값 그대로다. 돌려 세운 문 위 등도 같은 값이 나온다.
+        light.position.z += GALLERY_LIGHT_STANDOFF / GALLERY_MODEL_SCALE.x
         return
       }
 
@@ -131,7 +132,16 @@ export function GalleryModel({ bays }: GalleryModelProps) {
       parts.push({ mesh, kind: blocker ? 'blocker' : 'none' })
     })
 
-    return { model: root, walkables, blockers, triggers, parts, bounds: { minX, maxX }, plates }
+    return {
+      model: root,
+      walkables,
+      blockers,
+      triggers,
+      parts,
+      bounds: { minX, maxX },
+      plates,
+      artworks,
+    }
   }, [scene, bays])
 
   // 지정한 재질에 **자기 환경맵**을 물린다. 그러면 씬 환경광 세기를 타지 않으면서 반사 계산은
@@ -153,9 +163,9 @@ export function GalleryModel({ bays }: GalleryModelProps) {
   }, [walkables, blockers])
 
   useEffect(() => {
-    setGeometry(triggers, bounds, plates)
+    setGeometry(triggers, bounds, plates, artworks)
     return () => clearGeometry()
-  }, [triggers, bounds, plates, setGeometry, clearGeometry])
+  }, [triggers, bounds, plates, artworks, setGeometry, clearGeometry])
 
   return (
     <>
