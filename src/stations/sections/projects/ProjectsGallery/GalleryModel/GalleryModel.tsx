@@ -12,7 +12,6 @@ import {
   applyInteriorOwnEnv,
   clearInteriorCollision,
   ensureInteriorTangents,
-  makeInteriorBlocker,
   setInteriorCollision,
   type InteriorBlocker,
   type InteriorColliderPart,
@@ -34,6 +33,7 @@ import {
 } from '../ProjectsGallery.constants'
 import { splitNameplateFront } from '../GalleryNameplates'
 import { assembleGallery } from './GalleryModel.assemble'
+import { makeGalleryBlockers } from './GalleryModel.blockers'
 import type { GalleryModelProps } from './GalleryModel.types'
 
 /**
@@ -126,10 +126,10 @@ export function GalleryModel({ bays }: GalleryModelProps) {
         return
       }
 
-      // 경계 상자로 뭉개지 않고 면으로 읽는다 (DECISIONS 036).
-      const blocker = makeInteriorBlocker(mesh)
-      if (blocker) blockers.push(blocker)
-      parts.push({ mesh, kind: blocker ? 'blocker' : 'none' })
+      // 경계 상자로 뭉개지 않고 면으로 읽되, 한 메시에 든 덩어리는 갈라 따로 만든다 (DECISIONS 036).
+      const made = makeGalleryBlockers(mesh)
+      blockers.push(...made)
+      parts.push({ mesh, kind: made.length > 0 ? 'blocker' : 'none' })
     })
 
     return {

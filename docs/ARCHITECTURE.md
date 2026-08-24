@@ -92,12 +92,12 @@ Canvas 밖: `BackButton`(좌상단 — 책을 보고 있으면 `Back`, 아니면
 로비 통로 안쪽이다. 이동·캐릭터·환경광·콜라이더 보기는 로비와 `interior/` 공용 부품을 그대로 쓰고, 판정 결과를 잰 값 형태로 올리는 자리(`useGalleryGeometryStore`)와 카메라 리그·트리거만 따로 둔다.
 
 - `ProjectsGalleryPage` (`<Canvas>`) — 원근 카메라. 칸 수가 정해지기 전(Firestore 읽기 중)에는 방을 세우지 않아 반쯤 지어진 방이 보이지 않는다.
-  - `GalleryModel` — 모델(`gallery.glb`, Draco)에서 전시 칸 하나·양 끝 마감·벽등 한 벌을 갈라 Firestore `projects` 개수만큼 조립한다(`GalleryModel.assemble.ts`). 벽등은 액자 사이 경계와 문 위에만 세우고, 방 배율이 비균등해 벽등에는 그 배율을 적용하지 않는다(DECISIONS 032 갱신). 밟는 바닥·막는 것은 `interior/`가 그대로 판정한다.
+  - `GalleryModel` — 모델(`gallery.glb`, Draco)에서 전시 칸 하나·양 끝 마감·벽등 한 벌을 갈라 Firestore `projects` 개수만큼 조립한다(`GalleryModel.assemble.ts`). 벽등은 액자 사이 경계와 문 위에만 세우고, 방 배율이 비균등해 벽등에는 그 배율을 적용하지 않는다(DECISIONS 032 갱신). 밟는 바닥·막는 것은 `interior/`가 그대로 판정한다. 다만 **막는 것은 덩어리별로 갈라** 올린다(`GalleryModel.blockers.ts`) — 문이 뚫린 끝벽은 상자 셋이 한 메시라 볼록체 하나로 읽으면 벽이 아니라 문 구멍이 막힌다(DECISIONS 036 갱신).
   - `GalleryNameplates` — 칸마다 이름판 앞에 프로젝트 이름을 적은 판을 세운다. 재질을 공유하는 복제 부품이라 재질이 아니라 앞에 세운 별도 판에 얹는다(DECISIONS 043).
   - `GalleryArtworks` — 같은 방식으로 액자 앞에 프로젝트 사진 판을 세운다. 폴더나 파일이 없으면 그 칸은 원래 회색 판으로 남는다.
   - `GalleryFrames` — 액자와 그 아래 이름판을 감싼 사각형을 눌러 그 칸을 확대해 본다.
   - `GalleryCameraRig` — 좌우로만 캐릭터를 따라가고 앞뒤·높이는 고정이다. 액자를 확대할 때는 진행도 하나로 평소 자세와 확대 자세를 섞고, 거리는 상수가 아니라 화각·화면비에서 구한다(DECISIONS 044).
-  - `GalleryTriggers` — 왼쪽 마감의 문을 누르면 로비로 돌아간다.
+  - `GalleryTriggers` — 왼쪽 마감의 문으로 로비에 돌아간다. **누르는 것과 걸어 들어가는 것** 두 길이 있고, 걸어 들어가는 쪽은 캐릭터가 잰 트리거 부피 안에 들었는지로 본다.
 
 Canvas 밖: `BackButton`(좌상단) · `GalleryPageHUD`(dev 전용).
 
