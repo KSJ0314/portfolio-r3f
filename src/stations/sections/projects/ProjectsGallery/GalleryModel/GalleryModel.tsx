@@ -26,6 +26,7 @@ import {
   GALLERY_LIGHT_RANGE,
   GALLERY_LIGHT_STANDOFF,
   GALLERY_MATERIAL,
+  GALLERY_MODEL_SCALE,
   GALLERY_MODEL_URL,
   GALLERY_OVERHEAD_NAMES,
   GALLERY_OWN_ENV,
@@ -76,7 +77,8 @@ export function GalleryModel({ bays }: GalleryModelProps) {
         light.castShadow = false
         // 벽에 파묻힌 광원을 방 안쪽으로 떼어 놓는다. 붙어 있으면 웅덩이가 얇은 띠가 된다.
         // 벽등이 모두 북쪽 벽에 붙어 남쪽을 향하므로 z로만 민다.
-        light.position.z += GALLERY_LIGHT_STANDOFF
+        // 미는 것은 로컬 좌표라 방 배율로 나눠야 떼어 놓는 거리가 월드 값 그대로다.
+        light.position.z += GALLERY_LIGHT_STANDOFF / GALLERY_MODEL_SCALE.z
         return
       }
 

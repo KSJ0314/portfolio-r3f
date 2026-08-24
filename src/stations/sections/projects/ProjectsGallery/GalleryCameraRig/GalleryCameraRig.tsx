@@ -3,6 +3,7 @@ import { MathUtils, type PerspectiveCamera, Vector3 } from 'three'
 import { useGalleryGeometryStore } from '../../../../../state/useGalleryGeometryStore'
 import { useGalleryPageStore } from '../../../../../state/useGalleryPageStore'
 import { useInteriorStore } from '../../../../../state/useInteriorStore'
+import { GALLERY_MODEL_SCALE } from '../ProjectsGallery.constants'
 
 /** 화면 기준 오른쪽·위를 구할 때 쓰는 기준 축. */
 const WORLD_UP = new Vector3(0, 1, 0)
@@ -30,6 +31,9 @@ const _up = new Vector3()
  *
  * **화각도 여기서 맞춘다.** Canvas의 `camera` prop은 만들 때 한 번만 먹으므로,
  * 그러지 않으면 개발용 HUD에서 화각만 조절이 안 된다.
+ *
+ * **바라보는 점의 높이·깊이는 모델 좌표로 받아 여기서 방 배율을 곱한다.** 튜닝 값과 방 배율은
+ * 따로 둬야 HUD에 뜨는 값과 상수에 적는 값이 같다.
  */
 export function GalleryCameraRig() {
   const position = useInteriorStore((s) => s.position)
@@ -59,7 +63,13 @@ export function GalleryCameraRig() {
         ? MathUtils.clamp(position.x, roomCenter - limit, roomCenter + limit)
         : roomCenter
 
-    _anchor.set(anchorX, camera.anchorY, camera.anchorZ)
+    // 높이·깊이는 **모델 좌표**로 튜닝하므로 여기서 방 배율을 곱한다.
+    // 좌우는 이미 잰 방 끝(월드)에서 나온 값이라 곱하지 않는다.
+    _anchor.set(
+      anchorX,
+      camera.anchorY * GALLERY_MODEL_SCALE.y,
+      camera.anchorZ * GALLERY_MODEL_SCALE.z,
+    )
 
     // 자세는 **바라보는 점을 향한** 자리에서 잡는다. 비켜 놓기는 그 뒤에 얹어야
     // 각도는 건드리지 않고 구도만 바뀐다.

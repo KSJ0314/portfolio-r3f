@@ -1,10 +1,10 @@
 import { Box3, Group, type Object3D, Vector3 } from 'three'
-import { GALLERY_PART } from '../ProjectsGallery.constants'
+import { GALLERY_MODEL_SCALE, GALLERY_PART } from '../ProjectsGallery.constants'
 
 /** 조립한 방. 방을 이루는 뿌리와, 배치가 결정한 값들. */
 export interface GalleryAssembly {
   root: Object3D
-  /** 전시 칸 하나의 가로. 칸을 늘어놓는 간격이자 벽등 사이 간격이다. */
+  /** 전시 칸 하나의 가로(모델 좌표). 칸을 늘어놓는 간격이자 벽등 사이 간격이다. */
   bayWidth: number
   /** 방의 좌우 끝(월드 x). 카메라가 방 밖을 비추지 않도록 여기까지만 따라간다. */
   minX: number
@@ -73,6 +73,9 @@ export function assembleGallery(scene: Object3D, bays: number): GalleryAssembly 
     }
   }
 
+  // 늘리는 것은 **칸을 다 세운 뒤, 재기 전**이다. 그래야 여기서 얻는 좌우 끝도,
+  // 이 뒤에 잴 콜라이더·트리거도 늘어난 자세로 잡힌다.
+  root.scale.set(GALLERY_MODEL_SCALE.x, GALLERY_MODEL_SCALE.y, GALLERY_MODEL_SCALE.z)
   root.updateMatrixWorld(true)
   box.setFromObject(root)
 
