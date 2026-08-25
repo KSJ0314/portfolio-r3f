@@ -4,7 +4,7 @@ import { MathUtils, type PerspectiveCamera, Vector3 } from 'three'
 import gsap from 'gsap'
 import { useLobbyGeometryStore } from '../../../../../state/useLobbyGeometryStore'
 import { useLobbyPageStore } from '../../../../../state/useLobbyPageStore'
-import { useLobbyStore } from '../../../../../state/useLobbyStore'
+import { useInteriorStore } from '../../../../../state/useInteriorStore'
 import { useLobbyTriggerStore } from '../../../../../state/useLobbyTriggerStore'
 import {
   LOBBY_CAMERA_LIMIT,
@@ -81,7 +81,7 @@ function applyShift(
  * 그러지 않으면 개발용 HUD에서 화각만 조절이 안 된다.
  */
 export function LobbyCameraRig() {
-  const position = useLobbyStore((s) => s.position)
+  const position = useInteriorStore((s) => s.position)
   const camera = useLobbyPageStore((s) => s.camera)
   const activeId = useLobbyTriggerStore((s) => s.activeId)
   const triggers = useLobbyGeometryStore((s) => s.triggers)

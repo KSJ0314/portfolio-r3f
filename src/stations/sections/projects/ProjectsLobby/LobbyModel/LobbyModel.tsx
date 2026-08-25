@@ -11,12 +11,30 @@ import {
   type Texture,
   Vector3,
 } from 'three'
-import { useLobbyGeometryStore, type LobbyTrigger } from '../../../../../state/useLobbyGeometryStore'
-import { LobbyColliderView, type LobbyColliderPart } from '../LobbyColliderView'
+import {
+  useLobbyGeometryStore,
+  type LobbyPassageOpening,
+} from '../../../../../state/useLobbyGeometryStore'
+import { useLobbyPageStore } from '../../../../../state/useLobbyPageStore'
+import {
+  INTERIOR_COLLIDER_PREFIX,
+  INTERIOR_TRIGGER_PREFIX,
+  InteriorColliderView,
+  applyInteriorMaterial,
+  applyInteriorOwnEnv,
+  clearInteriorCollision,
+  ensureInteriorTangents,
+  makeInteriorBlocker,
+  setInteriorCollision,
+  setInteriorStepCenters,
+  type InteriorBlocker,
+  type InteriorColliderPart,
+  type InteriorTrigger,
+} from '../../interior'
 import {
   LOBBY_ARTWORK,
   LOBBY_BLOCKER_EXTEND_DOWN,
-  LOBBY_COLLIDER_PREFIX,
+  LOBBY_BLOCKER_TAPER_FRONT,
   LOBBY_DRACO_PATH,
   LOBBY_FIXTURE_PART,
   LOBBY_KEEP_DEPTH_GROUPS,
@@ -31,22 +49,15 @@ import {
   LOBBY_MODEL_URL,
   LOBBY_MODEL_WIDTH_SCALE,
   LOBBY_OVERHEAD_NAMES,
+  LOBBY_PASSAGE_CEILING,
+  LOBBY_PASSAGE_FLOOR,
+  LOBBY_RAIL_LEFT,
+  LOBBY_RAIL_RIGHT,
   LOBBY_SHADOW,
   LOBBY_STEP_MESH,
-  LOBBY_TRIGGER_PREFIX,
   LOBBY_WALKABLE_NAMES,
 } from '../ProjectsLobby.constants'
-import {
-  clearLobbyCollision,
-  makeLobbyBlocker,
-  setLobbyCollision,
-  setLobbyStepCenters,
-  type LobbyBlocker,
-} from '../ProjectsLobby.collision'
 import { applyPageText, useLobbyBookPages } from '../LobbyBook'
-
-/** 금속으로 보는 기준. 이 위는 환경 반사가 있어야 보이므로 덮어쓰지 않는다. */
-const METAL_THRESHOLD = 0.5
 
 /**
  * 액자 재질 이름과 사진 경로. **모듈에 굳혀 둔다** — 렌더 안에서 만들면 매번 새 값이 되어
@@ -54,39 +65,6 @@ const METAL_THRESHOLD = 0.5
  */
 const ARTWORK_NAMES = Object.keys(LOBBY_ARTWORK)
 const ARTWORK_PATHS = Object.values(LOBBY_ARTWORK)
-
-/**
- * 재질이 원래 갖고 있던 값. 재질은 캐시와 공유되므로 한 번 덮어쓰면 원본이 사라진다.
- * 기억해 두지 않으면 `LOBBY_MATERIAL`을 되돌려도 새로고침 전에는 돌아오지 않는다.
- */
-const originalRoughness = new WeakMap<MeshStandardMaterial, { value: number; map: Texture | null }>()
-
-/**
- * 불러온 재질을 `LOBBY_MATERIAL` 값으로 덮어쓴다.
- *
- * 대리석·바닥의 광택은 **환경 반사**에서 나온다 — 반사할 환경(`LobbyEnvironment`)이 있고
- * 표면이 매끈해야(`roughness`가 낮아야) 생긴다. 둘 중 하나만 빠져도 무광이 된다.
- *
- * **금속은 건드리지 않는다** — 확산광이 없어 환경 반사가 빠지면 검게 죽는다.
- * 재질은 원본 캐시와 공유되므로 같은 값을 여러 번 넣어도 결과가 같다.
- */
-function applyMaterialOverrides(mesh: Mesh): void {
-  const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material
-  const standard = material as MeshStandardMaterial
-  if (!standard?.isMeshStandardMaterial) return
-
-  if (standard.metalness >= METAL_THRESHOLD) return
-
-  if (!originalRoughness.has(standard)) {
-    originalRoughness.set(standard, { value: standard.roughness, map: standard.roughnessMap })
-  }
-  const original = originalRoughness.get(standard)!
-  standard.roughnessMap = LOBBY_MATERIAL.dropRoughnessMap ? null : original.map
-  standard.roughness = LOBBY_MATERIAL.roughness ?? original.value
-  standard.envMapIntensity = LOBBY_MATERIAL.envMapIntensity
-  standard.normalScale.set(LOBBY_MATERIAL.normalScale, LOBBY_MATERIAL.normalScale)
-  standard.needsUpdate = true
-}
 
 /**
  * 액자 뒷판에 사진을 물린다. 모델이 액자마다 전용 재질을 갖고 있어 그것으로 짚는다.
@@ -104,25 +82,6 @@ function applyArtwork(mesh: Mesh, artworks: Record<string, Texture>): void {
   standard.map = texture
   standard.color.set('#ffffff')
   standard.needsUpdate = true
-}
-
-/**
- * 노멀맵을 쓰는 메시에 접선(TANGENT)을 채워 준다.
- *
- * 이 모델에는 접선이 하나도 들어 있지 않다. 그러면 three는 노멀맵을 읽을 기준 축을 **화면 공간
- * 미분으로 추정**하는데, 그 추정은 카메라에 딸려 있어 멀거나 스치는 각도에서 무너진다.
- *
- * 노멀맵이 없는 메시는 접선을 쓰지 않으니 그냥 둔다.
- */
-function ensureTangents(mesh: Mesh): void {
-  const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material
-  if (!(material as MeshStandardMaterial)?.normalMap) return
-
-  const geometry = mesh.geometry
-  if (geometry.getAttribute('tangent')) return
-  // index·position·normal·uv가 다 있어야 계산된다. 없으면 three가 콘솔로 알린다.
-  if (!geometry.index || !geometry.getAttribute('uv')) return
-  geometry.computeTangents()
 }
 
 /**
@@ -181,8 +140,9 @@ export function LobbyModel() {
   const { scene } = useGLTF(LOBBY_MODEL_URL, LOBBY_DRACO_PATH)
   const loaded = useTexture(ARTWORK_PATHS)
   const sceneRoot = useThree((s) => s.scene)
-  const setTriggers = useLobbyGeometryStore((s) => s.setTriggers)
-  const clearTriggers = useLobbyGeometryStore((s) => s.clearTriggers)
+  const setGeometry = useLobbyGeometryStore((s) => s.setGeometry)
+  const clearGeometry = useLobbyGeometryStore((s) => s.clearGeometry)
+  const showColliders = useLobbyPageStore((s) => s.showColliders)
 
   // 훅이 돌려준 것은 캐시에 든 것이라 직접 고치지 않고 복제해서 설정을 건다.
   // glTF의 UV 원점은 위쪽이라 `flipY`를 꺼야 사진이 뒤집히지 않는다.
@@ -202,7 +162,7 @@ export function LobbyModel() {
   // 여기서는 텍스처만 받아 물려 두면 된다.
   const pageTextures = useLobbyBookPages()
 
-  const { model, walkables, blockers, triggers, parts, stepCenters } = useMemo(() => {
+  const { model, walkables, blockers, triggers, parts, stepCenters, corridor, passage } = useMemo(() => {
     const model = scene.clone(true)
     // 늘어나면 안 되는 것을 먼저 골라 둔다. 배율을 걸기 전이라 여기서 잰 값이 곧 모델 좌표다.
     model.updateMatrixWorld(true)
@@ -212,12 +172,16 @@ export function LobbyModel() {
     model.updateMatrixWorld(true)
 
     const walkables: Mesh[] = []
-    const blockers: LobbyBlocker[] = []
-    const triggers: Record<string, LobbyTrigger> = {}
+    const blockers: InteriorBlocker[] = []
+    const triggers: Record<string, InteriorTrigger> = {}
     // 계단 단 중앙 z. 좌우 계단이 같은 깊이라 값이 겹치지만 가장 가까운 것을 고르는 데는 무관하다.
     const stepCenters: number[] = []
     // 눈으로 볼 때 쓸 목록. 무엇이 어느 역할로 갈렸는지 여기서만 알 수 있다.
-    const parts: LobbyColliderPart[] = []
+    const parts: InteriorColliderPart[] = []
+    // 통로로 곧장 갈 수 있는 좌우 폭. 난간 안쪽 면에서 잰다.
+    const corridor = { minX: 1, maxX: -1 }
+    // 통로 입구. 바닥에서 좌우 폭과 뚫린 자리를, 천장에서 높이를 얻는다.
+    const opening = { minX: 0, maxX: 0, floorY: 0, topY: 0, mouthZ: 0, measured: 0 }
     const box = new Box3()
     const size = new Vector3()
     const center = new Vector3()
@@ -250,14 +214,14 @@ export function LobbyModel() {
       const mesh = object as Mesh
       if (!mesh.isMesh) return
 
-      ensureTangents(mesh)
-      applyMaterialOverrides(mesh)
+      ensureInteriorTangents(mesh)
+      applyInteriorMaterial(mesh, LOBBY_MATERIAL)
       applyArtwork(mesh, artworks)
       // 글 쓰는 면에만 얹는다 — 옆면(종이 겹친 단면)까지 나오면 안 된다.
       applyPageText(mesh, pageTextures)
 
-      const isCollider = mesh.name.startsWith(LOBBY_COLLIDER_PREFIX)
-      const isTrigger = mesh.name.startsWith(LOBBY_TRIGGER_PREFIX)
+      const isCollider = mesh.name.startsWith(INTERIOR_COLLIDER_PREFIX)
+      const isTrigger = mesh.name.startsWith(INTERIOR_TRIGGER_PREFIX)
       if (!isCollider && !isTrigger) {
         mesh.receiveShadow = true
         // 조명 기구는 제 그림자를 드리우지 않는다 — 등이 스스로를 가려 벽에 검은 얼룩이 생긴다.
@@ -275,6 +239,20 @@ export function LobbyModel() {
       mesh.castShadow = false
       mesh.receiveShadow = false
 
+      // 통로 입구는 가림 면을 세울 자리다. 상수로 박으면 모델을 다시 내보낼 때 어긋난다.
+      if (mesh.name === LOBBY_PASSAGE_FLOOR || mesh.name === LOBBY_PASSAGE_CEILING) {
+        box.setFromObject(mesh)
+        opening.measured += 1
+        if (mesh.name === LOBBY_PASSAGE_FLOOR) {
+          opening.minX = box.min.x
+          opening.maxX = box.max.x
+          opening.floorY = box.max.y
+          opening.mouthZ = box.max.z
+        } else {
+          opening.topY = box.min.y
+        }
+      }
+
       if (isTrigger) {
         // 트리거는 자리와 크기를 알리는 용도라 경계 상자면 충분하다.
         box.setFromObject(mesh)
@@ -289,7 +267,7 @@ export function LobbyModel() {
           depth: size.z,
         }
         // 누를 자리이면서 막는 것이기도 하다 — 연단·통로 입구를 뚫고 지나가지 않게 한다.
-        const trigger = makeLobbyBlocker(mesh)
+        const trigger = makeInteriorBlocker(mesh, 0, LOBBY_BLOCKER_TAPER_FRONT[mesh.name])
         if (trigger) blockers.push(trigger)
         parts.push({ mesh, kind: 'trigger' })
         return
@@ -306,17 +284,36 @@ export function LobbyModel() {
         return
       }
 
+      // 난간 안쪽 면이 통로로 곧장 갈 수 있는 폭이다. 상수로 박으면 모델을 다시 내보낼 때 어긋난다.
+      if (mesh.name === LOBBY_RAIL_LEFT || mesh.name === LOBBY_RAIL_RIGHT) {
+        box.setFromObject(mesh)
+        if (mesh.name === LOBBY_RAIL_LEFT) corridor.minX = box.max.x
+        else corridor.maxX = box.min.x
+      }
+
       // 경계 상자로 뭉개지 않고 면으로 읽는다 — 기울여 놓은 난간·벽이 그대로 살아난다.
       // 아래가 뚫린 콜라이더는 그대로 내려 메운다.
       const extendDown = LOBBY_BLOCKER_EXTEND_DOWN[mesh.name] ?? 0
-      const blocker = makeLobbyBlocker(mesh, extendDown)
+      const blocker = makeInteriorBlocker(mesh, extendDown)
       if (blocker) blockers.push(blocker)
       parts.push({ mesh, kind: blocker ? 'blocker' : 'none', extendDown })
     })
 
     stepCenters.sort((a, b) => a - b)
 
-    return { model, walkables, blockers, triggers, parts, stepCenters }
+    // 둘 다 재지 못했으면 세울 자리를 모르는 것이라 가림 면을 두지 않는다.
+    const passage: LobbyPassageOpening | null =
+      opening.measured === 2
+        ? {
+            x: (opening.minX + opening.maxX) / 2,
+            y: (opening.floorY + opening.topY) / 2,
+            z: opening.mouthZ,
+            width: opening.maxX - opening.minX,
+            height: opening.topY - opening.floorY,
+          }
+        : null
+
+    return { model, walkables, blockers, triggers, parts, stepCenters, corridor, passage }
   }, [scene, artworks, pageTextures])
 
   // 그림자를 **한 번만 굽고 얼린다.** 방은 정지해 있어 다시 그릴 이유가 없고,
@@ -331,7 +328,7 @@ export function LobbyModel() {
   })
 
   // 지정한 재질에 **자기 환경맵**을 물린다. 그러면 씬 환경광 세기(`LOBBY_ENV`)를 타지 않으면서
-  // 반사 계산은 살아 있어 광택이 유지된다. 환경맵은 `LobbyEnvironment`가 씬에 걸어 둔 것을 쓰므로,
+  // 반사 계산은 살아 있어 광택이 유지된다. 환경맵은 `InteriorEnvironment`가 씬에 걸어 둔 것을 쓰므로,
   // 그것이 준비된 뒤(첫 프레임)에 한 번만 건다.
   const ownEnvDone = useRef(false)
   useFrame(() => {
@@ -339,36 +336,26 @@ export function LobbyModel() {
     const env = sceneRoot.environment
     if (!env) return
     ownEnvDone.current = true
-    model.traverse((object) => {
-      const mesh = object as Mesh
-      if (!mesh.isMesh) return
-      const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material
-      const standard = material as MeshStandardMaterial
-      if (!standard?.isMeshStandardMaterial) return
-      if (!LOBBY_OWN_ENV.materials.includes(standard.name)) return
-      standard.envMap = env
-      standard.envMapIntensity = LOBBY_OWN_ENV.intensity
-      standard.needsUpdate = true
-    })
+    applyInteriorOwnEnv(model, env, LOBBY_OWN_ENV.materials, LOBBY_OWN_ENV.intensity)
   })
 
   // 판정에 쓸 것을 올린다. 떠날 때 비우지 않으면 다음에 들어올 때 낡은 메시를 붙든다.
   useEffect(() => {
-    setLobbyCollision(walkables, blockers)
-    setLobbyStepCenters(stepCenters)
-    return () => clearLobbyCollision()
+    setInteriorCollision(walkables, blockers)
+    setInteriorStepCenters(stepCenters)
+    return () => clearInteriorCollision()
   }, [walkables, blockers, stepCenters])
 
   useEffect(() => {
-    setTriggers(triggers)
-    return () => clearTriggers()
-  }, [triggers, setTriggers, clearTriggers])
+    setGeometry(triggers, corridor, passage)
+    return () => clearGeometry()
+  }, [triggers, corridor, passage, setGeometry, clearGeometry])
 
   return (
     <>
       <primitive object={model} />
       {/* 콜라이더를 눈으로 보는 표시. dev 게이트를 마운트 자리에 둬 프로덕션 번들에서 빠진다. */}
-      {import.meta.env.DEV && <LobbyColliderView parts={parts} />}
+      {import.meta.env.DEV && <InteriorColliderView parts={parts} show={showColliders} />}
     </>
   )
 }

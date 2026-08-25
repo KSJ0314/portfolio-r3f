@@ -1,4 +1,6 @@
 import { DRACO_DECODER_PATH } from '../../../../lib/draco'
+import { INTERIOR_MOVE_SPEED, type InteriorFrontTaper } from '../interior'
+import { GALLERY_ROUTE } from '../ProjectsGallery/ProjectsGallery.constants'
 import { LOBBY_BOOK_TRIGGER } from './LobbyBook/LobbyBook.constants'
 
 /** 로비 라우트. 맵(`/`)과 별개인 페이지다. */
@@ -20,10 +22,6 @@ export const LOBBY_ARTWORK: Record<string, string> = {
   M_Artwork_Left: '/images/lobby/left.jpg',
   M_Artwork_Right: '/images/lobby/right.jpg',
 }
-
-/** 블렌더에서 붙인 이름 접두. 콜라이더·트리거는 화면에 그리지 않고 판정에만 쓴다. */
-export const LOBBY_COLLIDER_PREFIX = 'Collider_'
-export const LOBBY_TRIGGER_PREFIX = 'Trigger_'
 
 /**
  * 밟고 다니는 콜라이더. 나머지 콜라이더는 막는 것으로 다룬다.
@@ -58,6 +56,20 @@ export const LOBBY_BLOCKER_EXTEND_DOWN: Record<string, number> = {
   // 난간 꼭대기(y 3.05)에서 바닥 아래까지 닿는 길이.
   Collider_Rail_L: 3.4,
   Collider_Rail_R: 3.4,
+}
+
+/**
+ * 앞(카메라 쪽)을 뾰족하게 깎을 것.
+ *
+ * 연단은 통로로 가는 길 한가운데에 서 있는데 위에서 본 모양이 사각형이라, 정면으로 만나면
+ * 밀어내기가 좌우 어느 쪽으로도 확실히 미끄러뜨리지 못한다. 옆면 중앙에서 앞쪽 한 점으로
+ * 모으면 닿는 순간 옆으로 빠진다.
+ *
+ * 꼭짓점은 가운데에서 조금 오른쪽이다. 로비 시작 자리가 연단과 x가 같아, 대칭이면 들어서자마자
+ * 정면으로 마주 서서 어느 쪽으로도 비켜나지 못한다.
+ */
+export const LOBBY_BLOCKER_TAPER_FRONT: Record<string, InteriorFrontTaper> = {
+  [LOBBY_BOOK_TRIGGER]: { depth: 0.5, tip: 0.15 },
 }
 
 /**
@@ -99,31 +111,69 @@ export const LOBBY_START: readonly [number, number] = [0, -1.2]
  */
 export const LOBBY_SOUTH_LIMIT = LOBBY_START[1]
 
-/** 걸음 속도(유닛/초). 방이 좁아 맵(4)보다 느리다. */
-export const LOBBY_MOVE_SPEED = 2.2
+/** 북쪽 통로 트리거. 이름을 여기 두어 쓰는 쪽이 문자열을 박지 않게 한다. */
+export const LOBBY_PASSAGE_TRIGGER = 'Trigger_Passage'
 
 /**
- * 한 걸음에 오를 수 있는 높이. 바닥을 찾는 레이가 지금 발밑에서 이만큼 위에서 시작한다.
+ * 전시 공간에서 돌아왔을 때 서는 자리(월드 x, z). **가림 면 앞**이라야 캐릭터가 보인다.
  *
- * **하늘에서 쏘면 안 된다** — 통로가 2층 바로 밑이라, 통로를 걸을 때 2층 바닥을 먼저 맞는다.
- * 경사면이 한 걸음에 오르는 높이보다 넉넉하고 층간 높이(1.7)보다는 작아야 한다.
+ * z는 **모델 좌표에 깊이 배율을 곱해** 둔다. 방을 늘리면 통로도 함께 멀어지므로 월드 값으로
+ * 박아 두면 어긋난다.
  */
-export const LOBBY_STEP_UP = 0.6
-
-/** 바닥을 찾는 레이가 훑는 길이. 방 높이보다 넉넉하면 된다. */
-export const LOBBY_FLOOR_RAY_LENGTH = 20
+export const LOBBY_PASSAGE_STAND: readonly [number, number] = [0, -3.6 * LOBBY_MODEL_DEPTH_SCALE]
 
 /**
- * 막는 상자 판정에서 빼는 발밑 몫(캐릭터 높이 대비 비율).
- * 바닥 슬래브처럼 밟고 선 면과 윗면이 같은 상자가 발에 걸려 옆으로 미는 것을 막는다.
+ * 통로로 걸어 들어가 서는 자리(월드 x, z). 가림 면 뒤라 여기 서면 캐릭터가 보이지 않는다.
+ *
+ * 더 깊이 들어갈 수는 없다 — 통로 트리거가 막는 것이기도 해서(입구를 뚫고 지나가지 않게 한다)
+ * 그 앞에서 멎는다. 가림 면은 캐릭터가 이 자리에서 완전히 뒤에 놓이도록 입구 쪽에 세운다.
  */
-export const LOBBY_BLOCKER_FOOT_RATIO = 0.3
+export const LOBBY_PASSAGE_ENTER: readonly [number, number] = [0, -3.98 * LOBBY_MODEL_DEPTH_SCALE]
 
-/** 캐릭터 반폭. 막는 상자에서 이만큼 떨어져 선다. */
-export const LOBBY_CHARACTER_RADIUS = 0.25
+/** 통로로 걸어 들어가는 걸음 속도. 들어가는 구간은 평소보다 빠르게 지난다. */
+export const LOBBY_PASSAGE_WALK_SPEED = INTERIOR_MOVE_SPEED * 1.5
 
-/** 캐릭터 박스 크기 — 맵의 임시 캐릭터와 같은 비율로 두되 실내 축척에 맞춘다. */
-export const LOBBY_CHARACTER_SIZE: readonly [number, number, number] = [0.4, 0.55, 0.4]
+/**
+ * 통로로 넘어갈 때 화면이 조여드는 시간(초).
+ * 카메라가 따라 들어가기 시작하는 깊이에서 통로 안까지 걷는 시간에 맞춘다.
+ */
+export const LOBBY_PASSAGE_IRIS_SECONDS = 1.8
+
+/**
+ * 통로 입구에서 가림 면을 안쪽으로 들이는 거리.
+ * 입구에 딱 맞춰 세워야 걸어 들어간 캐릭터가 그 뒤로 완전히 들어간다.
+ */
+export const LOBBY_PASSAGE_COVER_INSET = 0.05
+
+/** 통로 입구를 재는 콜라이더. 바닥에서 좌우 폭과 뚫린 자리를, 천장에서 높이를 얻는다. */
+export const LOBBY_PASSAGE_FLOOR = 'Collider_Floor_Passage'
+export const LOBBY_PASSAGE_CEILING = 'Collider_Passage_Ceiling'
+
+/**
+ * 눌러서 다른 장면으로 가는 트리거 — 이름 → 갈 경로.
+ *
+ * 책처럼 그 자리에서 보는 트리거와 성격이 다르다. 여기 있으면 카메라를 돌리는 대신
+ * 캐릭터가 그 앞으로 걸어가고 장면이 갈린다. 목록으로 두어 "볼 자리가 없으면 이동"처럼
+ * 암묵적으로 갈리지 않게 한다.
+ */
+export const LOBBY_TRAVEL_TRIGGERS: Record<string, string> = {
+  [LOBBY_PASSAGE_TRIGGER]: GALLERY_ROUTE,
+}
+
+/**
+ * 통로로 걸어갈 수 있다고 보는 발밑 높이의 상한.
+ *
+ * 2층(바닥 y 2.0)이나 계단 위에서 누르면 캐릭터가 난간을 헤집으며 돌아간다.
+ * 층을 가르기만 하면 되므로 1층 바닥과 2층 바닥 사이 아무 값이면 된다.
+ */
+export const LOBBY_GROUND_LEVEL_MAX_Y = 0.5
+
+/**
+ * 계단 난간. 통로로 곧장 갈 수 있는 좌우 폭을 이 둘 **안쪽 면**에서 잰다.
+ * 왼쪽은 오른쪽 끝을, 오른쪽은 왼쪽 끝을 본다.
+ */
+export const LOBBY_RAIL_LEFT = 'Collider_Rail_L'
+export const LOBBY_RAIL_RIGHT = 'Collider_Rail_R'
 
 /**
  * 실내 팔로우 오프셋(카메라 − 캐릭터).

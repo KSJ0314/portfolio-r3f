@@ -1,0 +1,1 @@
+export { InteriorCharacter } from './InteriorCharacter'

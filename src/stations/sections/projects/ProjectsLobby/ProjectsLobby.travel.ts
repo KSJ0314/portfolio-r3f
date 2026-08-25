@@ -1,5 +1,7 @@
 import { Vector3 } from 'three'
 import { useCameraStore } from '../../../../state/useCameraStore'
+import { useInteriorStore } from '../../../../state/useInteriorStore'
+import { useLobbyGeometryStore } from '../../../../state/useLobbyGeometryStore'
 import { useLobbyTriggerStore } from '../../../../state/useLobbyTriggerStore'
 import { useProjectsSequenceStore } from '../../../../state/useProjectsSequenceStore'
 import { useSceneTransitionStore } from '../../../../state/useSceneTransitionStore'
@@ -9,7 +11,14 @@ import {
   PROJECTS_ID,
 } from '../ProjectsBuilding/ProjectsBuilding.constants'
 import { projectsBuildingStand } from '../ProjectsBuilding/ProjectsBuilding.distance'
-import { LOBBY_ROUTE } from './ProjectsLobby.constants'
+import {
+  LOBBY_GROUND_LEVEL_MAX_Y,
+  LOBBY_PASSAGE_ENTER,
+  LOBBY_PASSAGE_STAND,
+  LOBBY_PASSAGE_WALK_SPEED,
+  LOBBY_ROUTE,
+  LOBBY_START,
+} from './ProjectsLobby.constants'
 
 /**
  * 맵과 로비를 오가는 일.
@@ -19,6 +28,26 @@ import { LOBBY_ROUTE } from './ProjectsLobby.constants'
  */
 
 const _point = new Vector3()
+
+/**
+ * 다음에 로비에 들어설 자리. 전시 공간에서 돌아오면 입구가 아니라 **통로 앞**이다.
+ *
+ * 로비가 언마운트되면 잰 값도 함께 사라져, 돌아온 쪽이 통로 자리를 물어볼 데가 없다.
+ * 떠나는 쪽이 남겨 두고 들어서는 쪽이 한 번 쓰고 비운다.
+ */
+let nextEntry: readonly [number, number] | null = null
+
+/** 전시 공간이 로비로 나올 때 부른다 — 통로 앞에서 시작하도록 자리를 남긴다. */
+export function enterLobbyFromGallery(): void {
+  nextEntry = LOBBY_PASSAGE_STAND
+}
+
+/** 로비가 들어설 자리를 가져간다. 남겨진 것이 없으면 건물 문 안쪽(입구)이다. */
+export function takeLobbyEntry(): readonly [number, number] {
+  const entry = nextEntry ?? LOBBY_START
+  nextEntry = null
+  return entry
+}
 
 /**
  * 맵에서 볼 화면을 **건물 밖 문 앞에 선 상태**로 맞춘다.
@@ -54,6 +83,40 @@ export function leaveLobby(): void {
   if (useSceneTransitionStore.getState().phase !== 'idle') return
   standOutsideDoor()
   useSceneTransitionStore.getState().close('/')
+}
+
+/**
+ * 통로로 걸어갈 수 있는 자리에 서 있는지.
+ *
+ * **1층에서 계단 난간 사이에 있을 때만** 받는다. 2층이나 계단 위에서 누르면 캐릭터가 난간을
+ * 헤집으며 돌아가고, 그 길은 보여 줄 만한 그림이 아니다.
+ * 난간 안쪽 폭은 모델에서 잰 값이라 아직 재지 않았으면(방이 뜨기 전) 어디에 서 있든 아니다.
+ */
+export function canWalkToPassage(): boolean {
+  const { position, walking } = useInteriorStore.getState()
+  if (walking) return false
+  if (position.y > LOBBY_GROUND_LEVEL_MAX_Y) return false
+  const { minX, maxX } = useLobbyGeometryStore.getState().corridor
+  return position.x >= minX && position.x <= maxX
+}
+
+/**
+ * 통로 안으로 걸어 들어가게 한다. 도착 뒤에 무엇을 할지는 기다리는 쪽(`LobbyPassage`)이 정한다.
+ * 들어가는 구간이라 평소보다 빠른 걸음이다.
+ */
+export function walkIntoPassage(): void {
+  useInteriorStore
+    .getState()
+    .walkTo(LOBBY_PASSAGE_ENTER[0], LOBBY_PASSAGE_ENTER[1], LOBBY_PASSAGE_WALK_SPEED)
+}
+
+/**
+ * 지금 로비에서 이동 입력을 받지 않을 사정이 있는지.
+ * 트리거를 보고 있으면 카메라가 캐릭터를 떠나 있어 조준할 화면이 아니다.
+ * (화면이 덮여 있는 동안 받지 않는 것은 실내 공통이라 여기서 보지 않는다.)
+ */
+export function isLobbyMovementBlocked(): boolean {
+  return useLobbyTriggerStore.getState().activeId !== null
 }
 
 /**
