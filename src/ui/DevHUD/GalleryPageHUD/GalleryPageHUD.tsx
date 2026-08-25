@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { button, folder, useControls } from 'leva'
 import { useGalleryPageStore } from '../../../state/useGalleryPageStore'
+import { GALLERY_PAGER } from '../../../stations/sections/projects/ProjectsGallery/GalleryPages/GalleryPager'
 import {
   GALLERY_CAMERA_ANCHOR,
   GALLERY_CAMERA_FOV,
@@ -13,6 +14,7 @@ const A = GALLERY_CAMERA_ANCHOR
 const O = GALLERY_CAMERA_OFFSET
 const F = GALLERY_CAMERA_FOV
 const S = GALLERY_CAMERA_SHIFT
+const P = GALLERY_PAGER
 
 /** 툴팁 문구 — 설명 뒤에 기본값을 붙인다. */
 function hint(description: string, value: number | string) {
@@ -28,6 +30,7 @@ function hint(description: string, value: number | string) {
  */
 export function GalleryPageHUD() {
   const setCamera = useGalleryPageStore((s) => s.setCamera)
+  const setPager = useGalleryPageStore((s) => s.setPager)
   const setShowColliders = useGalleryPageStore((s) => s.setShowColliders)
 
   // 되돌리기 버튼이 패널의 값 자체를 되돌려야 하므로 함수 형태로 정의해 set을 받는다.
@@ -106,6 +109,54 @@ export function GalleryPageHUD() {
       },
       { collapsed: true },
     ),
+    '페이지 넘김': folder(
+      {
+        dotRadius: {
+          value: P.dotRadius,
+          min: 0.001,
+          max: 0.02,
+          step: 0.0005,
+          label: '점 크기',
+          hint: hint('점 반지름. 액자 가로 1을 기준으로 한 비율이다.', P.dotRadius),
+        },
+        dotGap: {
+          value: P.dotGap,
+          min: 0.004,
+          max: 0.06,
+          step: 0.001,
+          label: '점 간격',
+          hint: hint(
+            '점 중심에서 다음 점 중심까지. 누르는 판은 이 간격의 절반을 넘지 않는다.',
+            P.dotGap,
+          ),
+        },
+        dotBottom: {
+          value: P.dotBottom,
+          min: 0,
+          max: 0.1,
+          step: 0.002,
+          label: '점 아래 여백',
+          hint: hint('점을 페이지 아래 끝에서 올리는 거리.', P.dotBottom),
+        },
+        arrowSize: {
+          value: P.arrowSize,
+          min: 0.005,
+          max: 0.08,
+          step: 0.002,
+          label: '꺾쇠 크기',
+          hint: hint('꺾쇠 전체 세로.', P.arrowSize),
+        },
+        arrowInset: {
+          value: P.arrowInset,
+          min: 0,
+          max: 0.1,
+          step: 0.002,
+          label: '꺾쇠 좌우 여백',
+          hint: hint('꺾쇠를 페이지 좌우 끝에서 들이는 거리.', P.arrowInset),
+        },
+      },
+      { collapsed: true },
+    ),
     '판정': folder(
       {
         showColliders: {
@@ -130,6 +181,7 @@ export function GalleryPageHUD() {
             offset: [camera.x, camera.y, camera.z],
             fov: camera.fov,
             shift: { x: camera.shiftX, y: camera.shiftY },
+            pager: useGalleryPageStore.getState().pager,
           },
           null,
           2,
@@ -147,6 +199,11 @@ export function GalleryPageHUD() {
           cameraFov: F,
           shiftX: S.x,
           shiftY: S.y,
+          dotRadius: P.dotRadius,
+          dotGap: P.dotGap,
+          dotBottom: P.dotBottom,
+          arrowSize: P.arrowSize,
+          arrowInset: P.arrowInset,
         }),
       ),
     },
@@ -165,6 +222,16 @@ export function GalleryPageHUD() {
       shiftY: values.shiftY,
     })
   }, [values, setCamera])
+
+  useEffect(() => {
+    setPager({
+      dotRadius: values.dotRadius,
+      dotGap: values.dotGap,
+      dotBottom: values.dotBottom,
+      arrowSize: values.arrowSize,
+      arrowInset: values.arrowInset,
+    })
+  }, [values, setPager])
 
   useEffect(() => {
     setShowColliders(values.showColliders)

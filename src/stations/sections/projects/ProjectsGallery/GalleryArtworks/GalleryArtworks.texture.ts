@@ -1,9 +1,9 @@
 import { Texture, TextureLoader } from 'three'
 import { GALLERY_ARTWORK_DIR, GALLERY_ARTWORK_FILE } from './GalleryArtworks.constants'
 
-/** 프로젝트 이름으로 사진 경로를 만든다. 한글 폴더가 있으므로 이름을 인코딩한다. */
-export function artworkUrl(title: string): string {
-  return `${GALLERY_ARTWORK_DIR}/${encodeURIComponent(title)}/${GALLERY_ARTWORK_FILE}`
+/** 프로젝트 번호로 사진 경로를 만든다. 폴더 이름이 숫자라 인코딩할 것이 없다. */
+export function artworkUrl(key: number): string {
+  return `${GALLERY_ARTWORK_DIR}/${key}/${GALLERY_ARTWORK_FILE}`
 }
 
 /** 사진이 실제로 붙었는지. 빈 텍스처는 이미지가 없다. */
