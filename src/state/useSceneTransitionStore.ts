@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { IRIS_CLOSE_SECONDS } from '../ui/SceneTransition/SceneTransition.constants'
 
 /**
  * 장면 전환 단계.
@@ -24,8 +25,16 @@ interface SceneTransitionState {
    * `useCameraStore.position`과 같은 방식이다. 다른 곳으로 모아야 하는 씬이 매 프레임 채운다.
    */
   focus: { x: number; y: number }
-  /** 덮기 시작한다. 이미 전환 중이면 무시한다 — 겹쳐 부르면 가던 곳이 바뀐다. */
-  close: (to: string) => void
+  /**
+   * 지금 전환의 조여드는 시간(초). 부르는 쪽이 정하지 않으면 기본값이다.
+   * 걸어 들어가는 걸음과 함께 도는 구간이라 장면마다 다르다.
+   */
+  closeSeconds: number
+  /**
+   * 덮기 시작한다. 이미 전환 중이면 무시한다 — 겹쳐 부르면 가던 곳이 바뀐다.
+   * 조여드는 시간을 주면 이번 전환에만 쓰인다.
+   */
+  close: (to: string, seconds?: number) => void
   /** 다 덮였음을 알린다(덮개가 부른다). */
   markCovered: () => void
   /** 도착한 페이지가 준비됐음을 알린다. */
@@ -48,12 +57,13 @@ export const useSceneTransitionStore = create<SceneTransitionState>((set, get) =
   to: null,
   arrived: false,
   focus: { x: 0.5, y: 0.5 },
-  close: (to) => {
+  closeSeconds: IRIS_CLOSE_SECONDS,
+  close: (to, seconds) => {
     if (get().phase !== 'idle') return
     // 중심을 화면 한가운데로 되돌린다. 다른 곳으로 모아야 하는 씬은 그동안 매 프레임 다시 채운다.
     get().focus.x = 0.5
     get().focus.y = 0.5
-    set({ phase: 'closing', to, arrived: false })
+    set({ phase: 'closing', to, arrived: false, closeSeconds: seconds ?? IRIS_CLOSE_SECONDS })
   },
   markCovered: () => {
     if (get().phase === 'closing') set({ phase: 'covered' })

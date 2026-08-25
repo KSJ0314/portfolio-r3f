@@ -72,6 +72,8 @@
 src/stations/sections/projects/
   ProjectsBuilding/           # 구역 = 건물. 비활성 모습·활성 연출·문·문간 빛
   ProjectsLobby/              # 건물 안(/projects). 실내 씬·이동·판정·카메라·트리거·책
+  ProjectsGallery/            # 로비 통로 안쪽(/projects/gallery). 전시 칸을 Firestore 개수대로 조립
+  interior/                   # 로비·전시 공간이 함께 쓰는 판정·캐릭터·입력·환경광·콜라이더 보기
   demos/
     registry.ts               # demoKey -> 데모 컴포넌트 매핑
     <demoKey>/

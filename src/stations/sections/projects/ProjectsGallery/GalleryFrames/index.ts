@@ -1,0 +1,1 @@
+export { GalleryFrames } from './GalleryFrames'
