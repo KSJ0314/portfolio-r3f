@@ -38,7 +38,8 @@ const _up = new Vector3()
  * 상수로 둘 수 없다 — 지금 화각·거리에서 화면이 덮는 폭을 재 그만큼 안쪽까지만 따라간다.
  * 방이 화면보다 좁으면 가운데에 세워 둔다.
  *
- * **액자를 누르면 그 액자를 확대해 본다.** 진행도 하나를 굴려 평소 자세와 확대 자세를 섞으므로,
+ * **액자를 누르면 그 액자를 확대해 본다.** 다 돌면 페이지를 볼 수 있다고 알린다(`setZoomed`).
+ * 진행도 하나를 굴려 평소 자세와 확대 자세를 섞으므로,
  * 자리와 바라보는 점이 함께 움직여 도는 도중에도 구도가 어긋나지 않는다(로비가 책을 볼 때와
  * 같은 방식이다). 확대 거리는 상수가 아니라 **액자가 화면에 담기는 거리**를 그때그때 구한다.
  *
@@ -68,6 +69,11 @@ export function GalleryCameraRig() {
       value: artwork ? 1 : 0,
       duration: GALLERY_FOCUS_SECONDS,
       ease: 'power2.inOut',
+      // 다 확대돼야 페이지 내용이 뜬다. 도는 도중에 바뀌면 멀리서 그림만 갈리는 것으로 보인다.
+      // 끄는 것은 닫는 쪽이 곧바로 하므로 여기서는 켜기만 한다.
+      onComplete: () => {
+        if (artwork) useGalleryFocusStore.getState().setZoomed(true)
+      },
     })
     return () => {
       tween.kill()

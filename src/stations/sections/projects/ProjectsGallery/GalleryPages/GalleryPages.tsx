@@ -17,11 +17,17 @@ import type { GalleryPagesProps } from './GalleryPages.types'
  * 큰지 알 필요 없이 비율로만 그린다. 액자가 16:9라 그 비율이 그대로 페이지 비율이 된다.
  *
  * 페이지 목록은 프로젝트 번호로 찾는다(`contents/`). 등록 전이면 자리표시 페이지가 나온다.
+ *
+ * **마운트는 확대가 시작될 때 하고, 보이는 것은 확대가 끝난 뒤다.** 판이 액자 사진을 덮으므로
+ * 도는 도중에 보이면 멀리서 그림만 갈리는 것으로 보인다. 그렇다고 다 확대된 뒤에 마운트하면
+ * 그때부터 글씨를 배치하느라 바탕만 있는 판이 먼저 뜬다. 감춰 둔 채로 확대가 도는 동안 준비를
+ * 끝내 두면 켜지는 순간 한 번에 나온다. 닫을 때는 판이 먼저 사라지고 그다음 카메라가 물러난다.
  */
 export function GalleryPages({ projects }: GalleryPagesProps) {
   const artworks = useGalleryGeometryStore((s) => s.artworks)
   const focusedBay = useGalleryFocusStore((s) => s.focusedBay)
   const page = useGalleryFocusStore((s) => s.page)
+  const zoomed = useGalleryFocusStore((s) => s.zoomed)
   const setPage = useGalleryFocusStore((s) => s.setPage)
 
   if (focusedBay === null) return null
@@ -41,6 +47,7 @@ export function GalleryPages({ projects }: GalleryPagesProps) {
     <group
       position={[spot.x, spot.y, spot.z + GALLERY_PAGE_LIFT]}
       scale={[spot.width, spot.width, 1]}
+      visible={zoomed}
     >
       <mesh>
         <planeGeometry args={[1, height]} />
