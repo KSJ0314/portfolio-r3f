@@ -32,8 +32,8 @@ export function GalleryPager({ page, count, height, onPage }: GalleryPagerProps)
 
   const dotY = -height / 2 + pager.dotBottom
   const arrowX = 0.5 - pager.arrowInset
-  // 누르는 판이 이웃을 침범하면 옆 판에서 벗어날 때 커서가 지워진다. 얹힌 판 모두가 이벤트를
-  // 받는데, 아직 얹혀 있는 쪽은 이미 얹힌 상태라 커서를 다시 세우지 않기 때문이다.
+  // 누르는 판이 이웃을 침범하지 않게 자른다. 얹힌 판 모두가 이벤트를 받으므로, 겹친 자리를
+  // 누르면 두 점이 함께 반응해 엉뚱한 장으로 넘어간다.
   const dotHitRadius = Math.min(pager.dotRadius * GALLERY_PAGER_HIT_SCALE, pager.dotGap / 2)
 
   return (
