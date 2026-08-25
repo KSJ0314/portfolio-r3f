@@ -147,6 +147,11 @@ export function GalleryModel({ bays }: GalleryModelProps) {
   // 지정한 재질에 **자기 환경맵**을 물린다. 그러면 씬 환경광 세기를 타지 않으면서 반사 계산은
   // 살아 있어 광택이 유지된다. 환경맵은 `InteriorEnvironment`가 걸어 둔 것이라 그 뒤에 건다.
   const ownEnvDone = useRef(false)
+  // 칸 수가 바뀌어 방을 다시 조립하면 재질도 새것이라 자기 환경맵을 다시 물려야 한다.
+  useEffect(() => {
+    ownEnvDone.current = false
+  }, [model])
+
   useFrame(() => {
     if (ownEnvDone.current) return
     const env = sceneRoot.environment
