@@ -10,8 +10,8 @@ export const INTRO_TEXT = {
   /** 줄마다 하나씩 점을 찍어 쌓는다. */
   achievements: [
     'React Native · Expo 기반 앱 프론트엔드 전담',
-    'React Native 앱에 Unity를 얹어 3D 캐릭터 구동',
     'Atomic 디자인 패턴을 적용한 프론트엔드 컴포넌트 구조 설계',
+    'React Navigation 기반 화면 라우팅과 Zustand 상태 관리 설계',
     'Figma를 활용한 화면 설계·디자인 시스템 제작',
   ],
 }

@@ -1,6 +1,7 @@
 import { PROJECT_0_PAGES } from './0'
 import { PROJECT_1_PAGES } from './1'
 import { PROJECT_2_PAGES } from './2'
+import { PROJECT_3_PAGES } from './3'
 import { PLACEHOLDER_PAGES } from './PlaceholderPages'
 import type { ProjectPage } from './contents.types'
 
@@ -15,6 +16,7 @@ const PROJECT_PAGES: Record<number, readonly ProjectPage[]> = {
   0: PROJECT_0_PAGES,
   1: PROJECT_1_PAGES,
   2: PROJECT_2_PAGES,
+  3: PROJECT_3_PAGES,
 }
 
 /**
