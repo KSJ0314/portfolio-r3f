@@ -1,3 +1,6 @@
+import { PROJECT_0_PAGES } from './0'
+import { PROJECT_1_PAGES } from './1'
+import { PROJECT_2_PAGES } from './2'
 import { PLACEHOLDER_PAGES } from './PlaceholderPages'
 import type { ProjectPage } from './contents.types'
 
@@ -8,7 +11,11 @@ import type { ProjectPage } from './contents.types'
  * 페이지 컴포넌트를 둔다. 이름이 아니라 번호로 가리키는 것은 이름이 바뀌어도 흔들리지 않게
  * 하기 위함이고, 액자 사진을 찾는 폴더(`/images/projects/<key>/`)와도 같은 값이다.
  */
-const PROJECT_PAGES: Record<number, readonly ProjectPage[]> = {}
+const PROJECT_PAGES: Record<number, readonly ProjectPage[]> = {
+  0: PROJECT_0_PAGES,
+  1: PROJECT_1_PAGES,
+  2: PROJECT_2_PAGES,
+}
 
 /**
  * 그 프로젝트의 페이지 목록.

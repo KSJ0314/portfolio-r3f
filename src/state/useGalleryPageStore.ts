@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { INTRO_PAGE_LAYOUT } from '../stations/sections/projects/contents/shared/IntroPage'
 import { GALLERY_PAGER } from '../stations/sections/projects/ProjectsGallery/GalleryPages/GalleryPager'
 import {
   GALLERY_CAMERA_ANCHOR,
@@ -38,11 +39,16 @@ export interface GalleryPagerPlacement {
   arrowInset: number
 }
 
+/** 프로젝트 첫 장의 크기·간격(가로 1 기준 정규화). 자리는 값이 아니라 잰 글에서 나온다. */
+export type IntroPagePlacement = typeof INTRO_PAGE_LAYOUT
+
 interface GalleryPageState {
   camera: GalleryCameraPlacement
   setCamera: (camera: GalleryCameraPlacement) => void
   pager: GalleryPagerPlacement
   setPager: (pager: GalleryPagerPlacement) => void
+  introPage: IntroPagePlacement
+  setIntroPage: (introPage: IntroPagePlacement) => void
   /** 판정에 쓰는 콜라이더를 화면에 그릴지. 눈으로 맞춰 보기 위한 것이라 기본은 꺼짐이다. */
   showColliders: boolean
   setShowColliders: (show: boolean) => void
@@ -67,6 +73,8 @@ export const useGalleryPageStore = create<GalleryPageState>((set) => ({
   setCamera: (camera) => set({ camera }),
   pager: { ...GALLERY_PAGER },
   setPager: (pager) => set({ pager }),
+  introPage: { ...INTRO_PAGE_LAYOUT },
+  setIntroPage: (introPage) => set({ introPage }),
   showColliders: false,
   setShowColliders: (showColliders) => set({ showColliders }),
 }))

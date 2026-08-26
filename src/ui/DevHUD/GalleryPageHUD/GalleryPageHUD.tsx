@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { button, folder, useControls } from 'leva'
 import { useGalleryPageStore } from '../../../state/useGalleryPageStore'
+import { INTRO_PAGE_LAYOUT } from '../../../stations/sections/projects/contents/shared/IntroPage'
 import { GALLERY_PAGER } from '../../../stations/sections/projects/ProjectsGallery/GalleryPages/GalleryPager'
 import {
   GALLERY_CAMERA_ANCHOR,
@@ -15,6 +16,7 @@ const O = GALLERY_CAMERA_OFFSET
 const F = GALLERY_CAMERA_FOV
 const S = GALLERY_CAMERA_SHIFT
 const P = GALLERY_PAGER
+const I = INTRO_PAGE_LAYOUT
 
 /** 툴팁 문구 — 설명 뒤에 기본값을 붙인다. */
 function hint(description: string, value: number | string) {
@@ -31,6 +33,7 @@ function hint(description: string, value: number | string) {
 export function GalleryPageHUD() {
   const setCamera = useGalleryPageStore((s) => s.setCamera)
   const setPager = useGalleryPageStore((s) => s.setPager)
+  const setIntroPage = useGalleryPageStore((s) => s.setIntroPage)
   const setShowColliders = useGalleryPageStore((s) => s.setShowColliders)
 
   // 되돌리기 버튼이 패널의 값 자체를 되돌려야 하므로 함수 형태로 정의해 set을 받는다.
@@ -157,6 +160,179 @@ export function GalleryPageHUD() {
       },
       { collapsed: true },
     ),
+    '첫 장': folder(
+      {
+        padX: {
+          value: I.padX,
+          min: 0,
+          max: 0.2,
+          step: 0.002,
+          label: '좌우 여백',
+          hint: hint('판 좌우 끝에서 내용까지. 액자 가로 1을 기준으로 한 비율이다.', I.padX),
+        },
+        padY: {
+          value: I.padY,
+          min: 0,
+          max: 0.2,
+          step: 0.002,
+          label: '상하 여백',
+          hint: hint('판 위아래 끝에서 내용까지.', I.padY),
+        },
+        titleSize: {
+          value: I.titleSize,
+          min: 0.02,
+          max: 0.12,
+          step: 0.002,
+          label: '제목 크기',
+          hint: hint('맨 위 프로젝트 이름.', I.titleSize),
+        },
+        titleGap: {
+          value: I.titleGap,
+          min: 0,
+          max: 0.1,
+          step: 0.002,
+          label: '제목 아래 간격',
+          hint: hint('제목과 한 줄 소개 사이.', I.titleGap),
+        },
+        taglineSize: {
+          value: I.taglineSize,
+          min: 0.008,
+          max: 0.06,
+          step: 0.001,
+          label: '한 줄 소개 크기',
+          hint: hint('제목 아래 한 줄.', I.taglineSize),
+        },
+        taglineGap: {
+          value: I.taglineGap,
+          min: 0,
+          max: 0.12,
+          step: 0.002,
+          label: '한 줄 소개 아래 간격',
+          hint: hint('한 줄 소개와 요약 사이.', I.taglineGap),
+        },
+        summarySize: {
+          value: I.summarySize,
+          min: 0.008,
+          max: 0.04,
+          step: 0.001,
+          label: '요약 크기',
+          hint: hint('요약 본문.', I.summarySize),
+        },
+        summaryLineHeight: {
+          value: I.summaryLineHeight,
+          min: 1,
+          max: 2.6,
+          step: 0.05,
+          label: '요약 줄 간격',
+          hint: hint('글자 크기에 대한 배수.', I.summaryLineHeight),
+        },
+        quoteWidth: {
+          value: I.quoteWidth,
+          min: 0.001,
+          max: 0.02,
+          step: 0.001,
+          label: '인용 막대 폭',
+          hint: hint('요약 왼쪽 세로 막대.', I.quoteWidth),
+        },
+        quoteGap: {
+          value: I.quoteGap,
+          min: 0,
+          max: 0.08,
+          step: 0.002,
+          label: '인용 막대 거리',
+          hint: hint('막대에서 요약 글까지.', I.quoteGap),
+        },
+        summaryGap: {
+          value: I.summaryGap,
+          min: 0,
+          max: 0.15,
+          step: 0.002,
+          label: '요약 아래 간격',
+          hint: hint('요약과 성과 사이.', I.summaryGap),
+        },
+        bulletRadius: {
+          value: I.bulletRadius,
+          min: 0.001,
+          max: 0.015,
+          step: 0.0005,
+          label: '성과 점 크기',
+          hint: hint('성과 줄 앞에 찍는 점의 반지름.', I.bulletRadius),
+        },
+        bulletGap: {
+          value: I.bulletGap,
+          min: 0,
+          max: 0.06,
+          step: 0.002,
+          label: '성과 점 거리',
+          hint: hint('점에서 글까지.', I.bulletGap),
+        },
+        trophySize: {
+          value: I.trophySize,
+          min: 0.008,
+          max: 0.06,
+          step: 0.001,
+          label: '트로피 크기',
+          hint: hint('성과 첫 줄 앞 아이콘.', I.trophySize),
+        },
+        trophyGap: {
+          value: I.trophyGap,
+          min: 0,
+          max: 0.06,
+          step: 0.002,
+          label: '트로피 거리',
+          hint: hint('트로피에서 첫 줄 글까지.', I.trophyGap),
+        },
+        achievementSize: {
+          value: I.achievementSize,
+          min: 0.008,
+          max: 0.04,
+          step: 0.001,
+          label: '성과 목록 크기',
+          hint: hint('요약 아래로 쌓이는 성과들.', I.achievementSize),
+        },
+        achievementGap: {
+          value: I.achievementGap,
+          min: 0,
+          max: 0.06,
+          step: 0.001,
+          label: '성과 목록 줄 간격',
+          hint: hint('성과 목록의 줄 사이.', I.achievementGap),
+        },
+        periodSize: {
+          value: I.periodSize,
+          min: 0.008,
+          max: 0.04,
+          step: 0.001,
+          label: '기간 크기',
+          hint: hint('제목 오른쪽 기간·팀 한 줄.', I.periodSize),
+        },
+        periodGap: {
+          value: I.periodGap,
+          min: 0,
+          max: 0.1,
+          step: 0.002,
+          label: '기간 거리',
+          hint: hint('제목 오른쪽 끝에서 기간까지.', I.periodGap),
+        },
+        iconSize: {
+          value: I.iconSize,
+          min: 0.01,
+          max: 0.09,
+          step: 0.002,
+          label: '링크 아이콘 크기',
+          hint: hint('우상단 GitHub·노션 아이콘.', I.iconSize),
+        },
+        iconGap: {
+          value: I.iconGap,
+          min: 0.01,
+          max: 0.15,
+          step: 0.002,
+          label: '링크 아이콘 간격',
+          hint: hint('아이콘 중심에서 다음 아이콘 중심까지.', I.iconGap),
+        },
+      },
+      { collapsed: true },
+    ),
     '판정': folder(
       {
         showColliders: {
@@ -182,6 +358,7 @@ export function GalleryPageHUD() {
             fov: camera.fov,
             shift: { x: camera.shiftX, y: camera.shiftY },
             pager: useGalleryPageStore.getState().pager,
+            introPage: useGalleryPageStore.getState().introPage,
           },
           null,
           2,
@@ -232,6 +409,32 @@ export function GalleryPageHUD() {
       arrowInset: values.arrowInset,
     })
   }, [values, setPager])
+
+  useEffect(() => {
+    setIntroPage({
+      padX: values.padX,
+      padY: values.padY,
+      titleSize: values.titleSize,
+      titleGap: values.titleGap,
+      taglineSize: values.taglineSize,
+      taglineGap: values.taglineGap,
+      summarySize: values.summarySize,
+      summaryLineHeight: values.summaryLineHeight,
+      quoteWidth: values.quoteWidth,
+      quoteGap: values.quoteGap,
+      summaryGap: values.summaryGap,
+      bulletRadius: values.bulletRadius,
+      bulletGap: values.bulletGap,
+      trophySize: values.trophySize,
+      trophyGap: values.trophyGap,
+      achievementSize: values.achievementSize,
+      achievementGap: values.achievementGap,
+      periodSize: values.periodSize,
+      periodGap: values.periodGap,
+      iconSize: values.iconSize,
+      iconGap: values.iconGap,
+    })
+  }, [values, setIntroPage])
 
   useEffect(() => {
     setShowColliders(values.showColliders)
