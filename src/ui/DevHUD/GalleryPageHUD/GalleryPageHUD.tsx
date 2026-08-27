@@ -381,6 +381,8 @@ export function GalleryPageHUD() {
           dotBottom: P.dotBottom,
           arrowSize: P.arrowSize,
           arrowInset: P.arrowInset,
+          // leva set은 넘긴 키만 되돌린다. 첫 장 값을 빠뜨리면 조절해 둔 값이 그대로 남는다.
+          ...I,
         }),
       ),
     },
