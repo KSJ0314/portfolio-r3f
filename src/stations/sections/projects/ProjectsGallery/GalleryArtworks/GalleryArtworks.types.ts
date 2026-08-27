@@ -11,7 +11,10 @@ export interface GalleryArtworkSpot {
   height: number
 }
 
-/** 칸 순서대로의 프로젝트 이름. 사진을 찾는 폴더 이름이기도 하다. */
+/**
+ * 칸 순서대로의 프로젝트 번호. 사진을 찾는 폴더 이름이기도 하다.
+ * 번호가 없는 칸은 찾을 곳이 없어 사진을 걸지 않는다.
+ */
 export interface GalleryArtworksProps {
-  titles: readonly string[]
+  keys: readonly (number | undefined)[]
 }

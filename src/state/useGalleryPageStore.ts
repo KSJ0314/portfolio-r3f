@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import { INTRO_PAGE_LAYOUT } from '../stations/sections/projects/contents/shared/IntroPage'
+import { GALLERY_PAGER } from '../stations/sections/projects/ProjectsGallery/GalleryPages/GalleryPager'
 import {
   GALLERY_CAMERA_ANCHOR,
   GALLERY_CAMERA_FOV,
@@ -23,9 +25,30 @@ export interface GalleryCameraPlacement {
   shiftY: number
 }
 
+/** 확대한 칸의 페이지 넘김 UI 배치(가로 1 기준 정규화). */
+export interface GalleryPagerPlacement {
+  /** 점 반지름. */
+  dotRadius: number
+  /** 점 사이 간격(중심에서 중심). */
+  dotGap: number
+  /** 점을 아래 끝에서 올리는 거리. */
+  dotBottom: number
+  /** 꺾쇠 한 변. */
+  arrowSize: number
+  /** 꺾쇠를 좌우 끝에서 들이는 거리. */
+  arrowInset: number
+}
+
+/** 프로젝트 첫 장의 크기·간격(가로 1 기준 정규화). 자리는 값이 아니라 잰 글에서 나온다. */
+export type IntroPagePlacement = typeof INTRO_PAGE_LAYOUT
+
 interface GalleryPageState {
   camera: GalleryCameraPlacement
   setCamera: (camera: GalleryCameraPlacement) => void
+  pager: GalleryPagerPlacement
+  setPager: (pager: GalleryPagerPlacement) => void
+  introPage: IntroPagePlacement
+  setIntroPage: (introPage: IntroPagePlacement) => void
   /** 판정에 쓰는 콜라이더를 화면에 그릴지. 눈으로 맞춰 보기 위한 것이라 기본은 꺼짐이다. */
   showColliders: boolean
   setShowColliders: (show: boolean) => void
@@ -48,6 +71,10 @@ export const useGalleryPageStore = create<GalleryPageState>((set) => ({
     shiftY: GALLERY_CAMERA_SHIFT.y,
   },
   setCamera: (camera) => set({ camera }),
+  pager: { ...GALLERY_PAGER },
+  setPager: (pager) => set({ pager }),
+  introPage: { ...INTRO_PAGE_LAYOUT },
+  setIntroPage: (introPage) => set({ introPage }),
   showColliders: false,
   setShowColliders: (showColliders) => set({ showColliders }),
 }))
