@@ -98,8 +98,11 @@ Career의 칸 셋에 자리가 없어 미뤄 뒀고, 어디에 담을지는 이�
 | `endDate` | string ("YYYY-MM") \| null | 종료 |
 | `link` | string | 상세 정보 링크(노션) |
 | `order` | number | 표시 순서 |
+| `key` | number | 프로젝트를 가리키는 번호(0부터). 사진 폴더(`public/images/projects/<key>/`)와 페이지 정의 폴더(`contents/<key>/`) 이름이 이 값이다. 없으면 액자는 회색 판으로 남고 페이지는 자리표시가 나온다 ([DECISIONS 040]) |
 
-Firebase는 다른 프로젝트와도 공유하는 DB라 최소 정보만 둔다. `tech`·`images`·`demoKey` 등 상세 필드는 로컬에 별도 저장하며, 스테이션 상세 구현(Phase 8) 시 확정한다. ([DECISIONS 012])
+Firebase는 다른 프로젝트와도 공유하는 DB라 최소 정보만 둔다. 상세 필드를 로컬에 두기로 한 것([DECISIONS 012])은
+Phase 8에서 **데이터가 아니라 페이지 컴포넌트**로 확정됐다 — 전시 칸에 보이는 글은 컬렉션이 아니라
+`contents/<key>/`에 직접 쓰고, Firestore가 맡는 것은 칸 개수·이름판 이름·로비 책 목록·`key`다. ([DECISIONS 040])
 
 **guestbook**: 필드 설계는 Phase 8(방명록 스테이션 구현)에서 정한다.
 

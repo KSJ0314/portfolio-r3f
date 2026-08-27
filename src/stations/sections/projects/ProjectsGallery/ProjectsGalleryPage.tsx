@@ -13,6 +13,7 @@ import { GalleryCameraRig } from './GalleryCameraRig'
 import { GalleryFrames } from './GalleryFrames'
 import { GalleryModel } from './GalleryModel'
 import { GalleryNameplates, type GalleryProject } from './GalleryNameplates'
+import { GalleryPages } from './GalleryPages'
 import { GalleryTriggers } from './GalleryTriggers'
 import {
   GALLERY_BACKGROUND,
@@ -49,13 +50,14 @@ export function ProjectsGalleryPage() {
   const { data: projects, loading } = useCollection<GalleryProject>('projects')
 
   // 칸을 세우는 순서이자 이름판에 적는 순서다. 로비 책의 목록과 같은 순서로 읽힌다.
-  const titles = useMemo(
-    () =>
-      [...projects]
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-        .map((project) => project.title),
+  const sorted = useMemo(
+    () => [...projects].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     [projects],
   )
+
+  // 이름판은 이름을, 사진은 번호를 본다. 페이지는 문서를 통째로 받는다.
+  const titles = useMemo(() => sorted.map((project) => project.title), [sorted])
+  const keys = useMemo(() => sorted.map((project) => project.key), [sorted])
 
   // 확대해 보는 동안 막을 것들이 보는 판정. 매 프레임 불리므로 구독하지 않고 그때 읽는다.
   const isFocused = useCallback(() => useGalleryFocusStore.getState().focusedBay !== null, [])
@@ -123,8 +125,10 @@ export function ProjectsGalleryPage() {
           <GalleryFrames />
           {/* 액자 사진은 파일을 받는 동안 서스펜드하므로 자기 경계를 갖는다. */}
           <Suspense fallback={null}>
-            <GalleryArtworks titles={titles} />
+            <GalleryArtworks keys={keys} />
           </Suspense>
+          {/* 확대한 칸의 페이지. 액자 사진 위에 판을 세워 덮는다. */}
+          <GalleryPages projects={sorted} />
         </SceneErrorBoundary>
       </Canvas>
       {/* 전시실은 밝은 대리석이라 검정. */}

@@ -20,17 +20,21 @@ interface GalleryArtworkFrame {
  *
  * 자리는 모델에서 잰 것이라(`useGalleryGeometryStore`) 방 배율을 바꿔도 액자를 따라간다.
  * 사진이 없는 칸에는 판을 두지 않아 원래 회색 판이 그대로 남는다.
+ *
+ * 확대해 보는 동안에는 페이지(`GalleryPages`)가 이 사진을 덮는다.
  */
-export function GalleryArtworks({ titles }: GalleryArtworksProps) {
+export function GalleryArtworks({ keys }: GalleryArtworksProps) {
   const spots = useGalleryGeometryStore((s) => s.artworks)
 
-  // 사진은 프로젝트 이름으로 된 폴더에서 찾는다. 이름이 없는 칸은 찾을 곳이 없어 뺀다.
+  // 사진은 프로젝트 번호로 된 폴더에서 찾는다. 번호가 없는 칸은 찾을 곳이 없어 뺀다.
+  // 번호가 0부터라 있는지 없는지는 값의 참·거짓이 아니라 `!= null`로 본다.
   const frames = useMemo(
     () =>
-      spots.flatMap<GalleryArtworkFrame>((spot, index) =>
-        titles[index] ? [{ spot, url: artworkUrl(titles[index]) }] : [],
-      ),
-    [spots, titles],
+      spots.flatMap<GalleryArtworkFrame>((spot, index) => {
+        const key = keys[index]
+        return key == null ? [] : [{ spot, url: artworkUrl(key) }]
+      }),
+    [spots, keys],
   )
 
   // 걸 것이 없으면 불러오는 쪽을 마운트하지 않는다 — 빈 목록으로 로더를 부르지 않기 위해서다.
