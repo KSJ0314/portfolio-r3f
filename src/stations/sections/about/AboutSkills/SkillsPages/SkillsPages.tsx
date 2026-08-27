@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useCollection } from '../../../../../lib/firebase'
 import { useSkillsPageStore } from '../../../../../state/useSkillsPageStore'
+import { LoadFailed } from '../../../../LoadFailed'
 import { useStationGate } from '../../../../useStationGate'
 import { SkillsPager } from '../SkillsPager'
 import { SkillItem } from './SkillItem'
@@ -20,7 +21,7 @@ export function SkillsPages() {
   const list = useSkillsPageStore((s) => s.list)
   const level = useSkillsPageStore((s) => s.level)
   const pager = useSkillsPageStore((s) => s.pager)
-  const { data: skills, loading } = useCollection<SkillDoc>('skills')
+  const { data: skills, loading, error, refetch } = useCollection<SkillDoc>('skills')
   // 목록은 Firestore를 기다린다. 그동안 나가기·페이지 넘김만 먼저 뜨지 않도록 상세 전체를 잡아둔다.
   useStationGate('skills:data', loading)
   const [page, setPage] = useState(0)
@@ -72,32 +73,39 @@ export function SkillsPages() {
       position={[topLeft.x + area.width / 2, SKILLS_CONTENT_Y, topLeft.z + area.height / 2]}
       rotation={[-Math.PI / 2, 0, 0]}
     >
-      <group>
-        {placed.map(({ skill, x, y }) => (
-          <SkillItem
-            key={skill.id}
-            skill={skill}
-            x={x}
-            y={y}
-            width={columnWidth}
-            nameSize={list.nameSize}
-            nameGap={list.nameGap}
-            bodySize={list.bodySize}
-            bodyLineHeight={list.bodyLineHeight}
-            level={level}
-            onHeight={reportHeight}
-          />
-        ))}
-      </group>
+      {/* 읽기가 실패하면 목록도 페이지 넘김도 뜻이 없으므로 그 자리에 한 줄만 둔다. */}
+      {error ? (
+        <LoadFailed size={list.nameSize} onRetry={refetch} />
+      ) : (
+        <>
+          <group>
+            {placed.map(({ skill, x, y }) => (
+              <SkillItem
+                key={skill.id}
+                skill={skill}
+                x={x}
+                y={y}
+                width={columnWidth}
+                nameSize={list.nameSize}
+                nameGap={list.nameGap}
+                bodySize={list.bodySize}
+                bodyLineHeight={list.bodyLineHeight}
+                level={level}
+                onHeight={reportHeight}
+              />
+            ))}
+          </group>
 
-      <SkillsPager
-        page={page}
-        count={SKILL_PAGES.length}
-        onPage={setPage}
-        x={area.width / 2 - pager.right}
-        y={-area.height / 2 + pager.bottom}
-        size={pager.size}
-      />
+          <SkillsPager
+            page={page}
+            count={SKILL_PAGES.length}
+            onPage={setPage}
+            x={area.width / 2 - pager.right}
+            y={-area.height / 2 + pager.bottom}
+            size={pager.size}
+          />
+        </>
+      )}
     </group>
   )
 }
