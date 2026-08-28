@@ -6,7 +6,7 @@ import { useStationGate } from '../../../../useStationGate'
 import { SkillsPager } from '../SkillsPager'
 import { SkillItem } from './SkillItem'
 import { SKILL_PAGES, SKILLS_CONTENT_Y } from './SkillsPages.constants'
-import type { SkillDoc } from './SkillsPages.types'
+import type { SkillDoc, SkillsPagesProps } from './SkillsPages.types'
 
 /**
  * 활성 상태에서 제목 아래를 채우는 기술 목록. 페이지를 넘기면 이 영역만 갈린다(제목·로고는 그대로).
@@ -14,17 +14,21 @@ import type { SkillDoc } from './SkillsPages.types'
  * 쓸 내용이 많아 분류로 페이지를 나누고, 한 페이지는 두 열로 늘어놓는다.
  * 항목 높이는 설명이 몇 줄로 접히는지에 달려 있어 미리 알 수 없으므로, 각 항목이 배치를 끝내고
  * 알려주는 높이로 다음 항목 자리를 잡는다. 높이가 다 모이기 전에는 겹쳐 보이므로 그동안 감춘다.
+ *
+ * 몇 쪽을 그릴지는 스스로 갖되 밖에서 정해 줄 수도 있다 — 목록 보기는 페이지를 넘기지 않고
+ * 쪽마다 한 화면씩 늘어놓는다.
  */
-export function SkillsPages() {
+export function SkillsPages({ page: fixedPage, showPager = true }: SkillsPagesProps = {}) {
   const area = useSkillsPageStore((s) => s.area)
   const topLeft = useSkillsPageStore((s) => s.topLeft)
   const list = useSkillsPageStore((s) => s.list)
   const level = useSkillsPageStore((s) => s.level)
   const pager = useSkillsPageStore((s) => s.pager)
+  const [ownPage, setPage] = useState(0)
+  const page = fixedPage ?? ownPage
   const { data: skills, loading, error, refetch } = useCollection<SkillDoc>('skills')
   // 목록은 Firestore를 기다린다. 그동안 나가기·페이지 넘김만 먼저 뜨지 않도록 상세 전체를 잡아둔다.
-  useStationGate('skills:data', loading)
-  const [page, setPage] = useState(0)
+  useStationGate(`skills:data:${page}`, loading)
   const [heights, setHeights] = useState<Record<string, number>>({})
 
   const reportHeight = useCallback((id: string, height: number) => {
@@ -66,7 +70,7 @@ export function SkillsPages() {
   // 항목 높이가 다 모여야 자리가 잡힌다. 그전에는 겹쳐 보이므로 상세 전체를 마저 잡아둔다.
   // 빈 페이지(전부 비활성 등)는 잴 것이 없으므로 측정이 끝난 것으로 본다 — 아니면 영영 감춰진다.
   const measured = items.every((skill) => heights[skill.id] !== undefined)
-  useStationGate('skills:layout', !measured)
+  useStationGate(`skills:layout:${page}`, !measured)
 
   return (
     <group
@@ -96,14 +100,16 @@ export function SkillsPages() {
             ))}
           </group>
 
-          <SkillsPager
-            page={page}
-            count={SKILL_PAGES.length}
-            onPage={setPage}
-            x={area.width / 2 - pager.right}
-            y={-area.height / 2 + pager.bottom}
-            size={pager.size}
-          />
+          {showPager && (
+            <SkillsPager
+              page={page}
+              count={SKILL_PAGES.length}
+              onPage={setPage}
+              x={area.width / 2 - pager.right}
+              y={-area.height / 2 + pager.bottom}
+              size={pager.size}
+            />
+          )}
         </>
       )}
     </group>

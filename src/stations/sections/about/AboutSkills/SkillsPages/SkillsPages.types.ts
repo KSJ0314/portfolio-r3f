@@ -18,3 +18,11 @@ export interface SkillDoc extends DocBase {
 export interface SkillPage {
   columns: readonly (readonly string[])[]
 }
+
+/** 목록이 받는 것. 둘 다 주지 않으면 스스로 페이지를 넘기는 평소 모습이다. */
+export interface SkillsPagesProps {
+  /** 그릴 쪽(0부터). 주면 그 쪽에 고정된다. */
+  page?: number
+  /** 페이지 넘김을 둘지. 조작 요소라 읽기만 하는 화면에서는 끈다. */
+  showPager?: boolean
+}

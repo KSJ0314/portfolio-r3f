@@ -5,6 +5,7 @@ import { GlobalStyle } from './styles/GlobalStyle'
 import { themes } from './theme/themes'
 import { useThemeStore } from './state/useThemeStore'
 import { CrayonStudioPage } from './tools/CrayonStudio'
+import { LIST_ROUTE, ListViewPage } from './pages/ListView'
 import { LOBBY_ROUTE, ProjectsLobbyPage } from './stations/sections/projects/ProjectsLobby'
 import { GALLERY_ROUTE, ProjectsGalleryPage } from './stations/sections/projects/ProjectsGallery'
 import { SceneTransition } from './ui/SceneTransition'
@@ -24,6 +25,7 @@ export function Root() {
           <Route path="/" element={<App />} />
           <Route path={LOBBY_ROUTE} element={<ProjectsLobbyPage />} />
           <Route path={GALLERY_ROUTE} element={<ProjectsGalleryPage />} />
+          <Route path={LIST_ROUTE} element={<ListViewPage />} />
           <Route path="/crayon" element={<CrayonStudioPage />} />
           {/* SPA rewrite로 오타 주소도 여기까지 오므로, 받아 줄 자리를 끝에 둔다. */}
           <Route path="*" element={<ErrorPage message="찾으시는 페이지가 없습니다." action="home" />} />

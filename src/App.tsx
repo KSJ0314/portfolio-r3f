@@ -6,6 +6,7 @@ import { WorldMap } from './ui/WorldMap'
 import { Credits } from './ui/Credits'
 import { DevHUD } from './ui/DevHUD'
 import { CrayonStudio } from './tools/CrayonStudio'
+import { ListViewButton } from './ui/ListViewButton'
 import { StationLifecycle } from './stations'
 import { ensureOutsideBuilding } from './stations/sections/projects/ProjectsLobby'
 import { useStationStore } from './state/useStationStore'
@@ -38,6 +39,8 @@ function App() {
       {idle && <CrayonStudio />}
       {/* 가져다 쓴 에셋의 출처. CC-BY는 방문자가 볼 수 있는 곳에 밝히도록 요구한다. */}
       {idle && <Credits />}
+      {/* 3D를 돌아다니지 않고 주요 화면만 훑는 자리. */}
+      <ListViewButton />
     </>
   )
 }
