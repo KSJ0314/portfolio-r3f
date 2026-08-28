@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
+import { createLogger } from '../logger'
 import { fetchCollection, fetchDoc, type CollectionName, type DocBase } from './firestore'
+import { getPrefetchedCollection } from './prefetch'
+
+const log = createLogger('data:firestore')
 
 /** 비동기 읽기 상태(로딩·에러 포함). */
 export interface AsyncState<T> {
@@ -41,9 +45,24 @@ export function useCollection<T extends DocBase = DocBase>(name: CollectionName)
     let timer: ReturnType<typeof setTimeout> | undefined
 
     const run = (retry: number) => {
-      fetchCollection<T>(name)
+      // 미리 읽어 둔 것이 있으면 그것을 기다린다. 읽는 중이어도 같은 프로미스라 두 번 읽지 않는다.
+      const prefetched = retry === 0 ? getPrefetchedCollection<T>(name) : null
+      const source = prefetched ? '미리 읽어 둔 것' : retry > 0 ? `재시도 ${retry}` : '새로 읽기'
+      // 걸린 시간을 함께 남긴다. 로그 사이의 간격만 보면 메인 스레드가 막혀 콜백이 밀린 것과
+      // 실제로 오래 읽은 것을 구분할 수 없다.
+      const start = performance.now()
+      log('%s 읽기 시작 (%s)', name, source)
+      ;(prefetched ?? fetchCollection<T>(name))
         .then((data) => {
-          if (alive) setResult({ data, error: null, forName: name })
+          if (!alive) return
+          log(
+            '%s 읽기 성공 (%s) — 문서 %d개, %sms',
+            name,
+            source,
+            data.length,
+            (performance.now() - start).toFixed(0),
+          )
+          setResult({ data, error: null, forName: name })
         })
         .catch((error: unknown) => {
           if (!alive) return
@@ -53,7 +72,8 @@ export function useCollection<T extends DocBase = DocBase>(name: CollectionName)
           setResult({ data: [], error: error as Error, forName: name })
           // 알린 뒤에 다시 시도한다. 남은 시도가 없으면 그대로 포기한다.
           const delay = RETRY_DELAYS[retry]
-          if (delay !== undefined) timer = setTimeout(() => run(retry + 1), delay)
+          if (delay === undefined) log('%s 읽기 포기 — 재시도를 다 썼다', name)
+          else timer = setTimeout(() => run(retry + 1), delay)
         })
     }
     run(0)
@@ -97,9 +117,12 @@ export function useDoc<T extends DocBase = DocBase>(
     let timer: ReturnType<typeof setTimeout> | undefined
 
     const run = (retry: number) => {
+      log('%s/%s 읽기 시작%s', name, id, retry > 0 ? ` (재시도 ${retry})` : '')
       fetchDoc<T>(name, id)
         .then((data) => {
-          if (alive) setResult({ data, error: null, forName: name, forId: id })
+          if (!alive) return
+          log('%s/%s 읽기 성공%s', name, id, data ? '' : ' — 문서 없음')
+          setResult({ data, error: null, forName: name, forId: id })
         })
         .catch((error: unknown) => {
           if (!alive) return
@@ -107,7 +130,8 @@ export function useDoc<T extends DocBase = DocBase>(
           console.error(`[firestore] ${name}/${id} 읽기 실패`, error)
           setResult({ data: null, error: error as Error, forName: name, forId: id })
           const delay = RETRY_DELAYS[retry]
-          if (delay !== undefined) timer = setTimeout(() => run(retry + 1), delay)
+          if (delay === undefined) log('%s/%s 읽기 포기 — 재시도를 다 썼다', name, id)
+          else timer = setTimeout(() => run(retry + 1), delay)
         })
     }
     run(0)

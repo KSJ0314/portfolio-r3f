@@ -1,7 +1,10 @@
 import { useEffect } from 'react'
 import { useLoader, useThree } from '@react-three/fiber'
 import { CanvasTexture, Loader, SRGBColorSpace } from 'three'
+import { createLogger } from '../logger'
 import { drawCrayonDrawing } from './Crayon.draw'
+
+const log = createLogger('asset:crayon')
 import type { CrayonDrawing, CrayonSharedParams } from './Crayon.types'
 
 /** 크레파스 텍스처를 굽는 입력. 로더의 캐시 키로 직렬화한다. */
@@ -34,7 +37,9 @@ class CrayonTextureLoader extends Loader<CanvasTexture> {
       canvas.width = width
       canvas.height = height
       const ctx = canvas.getContext('2d')
+      const start = performance.now()
       if (ctx) drawCrayonDrawing(ctx, width, height, drawing, params)
+      log('굽기 끝 — %dx%d, 획 %d개, %sms', width, height, drawing.length, (performance.now() - start).toFixed(1))
       const texture = new CanvasTexture(canvas)
       texture.colorSpace = SRGBColorSpace
       onLoad?.(texture)
@@ -43,6 +48,14 @@ class CrayonTextureLoader extends Loader<CanvasTexture> {
     }
   }
 }
+
+/** 캐시 키. 훅과 미리 굽기가 같은 문자열을 써야 다시 굽지 않는다. */
+const textureKey = (
+  drawing: CrayonDrawing,
+  params: CrayonSharedParams,
+  width: number,
+  height: number,
+) => JSON.stringify({ drawing, params, width, height } satisfies CrayonBakeInput)
 
 /**
  * 크레파스 그림을 텍스처로 굽고 GPU에 올려 돌려주는 훅.
@@ -55,8 +68,7 @@ export function useCrayonTexture(
   height: number,
 ): CanvasTexture {
   const gl = useThree((s) => s.gl)
-  const key = JSON.stringify({ drawing, params, width, height } satisfies CrayonBakeInput)
-  const texture = useLoader(CrayonTextureLoader, key)
+  const texture = useLoader(CrayonTextureLoader, textureKey(drawing, params, width, height))
 
   // 텍스처를 GPU에 미리 올린다(drei useTexture와 같은 처리 — 첫 렌더의 업로드 지연 방지).
   useEffect(() => {

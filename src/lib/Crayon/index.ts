@@ -1,4 +1,5 @@
 export { Crayon } from './Crayon'
+export { bakeCrayonCanvas, resolveCrayonBake } from './Crayon.bake'
 export { drawCrayonStroke, drawCrayonDrawing, createCrayonStrokePainter } from './Crayon.draw'
 export { useCrayonTexture } from './Crayon.texture'
 export { useCrayonRevealTexture } from './Crayon.reveal'
@@ -11,6 +12,7 @@ export {
   CRAYON_TEXTURE_MARGIN,
   PATTERN_PERIOD,
 } from './Crayon.constants'
+export type { CrayonBakeOptions, CrayonBakeResult } from './Crayon.bake'
 export type { CrayonStrokePainter } from './Crayon.draw'
 export type { CrayonEdgeField } from './Crayon.edge'
 export type {

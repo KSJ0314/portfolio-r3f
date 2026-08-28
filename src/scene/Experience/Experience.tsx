@@ -11,6 +11,7 @@ import { SceneErrorBoundary } from '../SceneErrorBoundary'
 import { MapDecorations } from '../MapDecorations'
 import { AssetPreload } from '../AssetPreload'
 import { SceneArrival } from '../SceneArrival'
+import { DevicePerfProbe } from '../DevicePerfProbe'
 import { ActiveStationScene } from '../../stations'
 
 export function Experience() {
@@ -77,6 +78,8 @@ export function Experience() {
         <AssetPreload />
         {/* 로비에서 돌아온 경우, 이 씬이 그려졌음을 알려야 전환 덮개가 열린다. */}
         <SceneArrival />
+        {/* 무거운 연출을 켤지 정할 수 있게 기기 성능을 재 둔다(그리는 것은 없다). */}
+        <DevicePerfProbe />
       </SceneErrorBoundary>
     </Canvas>
   )

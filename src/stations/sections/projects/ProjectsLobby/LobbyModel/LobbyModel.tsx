@@ -15,6 +15,7 @@ import {
   useLobbyGeometryStore,
   type LobbyPassageOpening,
 } from '../../../../../state/useLobbyGeometryStore'
+import { createLogger } from '../../../../../lib/logger'
 import { useLobbyPageStore } from '../../../../../state/useLobbyPageStore'
 import {
   INTERIOR_COLLIDER_PREFIX,
@@ -136,6 +137,8 @@ function keepDepth(root: Object3D): void {
  * 방을 **좌우(x)·앞뒤(z)로 늘려** 쓴다. 모델 파일은 그대로 두고 불러온 것을 늘리며,
  * 늘린 자세를 반영한 **뒤에** 콜라이더·트리거를 잰다 — 재고 나서 늘리면 판정이 그림과 어긋난다.
  */
+const log = createLogger('interior:lobby')
+
 export function LobbyModel() {
   const { scene } = useGLTF(LOBBY_MODEL_URL, LOBBY_DRACO_PATH)
   const loaded = useTexture(ARTWORK_PATHS)
@@ -341,10 +344,16 @@ export function LobbyModel() {
 
   // 판정에 쓸 것을 올린다. 떠날 때 비우지 않으면 다음에 들어올 때 낡은 메시를 붙든다.
   useEffect(() => {
+    log(
+      '모델 준비 끝 — 밟는 바닥 %d · 막는 것 %d · 트리거 %d',
+      walkables.length,
+      blockers.length,
+      Object.keys(triggers).length,
+    )
     setInteriorCollision(walkables, blockers)
     setInteriorStepCenters(stepCenters)
     return () => clearInteriorCollision()
-  }, [walkables, blockers, stepCenters])
+  }, [walkables, blockers, stepCenters, triggers])
 
   useEffect(() => {
     setGeometry(triggers, corridor, passage)

@@ -10,6 +10,7 @@ import { useProjectsPageStore } from '../../../../state/useProjectsPageStore'
 import { useProjectsSequenceStore } from '../../../../state/useProjectsSequenceStore'
 import { useStationStore } from '../../../../state/useStationStore'
 import type { StationInactiveProps } from '../../../registry'
+import { createLogger } from '../../../../lib/logger'
 import { preloadLobbyModel } from '../ProjectsLobby/LobbyModel'
 import { DoorGlow } from './DoorGlow'
 import {
@@ -41,6 +42,8 @@ const OUTLINE_COLOR = '#3a3a3a'
  * 캐릭터가 통과하지 못하도록 **자기 발자국을 막는 사각형으로 올리고**, 사라질 때 자기 것만 뺀다.
  * 누르는 곳은 문뿐이라 건물 자체는 레이캐스트에서 뺀다 — 우클릭 이동도 건물에 막히지 않는다.
  */
+const log = createLogger('asset:lobby')
+
 export function ProjectsBuildingInactive({ station }: StationInactiveProps) {
   const building = useProjectsPageStore((s) => s.building)
   const swing = useProjectsPageStore((s) => s.swing)
@@ -59,7 +62,9 @@ export function ProjectsBuildingInactive({ station }: StationInactiveProps) {
   // 전환을 시작한 뒤에 받기 시작하면 덮인 채로 오래 기다린다.
   const nearDoor = useStationStore((s) => s.nearId === PROJECTS_ID)
   useEffect(() => {
-    if (nearDoor) preloadLobbyModel()
+    if (!nearDoor) return
+    log('문 앞 근접')
+    preloadLobbyModel()
   }, [nearDoor])
 
   const setBlocker = useBlockersStore((s) => s.setBlocker)

@@ -63,7 +63,7 @@ export function CreditsHUD() {
       },
       { collapsed: true },
     ),
-  }))
+  }), { collapsed: true })
 
   // 버튼은 따로 등록한다. 위 스키마 안에서는 아직 set이 선언되기 전이라 참조할 수 없다.
   useControls(
