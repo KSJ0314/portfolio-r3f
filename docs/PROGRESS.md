@@ -84,7 +84,7 @@
 - **2026-07-03**
   - **Phase 0.5 — Vercel 배포 연결**: Vercel Git 연동으로 배포 파이프라인 구성 (별도 CI 워크플로 불필요, Vite 자동 감지: build `npm run build` / output `dist`)
   - **환경 매핑 확정**: `main`=프로덕션 / `develop`=스테이징 프리뷰 / PR=자동 프리뷰 (레포 default 브랜치를 프로덕션으로 자동 지정)
-  - **프로덕션 라이브 URL**: https://portfolio-r3f-blue.vercel.app/
+  - **프로덕션 라이브 URL**: https://kimsojung-portfolio.vercel.app/
 - **2026-07-07**
   - **Phase 1 — 맵 + 우클릭 카메라 이동** 구현
   - **이동 방식**: 우클릭 홀드로 캐릭터가 목적지로 이동. 누른 동안 매 프레임 커서 밑 바닥 지점을 레이캐스트해 목표점 갱신 → 커서가 정지해 있어도(카메라가 따라가며 월드가 밀리므로) 계속 이동, 떼면 정지. 좌클릭은 인터랙션용 예약. 거리와 무관한 **고정 속도**(매 프레임 step).

@@ -2,7 +2,7 @@
 
 > ThreeJS(react-three-fiber) 기반 3D 인터랙티브 포트폴리오
 
-🔗 https://portfolio-r3f-blue.vercel.app/
+🔗 https://kimsojung-portfolio.vercel.app/
 
 ## 소개
 
