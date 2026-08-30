@@ -30,7 +30,7 @@
 | 애니메이션 | gsap (스테이션 포커스·낮/밤 전환 트윈) |
 | 스타일 | styled-components v6 + ThemeProvider |
 | 데이터/백엔드 | Firebase Firestore (+App Check) |
-| 출력 | react-to-print |
+| 출력 | jspdf |
 | 저장(페인팅) | localforage (IndexedDB) — Phase 11 |
 | 폰트 | Pretendard(본문) · Gamja Flower(손글씨) — 둘 다 self-host |
 | 개발 보조 | leva (텍스처·라이트·카메라 값 튜닝) |
