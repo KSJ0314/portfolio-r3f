@@ -761,7 +761,7 @@ export function CrayonStudio() {
     <>
       <CornerButton
         type="button"
-        $slot={0}
+        $slot={2}
         onClick={() => setOpen(true)}
         title="크레파스 스튜디오"
         aria-label="크레파스 스튜디오 열기"

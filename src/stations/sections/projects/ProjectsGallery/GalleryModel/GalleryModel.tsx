@@ -3,6 +3,7 @@ import { useGLTF } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Box3, type Mesh, type PointLight, Vector3 } from 'three'
 import { useGalleryGeometryStore } from '../../../../../state/useGalleryGeometryStore'
+import { createLogger } from '../../../../../lib/logger'
 import { useGalleryPageStore } from '../../../../../state/useGalleryPageStore'
 import {
   INTERIOR_COLLIDER_PREFIX,
@@ -46,6 +47,8 @@ import type { GalleryModelProps } from './GalleryModel.types'
  * 콜라이더·트리거는 개발용 표시색이 칠해져 있어 화면에서는 감춘다.
  * three의 레이캐스트는 `visible`을 보지 않으므로 감춰도 판정에는 그대로 쓰인다.
  */
+const log = createLogger('interior:gallery')
+
 export function GalleryModel({ bays }: GalleryModelProps) {
   const { scene } = useGLTF(GALLERY_MODEL_URL, GALLERY_DRACO_PATH)
   const sceneRoot = useThree((s) => s.scene)
@@ -163,9 +166,15 @@ export function GalleryModel({ bays }: GalleryModelProps) {
   // 판정에 쓸 것을 올린다. 떠날 때 비우지 않으면 다음에 들어올 때 낡은 메시를 붙든다.
   // 계단이 없어 단 중앙(`setInteriorStepCenters`)은 올리지 않는다.
   useEffect(() => {
+    log(
+      '방 조립 끝 — 전시 칸 %d · 밟는 바닥 %d · 막는 것 %d',
+      bays,
+      walkables.length,
+      blockers.length,
+    )
     setInteriorCollision(walkables, blockers)
     return () => clearInteriorCollision()
-  }, [walkables, blockers])
+  }, [walkables, blockers, bays])
 
   useEffect(() => {
     setGeometry(triggers, bounds, plates, artworks)

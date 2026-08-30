@@ -1,6 +1,9 @@
 import { useEffect } from 'react'
 import { STICKER_ASSETS } from '../../content/assets'
+import { createLogger } from '../../lib/logger'
 import { preloadPaperSticker } from '../../lib/PaperSticker'
+
+const log = createLogger('asset:sticker')
 
 /**
  * 앱이 뜰 때 에셋을 미리 구워 캐시에 넣는다. 그리는 것은 없다.
@@ -10,7 +13,10 @@ import { preloadPaperSticker } from '../../lib/PaperSticker'
  */
 export function AssetPreload() {
   useEffect(() => {
+    log('미리 굽기 시작 — %d개', STICKER_ASSETS.length)
+    const start = performance.now()
     for (const { url, params } of STICKER_ASSETS) preloadPaperSticker(url, params)
+    log('미리 굽기 요청 끝 — %sms', (performance.now() - start).toFixed(1))
   }, [])
 
   return null

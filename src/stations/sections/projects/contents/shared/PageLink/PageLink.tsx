@@ -17,8 +17,10 @@ export function PageLink({ icon, url, x, y, size }: PageLinkProps) {
   return (
     <>
       <PageIcon icon={icon} x={x} y={y} size={size} />
+      {/* 주소를 판에 실어 둔다 — 화면을 그림으로 구워 쓰는 쪽이 이 자리에 링크를 얹는다. */}
       <mesh
         position={[x, y, PAGE_LINK_LIFT]}
+        userData={{ linkUrl: url }}
         onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
         {...cursor}
       >

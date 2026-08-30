@@ -1,6 +1,16 @@
 import { useEffect } from 'react'
 import { button, folder, useControls } from 'leva'
-import { CROSSWALK_PLACEMENT } from '../../../scene/MapDecorations/Crosswalk/Crosswalk.constants'
+import { bakeCrayonCanvas } from '../../../lib/Crayon'
+import {
+  BENCH_GRAINS,
+  STRAINED_MS,
+  measureDevicePerf,
+} from '../../../scene/DevicePerfProbe'
+import {
+  CROSSWALK,
+  CROSSWALK_PLACEMENT,
+  CROSSWALK_STROKES,
+} from '../../../scene/MapDecorations/Crosswalk/Crosswalk.constants'
 import { PROJECTS_CAR_PLACEMENT } from '../../../scene/MapDecorations/ProjectsCar/ProjectsCar.constants'
 import { RIGHT_CLICK_HINT_PLACEMENT } from '../../../scene/MapDecorations/RightClickHint/RightClickHint.constants'
 import { GUIDE_ARROW_PLACEMENT } from '../../../scene/MapDecorations/SkillsGuideArrow/SkillsGuideArrow.constants'
@@ -12,6 +22,50 @@ const H = RIGHT_CLICK_HINT_PLACEMENT
 const C = CROSSWALK_PLACEMENT
 const T = TRAFFIC_LIGHT_PLACEMENT
 const R = PROJECTS_CAR_PLACEMENT
+
+/**
+ * 횡단보도를 지금 값으로 구워 PNG로 내려받는다.
+ *
+ * 성능이 버거운 기기에서는 그리는 연출 대신 이 파일을 붙인다(`CROSSWALK_FLAT_URL`).
+ * 크기(`scale`)는 굽는 결과와 무관하다 — 크기와 획 굵기에 같은 배율이 걸려 텍스처가 같다.
+ * 내려받은 파일을 `public/images/`에 그 이름으로 넣는다.
+ */
+function saveCrosswalkPng() {
+  const canvas = bakeCrayonCanvas({
+    drawing: CROSSWALK_STROKES,
+    size: CROSSWALK.size,
+    height: CROSSWALK.height,
+    strokeWidth: CROSSWALK.strokeWidth,
+    color: CROSSWALK.color,
+    roughness: CROSSWALK.roughness,
+    opacity: CROSSWALK.opacity,
+    patchiness: CROSSWALK.patchiness,
+    wobbleRatio: CROSSWALK.wobbleRatio,
+    edge: CROSSWALK.edge,
+    margin: 1,
+  })
+
+  canvas.toBlob((blob) => {
+    if (!blob) return
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'crosswalk-flat.png'
+    link.click()
+    URL.revokeObjectURL(url)
+  })
+}
+
+/**
+ * 지금 기기 성능을 재 콘솔에 찍는다.
+ *
+ * 앱이 쓰는 등급은 건드리지 않는다 — 값이 얼마나 나오는지 눈으로 보는 용도다.
+ * 정해진 양을 그려 보고 걸린 시간을 재므로 화면 주사율과 무관하다.
+ */
+function logDevicePerf() {
+  const { tier, elapsed } = measureDevicePerf()
+  console.log(`[기기 성능] ${tier} — 알갱이 ${BENCH_GRAINS.toLocaleString()}개에 ${elapsed.toFixed(1)}ms (기준 ${STRAINED_MS}ms)`)
+}
 
 /** 툴팁 문구 — 설명 뒤에 기본값을 붙인다. */
 function hint(description: string, value: number | string) {
@@ -310,6 +364,8 @@ export function MapDecorationsHUD() {
     {
       '화살표 다시 그리기': button(() => redrawGuide()),
       '횡단보도 다시 그리기': button(() => redrawCrosswalk()),
+      '횡단보도 PNG 저장': button(() => saveCrosswalkPng()),
+      '기기 성능 재기(콘솔)': button(() => logDevicePerf()),
       '자동차 다시 재생': button(() => redrawCar()),
       '값 복사(JSON)': button(() => {
         const {

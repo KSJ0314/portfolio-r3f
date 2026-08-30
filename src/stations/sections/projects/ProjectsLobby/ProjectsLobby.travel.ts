@@ -6,6 +6,7 @@ import { useLobbyTriggerStore } from '../../../../state/useLobbyTriggerStore'
 import { useProjectsSequenceStore } from '../../../../state/useProjectsSequenceStore'
 import { useSceneTransitionStore } from '../../../../state/useSceneTransitionStore'
 import { useStationStore } from '../../../../state/useStationStore'
+import { preloadGalleryModel } from '../ProjectsGallery/GalleryModel'
 import {
   PROJECTS_DOOR_FALLBACK_STAND,
   PROJECTS_ID,
@@ -105,6 +106,8 @@ export function canWalkToPassage(): boolean {
  * 들어가는 구간이라 평소보다 빠른 걸음이다.
  */
 export function walkIntoPassage(): void {
+  // 걸어가는 동안 받아 둔다. 도착해서 시작하면 그만큼 덮개가 더 덮여 있다.
+  preloadGalleryModel()
   useInteriorStore
     .getState()
     .walkTo(LOBBY_PASSAGE_ENTER[0], LOBBY_PASSAGE_ENTER[1], LOBBY_PASSAGE_WALK_SPEED)

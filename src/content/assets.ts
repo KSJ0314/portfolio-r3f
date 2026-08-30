@@ -9,6 +9,10 @@ import {
 } from '../scene/MapDecorations/TrafficLight/TrafficLight.constants'
 import { EXIT_STICKER_PARAMS, EXIT_STICKER_URL } from '../stations/ExitSticker/ExitSticker.constants'
 import {
+  LOAD_FAILED_ICON_PARAMS,
+  LOAD_FAILED_ICON_URL,
+} from '../stations/LoadFailed/LoadFailed.constants'
+import {
   CAREER_EDUCATION,
   CAREER_PAPER_PARAMS,
   CAREER_SPEC,
@@ -65,6 +69,11 @@ export const STICKER_ASSETS: StickerAsset[] = [
   {
     url: EXIT_STICKER_URL,
     params: { ...DEFAULT_PAPER_STICKER_PARAMS, ...EXIT_STICKER_PARAMS },
+  },
+  // 읽기가 실패해야 뜨는 아이콘이지만, 그때 굽기 시작하면 서스펜드가 걸려 페이지가 사라졌다 돌아온다.
+  {
+    url: LOAD_FAILED_ICON_URL,
+    params: { ...DEFAULT_PAPER_STICKER_PARAMS, ...LOAD_FAILED_ICON_PARAMS },
   },
   {
     url: RIGHT_CLICK_HINT_URL,
