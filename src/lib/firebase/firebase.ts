@@ -13,14 +13,23 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 }
+
+/** 없으면 앱이 돌지 않는 값. */
+const REQUIRED_KEYS = [
+  'apiKey',
+  'authDomain',
+  'projectId',
+  'storageBucket',
+  'messagingSenderId',
+  'appId',
+] as const
 
 // 값이 비면 SDK가 네트워크로 나가기도 전에 막혀, 화면만 비고 아무 단서가 남지 않는다.
 // (Vite는 빌드 시점에 값을 박으므로 배포 환경에 변수를 안 넣으면 그대로 빈 채로 굳는다.)
 // 그래서 어느 값이 비었는지 여기서 먼저 알린다.
-const missing = Object.entries(firebaseConfig)
-  .filter(([, value]) => !value)
-  .map(([key]) => key)
+const missing = REQUIRED_KEYS.filter((key) => !firebaseConfig[key])
 
 if (missing.length > 0) {
   console.error(
@@ -30,7 +39,8 @@ if (missing.length > 0) {
   )
 }
 
-const app = initializeApp(firebaseConfig)
+/** Firebase 앱 인스턴스. Firestore·Analytics가 나눠 쓴다. */
+export const app = initializeApp(firebaseConfig)
 
 /** Firestore 인스턴스. 앱 전역에서 이것을 통해 데이터에 접근한다. */
 export const db = getFirestore(app)

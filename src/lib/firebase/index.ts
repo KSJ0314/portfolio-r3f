@@ -1,4 +1,5 @@
 export { db } from './firebase'
+export { startAnalytics } from './analytics'
 export * from './firestore'
 export * from './hooks'
 export { prefetchCollection } from './prefetch'
