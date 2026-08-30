@@ -1,4 +1,7 @@
 import { create } from 'zustand'
+import { createLogger } from '../lib/logger'
+
+const log = createLogger('station:lifecycle')
 
 /**
  * 스테이션 활성화 라이프사이클.
@@ -63,7 +66,10 @@ export const useStationStore = create<StationState>((set, get) => ({
   // 첫 화면 Intro는 `activate`를 거치지 않으므로 처음부터 열어본 것으로 둔다.
   visited: { 'about-intro': true },
   setNear: (id) => {
-    if (get().nearId !== id) set({ nearId: id })
+    if (get().nearId !== id) {
+      log('근접 %s → %s', get().nearId ?? '없음', id ?? '없음')
+      set({ nearId: id })
+    }
     // 걸어서 멀어지는 것이 곧 닫기다. 값이 바뀌는 순간이 아니라 매번 확인한다 —
     // 활성 스테이션이 처음부터 근접 밖이면 전환이 일어나지 않아 영영 안 닫힌다.
     // requestClose는 active에서만 받으므로 반복 호출은 무시된다.
@@ -73,6 +79,7 @@ export const useStationStore = create<StationState>((set, get) => ({
   activate: (id) => {
     const { phase, nearId, visited } = get()
     if (phase !== 'idle' || nearId !== id) return
+    log('%s 열기 — 진입 애니메이션 시작', id)
     set({
       activeId: id,
       phase: 'entering',
@@ -80,18 +87,23 @@ export const useStationStore = create<StationState>((set, get) => ({
     })
   },
   enterComplete: () => {
-    if (get().phase === 'entering') set({ phase: 'active' })
+    if (get().phase !== 'entering') return
+    log('%s 진입 애니메이션 끝 — 활성', get().activeId)
+    set({ phase: 'active' })
   },
   requestClose: () => {
     if (get().phase !== 'active') return
+    log('%s 닫기 — 종료 애니메이션 시작', get().activeId)
     set({ phase: 'exiting' })
   },
   exitComplete: () => {
     if (get().phase !== 'exiting') return
+    log('%s 종료 애니메이션 끝 — 대기', get().activeId)
     set({ activeId: null, phase: 'idle' })
   },
   closeImmediately: () => {
     if (get().phase === 'idle' && get().activeId === null) return
+    log('%s 즉시 닫기(연출 없음)', get().activeId)
     set({ activeId: null, phase: 'idle' })
   },
 }))

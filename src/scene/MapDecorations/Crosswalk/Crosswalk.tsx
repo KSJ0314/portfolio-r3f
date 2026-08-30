@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { MathUtils } from 'three'
-import { Crayon } from '../../../lib/Crayon'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { MathUtils, SRGBColorSpace } from 'three'
+import { useTexture } from '@react-three/drei'
+import { Crayon, type CrayonBakeOptions } from '../../../lib/Crayon'
+import { createLogger } from '../../../lib/logger'
 import { useCameraStore } from '../../../state/useCameraStore'
+import { useDevicePerfStore } from '../../../state/useDevicePerfStore'
 import { useMapDecorationsStore } from '../../../state/useMapDecorationsStore'
 import { type StationPhase, useStationStore } from '../../../state/useStationStore'
 import { moveToStand, walkToStand } from '../../../stations/registry'
@@ -9,9 +12,35 @@ import { useAfterStation } from '../../useAfterStation'
 import {
   CROSSWALK,
   CROSSWALK_AFTER_STATION,
+  CROSSWALK_FLAT_URL,
   CROSSWALK_STROKES,
   CROSSWALK_Y,
 } from './Crosswalk.constants'
+
+/**
+ * 미리 구워 둔 그림을 그대로 붙인 횡단보도.
+ *
+ * 크레파스를 그 자리에서 구우면 한 프레임이 통째로 멈춘다. 연출을 뺀 기기는 그 멈춤이 더
+ * 도드라지므로 굽는 일 자체를 없앤다. 파일을 다시 굽는 방법은 `CROSSWALK_FLAT_URL` 참고.
+ */
+const log = createLogger('deco:crosswalk')
+
+function CrosswalkFlat({ width, height }: { width: number; height: number }) {
+  const texture = useTexture(CROSSWALK_FLAT_URL)
+
+  return (
+    <mesh
+      // 판 중심을 상단 중앙에서 세로 반크기만큼 밀어 그 점이 좌표에 오게 한다.
+      position={[0, 0, height / 2]}
+      rotation={[-Math.PI / 2, 0, 0]}
+      // 바닥 장식일 뿐이라 클릭·이동 판정에서 뺀다.
+      raycast={() => null}
+    >
+      <planeGeometry args={[width, height]} />
+      <meshBasicMaterial map={texture} map-colorSpace={SRGBColorSpace} transparent toneMapped={false} />
+    </mesh>
+  )
+}
 
 /**
  * 종이 위에 놓이는 횡단보도 — career 쪽으로 건너가라고 알리는 길목이다.
@@ -31,6 +60,33 @@ export function Crosswalk() {
   const markDrawn = useMapDecorationsStore((s) => s.markCrosswalkDrawn)
   const returned = useAfterStation(CROSSWALK_AFTER_STATION)
   const [drawing, setDrawing] = useState(false)
+
+  // 그어지는 연출은 매 프레임 알갱이를 찍어 텍스처를 다시 올리는 일이라 기기를 탄다.
+  // 버거운 기기에서는 연출을 빼고 완성된 그림을 바로 붙인다.
+  // 아직 재지 않았으면(null) 지금까지의 동작인 연출 쪽으로 둔다.
+  const strained = useDevicePerfStore((s) => s.tier === 'strained')
+  const revealSeconds = strained ? 0 : seconds
+
+  const height = CROSSWALK.height * scale
+
+  // 굽는 데 쓰는 값. 미리 굽기와 렌더가 **같은 것**을 넘겨야 캐시에 적중해 다시 굽지 않는다.
+  const bake = useMemo<CrayonBakeOptions>(
+    () => ({
+      drawing: CROSSWALK_STROKES,
+      size: CROSSWALK.size * scale,
+      height: CROSSWALK.height * scale,
+      strokeWidth: CROSSWALK.strokeWidth * scale,
+      color: CROSSWALK.color,
+      roughness: CROSSWALK.roughness,
+      opacity: CROSSWALK.opacity,
+      patchiness: CROSSWALK.patchiness,
+      wobbleRatio: CROSSWALK.wobbleRatio,
+      edge: CROSSWALK.edge,
+      // 그린 그대로를 고정한다 — 스튜디오에서 뽑은 값(Crayon 기본값이 바뀌어도 유지).
+      margin: 1,
+    }),
+    [scale],
+  )
 
   const sent = useRef(false)
   const started = useRef(false)
@@ -101,6 +157,7 @@ export function Crosswalk() {
       // 자리에 닿으면 Character가 walking을 끈다. 이펙트 몸통이 아니라 구독 콜백이라 여기서 상태를 바꾼다.
       if (s.walking) return
       unsubscribe()
+      log('자리 도착 — %s', useDevicePerfStore.getState().tier === 'strained' ? '그림 붙이기' : '긋기 시작')
       setDrawing(true)
     })
     cleanup.current = unsubscribe
@@ -110,42 +167,33 @@ export function Crosswalk() {
   useEffect(() => {
     if (!drawing) return
     const timer = window.setTimeout(() => {
+      log('끝 — 이동 잠금 해제')
       releaseLock()
       markDrawn()
-    }, seconds * 1000)
+    }, revealSeconds * 1000)
     return () => window.clearTimeout(timer)
-  }, [drawing, redraw, seconds, releaseLock, markDrawn])
+  }, [drawing, redraw, revealSeconds, releaseLock, markDrawn])
 
   if (!drawing) return null
 
-  const width = CROSSWALK.size * scale
-  const height = CROSSWALK.height * scale
-
   return (
     <group position={[x, CROSSWALK_Y, z]} rotation={[0, MathUtils.degToRad(rotation), 0]}>
-      <Crayon
-        // 다시 그리기(HUD)는 새로 마운트해 연출을 처음부터 재생한다.
-        key={redraw}
-        drawing={CROSSWALK_STROKES}
-        // 판 중심을 상단 중앙에서 세로 반크기만큼 밀어 그 점이 좌표에 오게 한다.
-        // 눕히면 로컬 +y가 월드 -z라, 아래로 미는 값이 +z다.
-        position={[0, 0, height / 2]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        size={width}
-        height={height}
-        strokeWidth={CROSSWALK.strokeWidth * scale}
-        color={CROSSWALK.color}
-        roughness={CROSSWALK.roughness}
-        opacity={CROSSWALK.opacity}
-        patchiness={CROSSWALK.patchiness}
-        wobbleRatio={CROSSWALK.wobbleRatio}
-        edge={CROSSWALK.edge}
-        // 그린 그대로를 고정한다 — 스튜디오에서 뽑은 값(Crayon 기본값이 바뀌어도 유지).
-        margin={1}
-        reveal={seconds}
-        // 바닥 장식일 뿐이라 클릭·이동 판정에서 뺀다.
-        raycast={() => null}
-      />
+      {strained ? (
+        <CrosswalkFlat width={CROSSWALK.size * scale} height={height} />
+      ) : (
+        <Crayon
+          // 다시 그리기(HUD)는 새로 마운트해 연출을 처음부터 재생한다.
+          key={redraw}
+          {...bake}
+          // 판 중심을 상단 중앙에서 세로 반크기만큼 밀어 그 점이 좌표에 오게 한다.
+          // 눕히면 로컬 +y가 월드 -z라, 아래로 미는 값이 +z다.
+          position={[0, 0, height / 2]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          reveal={seconds}
+          // 바닥 장식일 뿐이라 클릭·이동 판정에서 뺀다.
+          raycast={() => null}
+        />
+      )}
     </group>
   )
 }

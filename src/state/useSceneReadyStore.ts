@@ -1,4 +1,7 @@
 import { create } from 'zustand'
+import { createLogger } from '../lib/logger'
+
+const log = createLogger('scene:gate')
 
 interface SceneReadyState {
   /** 준비를 마친 것들. 각 요소가 마운트되면서 자기 이름을 올린다. */
@@ -20,5 +23,9 @@ interface SceneReadyState {
 export const useSceneReadyStore = create<SceneReadyState>((set) => ({
   ready: {},
   markReady: (key) =>
-    set((state) => (state.ready[key] ? state : { ready: { ...state.ready, [key]: true } })),
+    set((state) => {
+      if (state.ready[key]) return state
+      log('준비됨 — %s', key)
+      return { ready: { ...state.ready, [key]: true } }
+    }),
 }))

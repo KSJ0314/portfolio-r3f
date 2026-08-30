@@ -4,6 +4,7 @@ import { BODY_FONT, HAND_FONT } from '../../../../content/fonts'
 import { useDoc } from '../../../../lib/firebase'
 import { useIntroPageStore } from '../../../../state/useIntroPageStore'
 import { useSceneReadyStore } from '../../../../state/useSceneReadyStore'
+import { LoadFailed } from '../../../LoadFailed'
 import type { StationInactiveProps } from '../../../registry'
 import type { TroikaTextMesh } from '../../../types'
 import { AREA_Y, CONTENT_Y, INK, OUTLINE_Y } from './AboutIntro.constants'
@@ -25,7 +26,12 @@ export function AboutIntroInactive({ station }: StationInactiveProps) {
   const { width, height } = useIntroPageStore((s) => s.area)
   const layout = useIntroPageStore((s) => s.layout)
   const showOutline = useIntroPageStore((s) => s.showOutline)
-  const { data: profile, loading: profileLoading } = useDoc<ProfileDoc>('profile', 'main')
+  const {
+    data: profile,
+    loading: profileLoading,
+    error: profileError,
+    refetch: refetchProfile,
+  } = useDoc<ProfileDoc>('profile', 'main')
 
   // 글씨는 텍스처가 아니라 Firestore를 기다리므로 서스펜드하지 않는다.
   // 마운트만으로 준비됐다고 하면 가림막이 데이터보다 먼저 걷혀 사진만 뜬 페이지가 보인다.
@@ -100,6 +106,9 @@ export function AboutIntroInactive({ station }: StationInactiveProps) {
       {/* 페이지 내용. 그룹을 눕혀두면 안쪽은 화면 좌표(x=가로, y=세로)로 쓸 수 있다.
           내용은 전부 레이캐스트에서 빼야 그 밑의 클릭 판정 면이 잡힌다. */}
       <group rotation={[-Math.PI / 2, 0, 0]} position={[0, CONTENT_Y, 0]}>
+        {/* 읽기가 실패하면 글씨 자리가 통째로 빈다. 사진은 Firestore와 무관하므로 그대로 둔다. */}
+        {profileError && <LoadFailed size={introSize} y={introY} onRetry={refetchProfile} />}
+
         {profile?.tagline && (
           <Text
             font={HAND_FONT}

@@ -1,4 +1,7 @@
 import { create } from 'zustand'
+import { createLogger } from '../lib/logger'
+
+const log = createLogger('scene:transition')
 import { IRIS_CLOSE_SECONDS } from '../ui/SceneTransition/SceneTransition.constants'
 
 /**
@@ -63,20 +66,29 @@ export const useSceneTransitionStore = create<SceneTransitionState>((set, get) =
     // 중심을 화면 한가운데로 되돌린다. 다른 곳으로 모아야 하는 씬은 그동안 매 프레임 다시 채운다.
     get().focus.x = 0.5
     get().focus.y = 0.5
+    log('덮기 시작 → %s (%s초)', to, seconds ?? IRIS_CLOSE_SECONDS)
     set({ phase: 'closing', to, arrived: false, closeSeconds: seconds ?? IRIS_CLOSE_SECONDS })
   },
   markCovered: () => {
-    if (get().phase === 'closing') set({ phase: 'covered' })
+    if (get().phase !== 'closing') return
+    log('다 덮임 — 도착 신호 대기')
+    set({ phase: 'covered' })
   },
   markArrived: () => {
     // 전환 없이 직접 들어온 경우에도 페이지가 부르므로, 기다리는 중이 아니면 아무 일도 하지 않는다.
-    if (get().phase === 'covered' && !get().arrived) set({ arrived: true })
+    if (get().phase !== 'covered' || get().arrived) return
+    log('도착 — 그릴 준비 끝')
+    set({ arrived: true })
   },
   beginOpen: () => {
-    if (get().phase === 'covered') set({ phase: 'opening' })
+    if (get().phase !== 'covered') return
+    log('열기 시작%s', get().arrived ? '' : ' — 도착 신호 없이 최대 대기를 넘김')
+    set({ phase: 'opening' })
   },
   markOpened: () => {
-    if (get().phase === 'opening') set({ phase: 'idle', to: null, arrived: false })
+    if (get().phase !== 'opening') return
+    log('전환 끝')
+    set({ phase: 'idle', to: null, arrived: false })
   },
 }))
 

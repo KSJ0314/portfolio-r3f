@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useCollection } from '../../../../../lib/firebase'
 import { useCareerPageStore } from '../../../../../state/useCareerPageStore'
+import { LoadFailed } from '../../../../LoadFailed'
 import { useStationGate } from '../../../../useStationGate'
 import { INK_LINE, careerColumnLeft, careerColumnWidth } from '../AboutCareer.constants'
 import { CAREER_COLUMN_BOUNDARIES, CAREER_CONTENT_Y } from './CareerColumns.constants'
@@ -28,6 +29,18 @@ export function CareerColumns() {
 
   // 목록은 Firestore를 기다린다. 그동안 나가기만 먼저 뜨지 않도록 상세 전체를 잡아둔다.
   useStationGate('career:data', education.loading || awards.loading || spec.loading)
+
+  // 셋은 같은 연결을 쓰므로 하나가 실패하면 대개 다 실패한다. 칸마다 나누지 않고 한 줄로 알린다.
+  const failed = Boolean(education.error || awards.error || spec.error)
+  // 훅이 돌려주는 결과 객체는 렌더마다 새로 만들어지므로, 안정적인 `refetch`만 꺼내 쓴다.
+  const { refetch: retryEducation } = education
+  const { refetch: retryAwards } = awards
+  const { refetch: retrySpec } = spec
+  const retryAll = useCallback(() => {
+    retryEducation()
+    retryAwards()
+    retrySpec()
+  }, [retryEducation, retryAwards, retrySpec])
 
   const reportHeight = useCallback((id: string, height: number) => {
     setHeights((prev) =>
@@ -82,8 +95,10 @@ export function CareerColumns() {
       position={[topCenter.x, CAREER_CONTENT_Y, topCenter.z + area.height / 2]}
       rotation={[-Math.PI / 2, 0, 0]}
     >
+      {failed && <LoadFailed size={list.titleSize} onRetry={retryAll} />}
+
       {/* 칸이 맞닿는 경계마다 세로선. 칸 왼쪽 테두리가 곧 경계라 그 자리에 세운다. */}
-      {dividerHeight > 0 &&
+      {!failed && dividerHeight > 0 &&
         CAREER_COLUMN_BOUNDARIES.map((index) => (
           <mesh
             key={index}

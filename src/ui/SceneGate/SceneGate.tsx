@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createLogger } from '../../lib/logger'
 import { useSceneReadyStore } from '../../state/useSceneReadyStore'
 import {
   MAX_RELOADS,
@@ -50,6 +51,8 @@ function clearReloadCount() {
  * 준비는 이미 끝나 있다. 그때는 아예 그리지 않는다 — 덮은 채로 마운트하면 걷을 전환이 일어나지 않아
  * 그대로 남는다.
  */
+const log = createLogger('scene:gate')
+
 const allReady = (ready: Record<string, boolean>) => REQUIRED_KEYS.every((key) => ready[key])
 
 export function SceneGate() {
@@ -63,7 +66,9 @@ export function SceneGate() {
   const uncovered = ready || forced
 
   useEffect(() => {
-    if (ready) clearReloadCount()
+    if (!ready) return
+    log('다 준비됨 — 가림막을 걷는다')
+    clearReloadCount()
   }, [ready])
 
   useEffect(() => {
@@ -72,9 +77,13 @@ export function SceneGate() {
       const count = readReloadCount()
       // 저장이 막힌 환경(시크릿 모드 등)에서는 횟수가 늘 0이라 상한에 닿지 못한다.
       // 그대로 새로고침하면 무한히 되풀이하므로, 셀 수 없으면 재시도하지 않는다.
+      const missing = REQUIRED_KEYS.filter((key) => !useSceneReadyStore.getState().ready[key])
+      log('%dms 안에 준비되지 않음 — 남은 것: %s', READY_TIMEOUT, missing.join(', '))
       if (count < MAX_RELOADS && writeReloadCount(count + 1)) {
+        log('새로고침으로 재시도 (%d번째)', count + 1)
         window.location.reload()
       } else {
+        log('재시도를 포기하고 그냥 걷는다')
         // 새로고침을 되풀이해도 안 되는 상황이다. 흰 화면에 갇히느니 그냥 걷는다.
         setForced(true)
       }

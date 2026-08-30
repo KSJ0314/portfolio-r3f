@@ -4,7 +4,6 @@ import { Vector3 } from 'three'
 import { useInteriorStore } from '../../../../../state/useInteriorStore'
 import { useLobbyGeometryStore } from '../../../../../state/useLobbyGeometryStore'
 import { useSceneTransitionStore } from '../../../../../state/useSceneTransitionStore'
-import { preloadGalleryModel } from '../../ProjectsGallery/GalleryModel'
 import { enterGallery } from '../../ProjectsGallery/ProjectsGallery.travel'
 import {
   LOBBY_CAMERA_LIMIT,
@@ -12,7 +11,6 @@ import {
   LOBBY_PASSAGE_IRIS_SECONDS,
   LOBBY_PASSAGE_TRIGGER,
 } from '../ProjectsLobby.constants'
-import { LOBBY_PASSAGE_PRELOAD_RANGE } from './LobbyPassage.constants'
 
 const _screen = new Vector3()
 
@@ -23,6 +21,9 @@ const _screen = new Vector3()
  * 시작하는 때는 캐릭터가 **카메라가 따라 들어가기 시작하는 깊이**를 지나는 순간이다 —
  * 화면이 통로로 당겨지는 것과 원이 조여드는 것이 한 동작으로 이어진다.
  * 거기까지 가지 못하고 걸음이 멎으면 그때 시작한다.
+ *
+ * 전시 공간 모델은 **누르는 순간**(`walkIntoPassage`) 받기 시작한다. 걸어가는 시간을 그대로
+ * 버는 셈이라, 도착해서 시작하는 것보다 덮개가 덜 덮인다.
  *
  * 덮개가 조여드는 초점도 여기서 채운다 — 건물 문으로 들어갈 때와 같이 **통로 쪽으로** 모인다.
  * 덮개는 Canvas 밖에 있어 카메라를 모르므로 통로가 화면 어디에 있는지 매 프레임 알려 준다.
@@ -49,20 +50,8 @@ export function LobbyPassage() {
     enterGallery(LOBBY_PASSAGE_IRIS_SECONDS)
   }, [walking])
 
-  // 통로에 다가서면 전시 공간 모델을 미리 받아 둔다. 전환을 시작한 뒤에 받기 시작하면
-  // 덮인 채로 오래 기다린다(건물 문 앞에서 로비를 미리 받는 것과 같다).
-  const preloaded = useRef(false)
   useFrame((state) => {
     if (!trigger) return
-
-    if (!preloaded.current) {
-      const { position } = useInteriorStore.getState()
-      const gap = Math.hypot(position.x - trigger.x, position.z - trigger.z)
-      if (gap <= LOBBY_PASSAGE_PRELOAD_RANGE) {
-        preloaded.current = true
-        preloadGalleryModel()
-      }
-    }
 
     // 카메라가 따라 들어가기 시작하는 깊이를 지나면 원이 조여들기 시작한다.
     // 그 뒤로도 걸음은 덮개 밑에서 이어져, 들어가는 것과 덮이는 것이 끊기지 않는다.
