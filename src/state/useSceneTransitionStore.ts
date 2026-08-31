@@ -15,10 +15,18 @@ import { IRIS_CLOSE_SECONDS } from '../ui/SceneTransition/SceneTransition.consta
  */
 export type SceneTransitionPhase = 'idle' | 'closing' | 'covered' | 'opening'
 
+/**
+ * 옮겨 갈 장면.
+ *
+ * **주소가 아니라 이름이다** — 씬은 자기가 어느 주소에 얹혀 있는지 알 필요가 없다.
+ * 이름을 주소로 바꾸는 일은 라우팅을 아는 쪽(`ui/SceneTransition`)이 `routes.ts`를 보고 한다.
+ */
+export type SceneDestination = 'map' | 'lobby' | 'gallery'
+
 interface SceneTransitionState {
   phase: SceneTransitionPhase
-  /** 다 덮인 뒤에 갈 경로. 덮개가 직접 옮긴다. */
-  to: string | null
+  /** 다 덮인 뒤에 갈 장면. 주소로 바꿔 옮기는 것은 덮개가 한다. */
+  to: SceneDestination | null
   /** 도착한 페이지가 그릴 준비를 마쳤는지. 이것이 켜져야 덮개를 연다. */
   arrived: boolean
   /**
@@ -37,7 +45,7 @@ interface SceneTransitionState {
    * 덮기 시작한다. 이미 전환 중이면 무시한다 — 겹쳐 부르면 가던 곳이 바뀐다.
    * 조여드는 시간을 주면 이번 전환에만 쓰인다.
    */
-  close: (to: string, seconds?: number) => void
+  close: (to: SceneDestination, seconds?: number) => void
   /** 다 덮였음을 알린다(덮개가 부른다). */
   markCovered: () => void
   /** 도착한 페이지가 준비됐음을 알린다. */
@@ -51,7 +59,7 @@ interface SceneTransitionState {
 /**
  * 라우트를 옮기는 동안 화면을 덮는 전환 상태.
  *
- * 페이지가 통째로 갈리므로 덮개는 라우트보다 위(`Root`)에 있고, 이 스토어가 그것과 페이지 사이의
+ * 페이지가 통째로 갈리므로 덮개는 라우트보다 위(`App`)에 있고, 이 스토어가 그것과 페이지 사이의
  * 유일한 연결이다. **다 덮인 뒤에 옮기고, 도착한 쪽이 준비를 알려야 연다** — 덮인 채로 기다리므로
  * 모델을 받는 동안에도 화면이 끊기지 않는다.
  */

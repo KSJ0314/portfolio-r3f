@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
-import { LIST_ROUTE, ListIcon } from '../../pages/ListView'
+import { LIST_ROUTE } from '../../routes'
+import { ListIcon } from './ListViewButton.icons'
 import { CornerButton } from '../CornerButton'
 
 /**

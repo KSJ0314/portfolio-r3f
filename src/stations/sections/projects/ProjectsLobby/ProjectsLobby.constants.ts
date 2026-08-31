@@ -1,10 +1,7 @@
 import { DRACO_DECODER_PATH } from '../../../../lib/draco'
+import type { SceneDestination } from '../../../../state/useSceneTransitionStore'
 import { INTERIOR_MOVE_SPEED, type InteriorFrontTaper } from '../interior'
-import { GALLERY_ROUTE } from '../ProjectsGallery/ProjectsGallery.constants'
 import { LOBBY_BOOK_TRIGGER } from './LobbyBook/LobbyBook.constants'
-
-/** 로비 라우트. 맵(`/`)과 별개인 페이지다. */
-export const LOBBY_ROUTE = '/projects'
 
 /** 로비 모델 파일. 직접 만든 것이라 출처 표기(`content/credits.ts`) 대상이 아니다. */
 export const LOBBY_MODEL_URL = '/assets/lobby.glb'
@@ -150,14 +147,14 @@ export const LOBBY_PASSAGE_FLOOR = 'Collider_Floor_Passage'
 export const LOBBY_PASSAGE_CEILING = 'Collider_Passage_Ceiling'
 
 /**
- * 눌러서 다른 장면으로 가는 트리거 — 이름 → 갈 경로.
+ * 눌러서 다른 장면으로 가는 트리거 — 이름 → 갈 장면.
  *
  * 책처럼 그 자리에서 보는 트리거와 성격이 다르다. 여기 있으면 카메라를 돌리는 대신
  * 캐릭터가 그 앞으로 걸어가고 장면이 갈린다. 목록으로 두어 "볼 자리가 없으면 이동"처럼
- * 암묵적으로 갈리지 않게 한다.
+ * 암묵적으로 갈리지 않게 한다. **주소가 아니라 장면 이름이다** — 씬은 주소를 알지 못한다.
  */
-export const LOBBY_TRAVEL_TRIGGERS: Record<string, string> = {
-  [LOBBY_PASSAGE_TRIGGER]: GALLERY_ROUTE,
+export const LOBBY_TRAVEL_TRIGGERS: Record<string, SceneDestination> = {
+  [LOBBY_PASSAGE_TRIGGER]: 'gallery',
 }
 
 /**

@@ -6,8 +6,8 @@ import { DEFAULT_INTRO_PAGE_AREA } from '../../stations/sections/about/AboutIntr
 import { SKILL_PAGES } from '../../stations/sections/about/AboutSkills'
 import { projectPages } from '../../stations/sections/projects/contents'
 import type { GalleryProject } from '../../stations/sections/projects/ProjectsGallery/GalleryNameplates'
-import { PAGE_HEIGHT, SCREEN_GAP_X, fitZoom } from './ListView.constants'
-import type { ListScreen, ListScreenKind } from './ListView.types'
+import { PAGE_HEIGHT, SCREEN_GAP_X, fitZoom } from './ListBaker.constants'
+import type { ListScreen, ListScreenKind } from './ListBaker.types'
 
 /** 프로젝트를 표시 순서대로. 순서 값이 같으면 문서 id로 갈라 매번 같은 차례가 나온다. */
 export function sortProjects(projects: readonly GalleryProject[]): GalleryProject[] {

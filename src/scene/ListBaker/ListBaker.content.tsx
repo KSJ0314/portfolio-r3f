@@ -1,20 +1,24 @@
 import { useEffect } from 'react'
-import { getStation } from '../../../content/stations'
-import { useCareerPageStore } from '../../../state/useCareerPageStore'
-import { useCareerSequenceStore } from '../../../state/useCareerSequenceStore'
-import { useSkillsPageStore } from '../../../state/useSkillsPageStore'
-import { useSkillsSequenceStore } from '../../../state/useSkillsSequenceStore'
-import { AboutIntroInactive } from '../../../stations/sections/about/AboutIntro'
+import { getStation } from '../../content/stations'
+import { useCareerPageStore } from '../../state/useCareerPageStore'
+import { useCareerSequenceStore } from '../../state/useCareerSequenceStore'
+import { useSkillsPageStore } from '../../state/useSkillsPageStore'
+import { useSkillsSequenceStore } from '../../state/useSkillsSequenceStore'
+import { AboutIntroInactive } from '../../stations/sections/about/AboutIntro'
 import {
   CareerColumns,
   CareerFigures,
   CareerTitles,
-} from '../../../stations/sections/about/AboutCareer'
-import { SkillsBox, SkillsPages, SkillsTitle } from '../../../stations/sections/about/AboutSkills'
-import { projectPages } from '../../../stations/sections/projects/contents'
-import { LIST_BACKGROUND, PAGE_HEIGHT } from '../ListView.constants'
-import type { ListScreen } from '../ListView.types'
-import type { ListBakerContentProps, ListProjectScreenProps, SkillsScreenProps } from './ListBaker.types'
+} from '../../stations/sections/about/AboutCareer'
+import { SkillsBox, SkillsPages, SkillsTitle } from '../../stations/sections/about/AboutSkills'
+import { projectPages } from '../../stations/sections/projects/contents'
+import { LIST_BACKGROUND, PAGE_HEIGHT } from './ListBaker.constants'
+import type {
+  ListBakerContentProps,
+  ListProjectScreenProps,
+  ListScreen,
+  SkillsScreenProps,
+} from './ListBaker.types'
 
 const SKILLS_ID = 'about-skills'
 const INTRO_ID = 'about-intro'

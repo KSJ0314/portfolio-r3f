@@ -1,5 +1,5 @@
 import { Box3, type Camera, type Object3D, Vector3 } from 'three'
-import type { ListShotLink } from '../ListView.types'
+import type { ListShotLink } from './ListBaker.types'
 
 const _box = new Box3()
 const _point = new Vector3()

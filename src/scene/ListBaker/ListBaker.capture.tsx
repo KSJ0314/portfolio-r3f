@@ -1,17 +1,16 @@
 import { useEffect } from 'react'
 import { useThree } from '@react-three/fiber'
 import type { OrthographicCamera } from 'three'
-import { createLogger } from '../../../lib/logger'
+import { createLogger } from '../../lib/logger'
 import {
   FOCUS_HEIGHT,
   SETTLE_MS,
   SHOT_GAP_MS,
   SHOT_IMAGE_QUALITY,
   SHOT_IMAGE_TYPE,
-} from '../ListView.constants'
+} from './ListBaker.constants'
 import { collectShotLinks } from './ListBaker.links'
-import type { ListScreen, ListShot } from '../ListView.types'
-import type { ListBakerCaptureProps } from './ListBaker.types'
+import type { ListBakerCaptureProps, ListScreen, ListShot } from './ListBaker.types'
 
 const log = createLogger('list:bake')
 

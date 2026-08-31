@@ -29,10 +29,41 @@ export interface ListShotLink {
   height: number
 }
 
-/** 구운 한 장. `url`은 blob 주소라 페이지를 떠날 때 되돌린다. */
+/** 구운 한 장. `url`은 blob 주소라 쓰는 쪽이 화면을 떠날 때 되돌린다. */
 export interface ListShot {
   id: string
   url: string
   /** 이 장에 있는 링크. 그림에는 그림만 남으므로 누를 자리를 따로 들고 있는다. */
   links: ListShotLink[]
+}
+
+export interface ListBakerProps {
+  /** 전시 칸을 만드는 그 목록. 프로젝트 화면 수가 여기서 나온다. */
+  projects: readonly GalleryProject[]
+  /** 몇 장까지 구웠는지. 가림막이 진행을 보여준다. */
+  onProgress: (done: number) => void
+  onDone: (shots: ListShot[]) => void
+}
+
+export interface ListBakerContentProps {
+  screens: readonly ListScreen[]
+  onReady: () => void
+}
+
+export interface SkillsScreenProps {
+  /** 그릴 쪽(0부터). */
+  page: number
+}
+
+export interface ListProjectScreenProps {
+  project: GalleryProject
+  page: number
+}
+
+export interface ListBakerCaptureProps {
+  screens: readonly ListScreen[]
+  /** 다 그려졌는지. 그 전에 찍으면 빈 화면이 나온다. */
+  ready: boolean
+  onProgress: (done: number) => void
+  onDone: (shots: ListShot[]) => void
 }
