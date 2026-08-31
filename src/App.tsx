@@ -10,6 +10,7 @@ import { ProjectsLobbyPage } from './pages/ProjectsLobbyPage'
 import { ProjectsGalleryPage } from './pages/ProjectsGalleryPage'
 import { CRAYON_ROUTE, GALLERY_ROUTE, LIST_ROUTE, LOBBY_ROUTE, MAIN_ROUTE } from './routes'
 import { SceneTransition } from './ui/SceneTransition'
+import { MobileNotice } from './ui/MobileNotice'
 import { AppErrorBoundary } from './ui/AppErrorBoundary'
 import { ErrorPage } from './ui/ErrorPage'
 
@@ -37,6 +38,8 @@ export function App() {
       </AppErrorBoundary>
       {/* 장면 전환 덮개도 라우트보다 위다 — 페이지가 통째로 갈리는 동안 남아 화면을 덮는다. */}
       <SceneTransition />
+      {/* 마우스 없는 기기 안내. 어느 화면에서나 같으므로 라우트가 아니라 여기 하나만 둔다. */}
+      <MobileNotice />
     </ThemeProvider>
   )
 }

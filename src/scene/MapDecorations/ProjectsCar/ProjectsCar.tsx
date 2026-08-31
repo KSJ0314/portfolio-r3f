@@ -26,6 +26,7 @@ import {
 } from './ProjectsCar.constants'
 import { useReturnOnClose } from './ProjectsCar.hooks'
 import { disposeCar, splitCar } from './ProjectsCar.wheels'
+import { isAfterTouchDrag, registerTouchTarget } from '../../touchMove'
 
 /**
  * 연출의 단계.
@@ -210,6 +211,15 @@ function CarRide({ placement }: { placement: ProjectsCarPlacement }) {
     })
   }, [advance, acquireLock, board, placement])
 
+  // 인터랙션 대상으로 등록한다.
+  // 탈 수 있는 동안만 두어 달리는 중에는 판정에서 빠진다.
+  useEffect(() => {
+    if (stage !== 'ready') return
+    const object = place.current
+    if (!object) return
+    return registerTouchTarget(object)
+  })
+
   // 좌클릭은 R3F 포인터 이벤트가 아니라 캔버스 mousedown을 직접 듣는다.
   // 우클릭 홀드로 이동하는 중에 좌클릭을 더 누르면 pointerdown이 아예 발생하지 않기 때문이다.
   // 차에 포인터 핸들러를 달지 않으므로 우클릭 이동은 차를 통과해 바닥으로 간다.
@@ -218,6 +228,8 @@ function CarRide({ placement }: { placement: ProjectsCarPlacement }) {
     const canvas = gl.domElement
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return
+      // 손가락으로 끌어 이동한 직후에는 받지 않는다. 뗀 자리에서 흉내 낸 마우스 이벤트가 뒤따라온다.
+      if (isAfterTouchDrag()) return
       const group = place.current
       if (!group) return
 

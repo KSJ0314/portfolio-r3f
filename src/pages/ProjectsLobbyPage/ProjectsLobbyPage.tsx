@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useLobbyTriggerStore } from '../../state/useLobbyTriggerStore'
 import { BackButton } from '../../ui/BackButton'
 import { LobbyPageHUD } from '../../ui/DevHUD/LobbyPageHUD'
+import { useCoarsePointer } from '../../ui/MobileNotice'
 import { LobbyScene } from '../../stations/sections/projects/ProjectsLobby/LobbyScene'
 import { goBack } from '../../stations/sections/projects/ProjectsLobby/ProjectsLobby.travel'
 
@@ -14,6 +15,7 @@ import { goBack } from '../../stations/sections/projects/ProjectsLobby/ProjectsL
 export function ProjectsLobbyPage() {
   // 책을 보고 있으면 책을 닫는 버튼, 아니면 맵으로 나가는 버튼이다.
   const activeId = useLobbyTriggerStore((s) => s.activeId)
+  const mobile = useCoarsePointer()
 
   // ESC는 좌상단 버튼과 같은 길을 탄다 — 열린 트리거를 먼저 닫고, 없을 때만 로비를 나간다.
   useEffect(() => {
@@ -34,8 +36,8 @@ export function ProjectsLobbyPage() {
         onClick={goBack}
       />
 
-      {/* leva 튜닝 패널은 dev 전용이라 프로덕션 번들에서 빠진다. 맵과 라우트가 달라 따로 둔다. */}
-      {import.meta.env.DEV && <LobbyPageHUD />}
+      {/* leva 튜닝 패널은 dev 전용이고 좁은 화면에서는 두지 않는다. 맵과 라우트가 달라 따로 둔다. */}
+      {import.meta.env.DEV && !mobile && <LobbyPageHUD />}
     </>
   )
 }

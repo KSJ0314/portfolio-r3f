@@ -33,6 +33,9 @@ export const LOBBY_WALKABLE_NAMES = [
   'Collider_Stair_R',
 ]
 
+/** 1층 바닥. 방의 좌우 끝을 이 콜라이더에서 잰다. */
+export const LOBBY_GROUND_FLOOR = 'Collider_Floor_Ground'
+
 /** 밟는 콜라이더 중 계단. 여기 올라선 목표점만 단 중앙으로 맞춘다. */
 export const LOBBY_STAIR_NAMES = ['Collider_Stair_L', 'Collider_Stair_R']
 

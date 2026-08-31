@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BackButton } from '../../ui/BackButton'
 import { GalleryPageHUD } from '../../ui/DevHUD/GalleryPageHUD'
+import { useCoarsePointer } from '../../ui/MobileNotice'
 import { GalleryScene } from '../../stations/sections/projects/ProjectsGallery/GalleryScene'
 import { goBackFromGallery } from '../../stations/sections/projects/ProjectsGallery/ProjectsGallery.travel'
 
@@ -11,6 +12,8 @@ import { goBackFromGallery } from '../../stations/sections/projects/ProjectsGall
  * 나가는 방법은 좌상단 버튼과 ESC 두 가지이고, 둘 다 같은 판단(`goBackFromGallery`)을 탄다.
  */
 export function ProjectsGalleryPage() {
+  const mobile = useCoarsePointer()
+
   // ESC는 좌상단 버튼과 같은 길을 탄다.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -26,8 +29,8 @@ export function ProjectsGalleryPage() {
       {/* 전시실은 밝은 대리석이라 검정. */}
       <BackButton label="Back" color="#000000" onClick={goBackFromGallery} />
 
-      {/* leva 튜닝 패널은 dev 전용이라 프로덕션 번들에서 빠진다. 라우트마다 하나씩 둔다. */}
-      {import.meta.env.DEV && <GalleryPageHUD />}
+      {/* leva 튜닝 패널은 dev 전용이고 좁은 화면에서는 두지 않는다. 라우트마다 하나씩 둔다. */}
+      {import.meta.env.DEV && !mobile && <GalleryPageHUD />}
     </>
   )
 }

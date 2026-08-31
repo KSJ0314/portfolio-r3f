@@ -8,6 +8,7 @@ import type { GalleryProject } from '../../stations/sections/projects/ProjectsGa
 import { ListBaker, buildShotsPdf, saveShotsPdf } from '../../scene/ListBaker'
 import { ChevronIcon, DownloadIcon } from './ListViewPage.icons'
 import {
+  BackSlot,
   Bar,
   Count,
   Cover,
@@ -20,6 +21,7 @@ import {
   NavButton,
   Row,
   Shot,
+  Stage,
   Viewer,
 } from './ListViewPage.styled'
 import type { ListShot } from '../../scene/ListBaker'
@@ -75,7 +77,9 @@ export function ListViewPage() {
 
   return (
     <>
-      <BackButton label="Go home" color={theme.colors.text} onClick={() => navigate(MAIN_ROUTE)} />
+      <BackSlot>
+        <BackButton label="Go home" color={theme.colors.text} onClick={() => navigate(MAIN_ROUTE)} />
+      </BackSlot>
 
       {!shots && (
         <Cover>
@@ -90,7 +94,7 @@ export function ListViewPage() {
 
       <Viewer>
         {shots && shot && (
-          <>
+          <Stage>
             <Row>
               <NavButton
                 type="button"
@@ -146,7 +150,7 @@ export function ListViewPage() {
                 {page + 1} / {shots.length}
               </Count>
             </Bar>
-          </>
+          </Stage>
         )}
       </Viewer>
 
