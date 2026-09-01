@@ -2,8 +2,10 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Line, Text } from '@react-three/drei'
 import { BODY_FONT, HAND_FONT } from '../../../../content/fonts'
 import { useDoc } from '../../../../lib/firebase'
+import { usePointerCursor } from '../../../../scene/usePointerCursor'
 import { useIntroPageStore } from '../../../../state/useIntroPageStore'
 import { useSceneReadyStore } from '../../../../state/useSceneReadyStore'
+import { useStationStore } from '../../../../state/useStationStore'
 import { LoadFailed } from '../../../LoadFailed'
 import type { StationInactiveProps } from '../../../registry'
 import type { TroikaTextMesh } from '../../../types'
@@ -26,6 +28,9 @@ export function AboutIntroInactive({ station }: StationInactiveProps) {
   const { width, height } = useIntroPageStore((s) => s.area)
   const layout = useIntroPageStore((s) => s.layout)
   const showOutline = useIntroPageStore((s) => s.showOutline)
+  const phase = useStationStore((s) => s.phase)
+  // 누를 수 있는 동안에만 손가락 커서를 붙인다. 열려 있는 동안에는 페이지를 읽는 화면이다.
+  const cursor = usePointerCursor(phase === 'idle')
   const {
     data: profile,
     loading: profileLoading,
@@ -88,12 +93,13 @@ export function AboutIntroInactive({ station }: StationInactiveProps) {
 
   return (
     <>
-      {/* 클릭 판정 면. 포인터 핸들러가 없어 R3F 이벤트에서는 무시되므로 우클릭 이동은 바닥으로 통과한다.
-          좌클릭 활성화는 Stations가 직접 쏘는 레이캐스트가 잡는다. */}
+      {/* 클릭 판정 면. 포인터 핸들러는 커서뿐이라 우클릭 이동은 바닥으로 통과하고,
+          좌클릭 활성화만 Stations가 직접 쏘는 레이캐스트로 잡는다. */}
       <mesh
         position={[0, AREA_Y, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         userData={{ stationId: station.id }}
+        {...cursor}
       >
         <planeGeometry args={[width, height]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />

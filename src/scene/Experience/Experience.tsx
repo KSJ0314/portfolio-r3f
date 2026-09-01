@@ -13,6 +13,7 @@ import { AssetPreload } from '../AssetPreload'
 import { SceneArrival } from '../SceneArrival'
 import { DevicePerfProbe } from '../DevicePerfProbe'
 import { ActiveStationScene } from '../../stations'
+import { fitAerialZoom } from './Experience.zoom'
 
 export function Experience() {
   const mode = useThemeStore((s) => s.mode)
@@ -32,7 +33,7 @@ export function Experience() {
         AERIAL_OFFSET[1],
         position.z + AERIAL_OFFSET[2],
       ] as [number, number, number],
-      zoom: 85,
+      zoom: fitAerialZoom(window.innerWidth, window.innerHeight),
       near: 0.1,
       far: 100,
     }

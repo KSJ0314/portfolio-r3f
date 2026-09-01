@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf'
 import { createLogger } from '../../lib/logger'
-import { BAKE_HEIGHT, BAKE_WIDTH, PDF_FILE_NAME } from './ListView.constants'
-import type { ListShot } from './ListView.types'
+import { BAKE_HEIGHT, BAKE_WIDTH, PDF_FILE_NAME } from './ListBaker.constants'
+import type { ListShot } from './ListBaker.types'
 
 const log = createLogger('list:pdf')
 

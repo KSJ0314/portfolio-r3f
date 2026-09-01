@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
 import { type Group, Raycaster, Vector2 } from 'three'
 import { ClickMarker } from '../../../../../scene/ClickMarker'
+import { isAfterTouchDrag, registerTouchTarget } from '../../../../../scene/touchMove'
 import { usePointerCursor } from '../../../../../scene/usePointerCursor'
 import { useLobbyGeometryStore } from '../../../../../state/useLobbyGeometryStore'
 import { useLobbyPageStore } from '../../../../../state/useLobbyPageStore'
@@ -50,11 +51,20 @@ export function LobbyTriggers() {
     },
   }
 
+  // 탭으로 열 수 있는 것으로 등록한다. 이동 쪽이 이것을 보고 탭을 여는 쪽에 넘긴다.
+  useEffect(() => {
+    const object = group.current
+    if (!object) return
+    return registerTouchTarget(object)
+  })
+
   useEffect(() => {
     const canvas = gl.domElement
 
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return
+      // 손가락으로 끌어 이동한 직후에는 받지 않는다. 뗀 자리에서 흉내 낸 마우스 이벤트가 뒤따라온다.
+      if (isAfterTouchDrag()) return
       // 이미 보고 있는 동안에는 받지 않는다. 커서도 걷혀 있어 누를 수 있다고 보이지도 않는다.
       if (useLobbyTriggerStore.getState().activeId !== null) return
       const plates = group.current

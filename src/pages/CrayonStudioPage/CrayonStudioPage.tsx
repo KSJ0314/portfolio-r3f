@@ -1,4 +1,4 @@
-import { StudioModal } from './CrayonStudio'
+import { StudioModal } from '../../tools/CrayonStudio'
 
 /**
  * `/crayon` — 크레파스 스튜디오만 단독으로 쓰는 페이지.

@@ -56,6 +56,7 @@ import {
   LOBBY_RAIL_RIGHT,
   LOBBY_SHADOW,
   LOBBY_STEP_MESH,
+  LOBBY_GROUND_FLOOR,
   LOBBY_WALKABLE_NAMES,
 } from '../ProjectsLobby.constants'
 import { applyPageText, useLobbyBookPages } from '../LobbyBook'
@@ -165,7 +166,8 @@ export function LobbyModel() {
   // 여기서는 텍스처만 받아 물려 두면 된다.
   const pageTextures = useLobbyBookPages()
 
-  const { model, walkables, blockers, triggers, parts, stepCenters, corridor, passage } = useMemo(() => {
+  const { model, walkables, blockers, triggers, parts, stepCenters, corridor, bounds, passage } =
+    useMemo(() => {
     const model = scene.clone(true)
     // 늘어나면 안 되는 것을 먼저 골라 둔다. 배율을 걸기 전이라 여기서 잰 값이 곧 모델 좌표다.
     model.updateMatrixWorld(true)
@@ -183,6 +185,8 @@ export function LobbyModel() {
     const parts: InteriorColliderPart[] = []
     // 통로로 곧장 갈 수 있는 좌우 폭. 난간 안쪽 면에서 잰다.
     const corridor = { minX: 1, maxX: -1 }
+    // 방의 좌우 끝. 1층 바닥에서 재 카메라가 따라갈 범위의 기준으로 쓴다.
+    const bounds = { minX: 1, maxX: -1 }
     // 통로 입구. 바닥에서 좌우 폭과 뚫린 자리를, 천장에서 높이를 얻는다.
     const opening = { minX: 0, maxX: 0, floorY: 0, topY: 0, mouthZ: 0, measured: 0 }
     const box = new Box3()
@@ -279,6 +283,11 @@ export function LobbyModel() {
       if (LOBBY_WALKABLE_NAMES.includes(mesh.name)) {
         walkables.push(mesh)
         parts.push({ mesh, kind: 'walkable' })
+        if (mesh.name === LOBBY_GROUND_FLOOR) {
+          box.setFromObject(mesh)
+          bounds.minX = box.min.x
+          bounds.maxX = box.max.x
+        }
         return
       }
       // 천장처럼 머리 위에 있는 것은 이동에 관여하지 않는다.
@@ -316,7 +325,7 @@ export function LobbyModel() {
           }
         : null
 
-    return { model, walkables, blockers, triggers, parts, stepCenters, corridor, passage }
+    return { model, walkables, blockers, triggers, parts, stepCenters, corridor, bounds, passage }
   }, [scene, artworks, pageTextures])
 
   // 그림자를 **한 번만 굽고 얼린다.** 방은 정지해 있어 다시 그릴 이유가 없고,
@@ -356,9 +365,9 @@ export function LobbyModel() {
   }, [walkables, blockers, stepCenters, triggers])
 
   useEffect(() => {
-    setGeometry(triggers, corridor, passage)
+    setGeometry(triggers, corridor, bounds, passage)
     return () => clearGeometry()
-  }, [triggers, corridor, passage, setGeometry, clearGeometry])
+  }, [triggers, corridor, bounds, passage, setGeometry, clearGeometry])
 
   return (
     <>

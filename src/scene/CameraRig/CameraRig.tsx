@@ -4,6 +4,7 @@ import { Vector3 } from 'three'
 import type { OrthographicCamera } from 'three'
 import { useCameraStore } from '../../state/useCameraStore'
 import { useStationStore } from '../../state/useStationStore'
+import { fitAerialZoom } from '../Experience/Experience.zoom'
 
 /**
  * 카메라는 캐릭터(position)와의 상대 오프셋(아이소메트릭 각도·거리)을 고정한 채 매 프레임 캐릭터를 따라가며 화면 중앙에 둔다.
@@ -18,6 +19,8 @@ import { useStationStore } from '../../state/useStationStore'
 export function CameraRig() {
   const { camera } = useThree()
   const offset = useRef(new Vector3())
+  // 화면 크기가 곧 배율이다.
+  // 창을 줄이거나 기기를 돌리면 매 프레임 다시 잡힌다.
   const baseZoom = useRef(camera.zoom)
   const ready = useRef(false)
   const position = useCameraStore((s) => s.position)
@@ -57,6 +60,8 @@ export function CameraRig() {
     // 초기화 전 프레임이 offset(0,0,0)으로 카메라를 원점에 박아(새로고침 시 맵이 안 뜨는 레이스) 회귀한다.
     // 그 회귀를 구조적으로 막기 위한 안전장치다.
     if (!ready.current) return
+    baseZoom.current = fitAerialZoom(state.size.width, state.size.height)
+
     const cam = state.camera as OrthographicCamera
     cam.position.copy(position).add(offset.current)
     cam.lookAt(position)

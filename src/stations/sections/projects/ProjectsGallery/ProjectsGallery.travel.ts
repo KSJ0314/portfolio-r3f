@@ -1,8 +1,6 @@
 import { useGalleryFocusStore } from '../../../../state/useGalleryFocusStore'
 import { useSceneTransitionStore } from '../../../../state/useSceneTransitionStore'
-import { LOBBY_ROUTE } from '../ProjectsLobby/ProjectsLobby.constants'
 import { enterLobbyFromGallery } from '../ProjectsLobby/ProjectsLobby.travel'
-import { GALLERY_ROUTE } from './ProjectsGallery.constants'
 
 /**
  * 로비와 전시 공간을 오가는 일.
@@ -16,7 +14,7 @@ import { GALLERY_ROUTE } from './ProjectsGallery.constants'
  * 조여드는 시간은 그 걸음에 맞춰 부르는 쪽이 준다.
  */
 export function enterGallery(seconds?: number): void {
-  useSceneTransitionStore.getState().close(GALLERY_ROUTE, seconds)
+  useSceneTransitionStore.getState().close('gallery', seconds)
 }
 
 /**
@@ -28,7 +26,7 @@ export function enterGallery(seconds?: number): void {
 export function leaveGallery(): void {
   if (useSceneTransitionStore.getState().phase !== 'idle') return
   enterLobbyFromGallery()
-  useSceneTransitionStore.getState().close(LOBBY_ROUTE)
+  useSceneTransitionStore.getState().close('lobby')
 }
 
 /**

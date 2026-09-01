@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { BAKE_HEIGHT, BAKE_WIDTH } from '../ListView.constants'
+import { BAKE_HEIGHT, BAKE_WIDTH } from './ListBaker.constants'
 
 /**
  * 굽는 캔버스를 두는 자리.

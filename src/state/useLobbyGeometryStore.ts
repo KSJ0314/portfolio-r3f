@@ -19,18 +19,24 @@ interface LobbyGeometryState {
    * 좌우가 뒤집혀 있으면(잰 적 없음) 아직 아무 데도 아니다.
    */
   corridor: { minX: number; maxX: number }
+  /**
+   * 방의 좌우 끝(월드 x). 카메라가 따라갈 범위를 여기서 구한다.
+   * 좌우가 뒤집혀 있으면 아직 재지 않은 것이라 카메라가 제한을 걸지 않는다.
+   */
+  bounds: { minX: number; maxX: number }
   /** 통로 입구. 재기 전에는 null이라 가림 면을 세우지 않는다. */
   passage: LobbyPassageOpening | null
   setGeometry: (
     triggers: Record<string, InteriorTrigger>,
     corridor: { minX: number; maxX: number },
+    bounds: { minX: number; maxX: number },
     passage: LobbyPassageOpening | null,
   ) => void
   clearGeometry: () => void
 }
 
 /** 잰 적이 없을 때의 값. 좌우가 뒤집혀 있어 어떤 x도 안에 들지 않는다. */
-const EMPTY_CORRIDOR = { minX: 1, maxX: -1 }
+const EMPTY_RANGE = { minX: 1, maxX: -1 }
 
 /**
  * 로비 모델에서 **잰** 것.
@@ -43,8 +49,11 @@ const EMPTY_CORRIDOR = { minX: 1, maxX: -1 }
  */
 export const useLobbyGeometryStore = create<LobbyGeometryState>((set) => ({
   triggers: {},
-  corridor: EMPTY_CORRIDOR,
+  corridor: EMPTY_RANGE,
+  bounds: EMPTY_RANGE,
   passage: null,
-  setGeometry: (triggers, corridor, passage) => set({ triggers, corridor, passage }),
-  clearGeometry: () => set({ triggers: {}, corridor: EMPTY_CORRIDOR, passage: null }),
+  setGeometry: (triggers, corridor, bounds, passage) =>
+    set({ triggers, corridor, bounds, passage }),
+  clearGeometry: () =>
+    set({ triggers: {}, corridor: EMPTY_RANGE, bounds: EMPTY_RANGE, passage: null }),
 }))

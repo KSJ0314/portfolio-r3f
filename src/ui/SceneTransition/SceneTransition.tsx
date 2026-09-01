@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import gsap from 'gsap'
+import { ROUTE_BY_DESTINATION } from '../../routes'
 import { useSceneTransitionStore } from '../../state/useSceneTransitionStore'
 import {
   IRIS_EASE,
@@ -29,7 +30,7 @@ const coverDiameter = () => {
 /**
  * 장면 전환 덮개 — 초점으로 조여드는 원.
  *
- * 라우트를 옮기면 페이지가 통째로 갈리므로 **라우트보다 위**(`Root`)에 둔다.
+ * 라우트를 옮기면 페이지가 통째로 갈리므로 **라우트보다 위**(`App`)에 둔다.
  * 다 덮인 뒤에 옮기고, 도착한 쪽이 준비를 알려야 연다(`useSceneTransitionStore`).
  * 그래서 모델을 받는 동안에도 화면이 끊기지 않는다.
  *
@@ -81,7 +82,7 @@ export function SceneTransition() {
         const { to, markCovered } = useSceneTransitionStore.getState()
         coveredAt.current = performance.now()
         markCovered()
-        if (to) navigate(to)
+        if (to) navigate(ROUTE_BY_DESTINATION[to])
       },
     })
     return () => {

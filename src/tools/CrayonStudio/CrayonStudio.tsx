@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { CornerButton } from '../../ui/CornerButton'
+import { useCoarsePointer } from '../../ui/MobileNotice'
 import {
   createCrayonCanvas,
   useCrayonStrokeInput,
@@ -756,6 +757,10 @@ export function StudioModal({ onClose }: StudioModalProps) {
  */
 export function CrayonStudio() {
   const [open, setOpen] = useState(false)
+  const coarse = useCoarsePointer()
+
+  // 그리는 판과 설정이 가로로 나란히 서는 배치라 좁은 화면에 들어가지 않는다. 버튼을 두지 않는다.
+  if (coarse) return null
 
   return (
     <>

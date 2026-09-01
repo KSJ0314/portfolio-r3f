@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { MAIN_ROUTE } from '../../routes'
 import { useTheme } from 'styled-components'
 import { useCollection } from '../../lib/firebase'
 import { BackButton } from '../../ui/BackButton'
 import type { GalleryProject } from '../../stations/sections/projects/ProjectsGallery/GalleryNameplates'
-import { ListBaker } from './ListBaker'
-import { ChevronIcon, DownloadIcon } from './ListView.icons'
-import { buildShotsPdf, saveShotsPdf } from './ListView.pdf'
+import { ListBaker, buildShotsPdf, saveShotsPdf } from '../../scene/ListBaker'
+import { ChevronIcon, DownloadIcon } from './ListViewPage.icons'
 import {
+  BackSlot,
   Bar,
   Count,
   Cover,
@@ -20,9 +21,10 @@ import {
   NavButton,
   Row,
   Shot,
+  Stage,
   Viewer,
-} from './ListView.styled'
-import type { ListShot } from './ListView.types'
+} from './ListViewPage.styled'
+import type { ListShot } from '../../scene/ListBaker'
 
 /**
  * 목록 보기 — 주요 화면을 한 장씩 넘겨 보는 페이지.
@@ -75,7 +77,9 @@ export function ListViewPage() {
 
   return (
     <>
-      <BackButton label="Go home" color={theme.colors.text} onClick={() => navigate('/')} />
+      <BackSlot>
+        <BackButton label="Go home" color={theme.colors.text} onClick={() => navigate(MAIN_ROUTE)} />
+      </BackSlot>
 
       {!shots && (
         <Cover>
@@ -90,7 +94,7 @@ export function ListViewPage() {
 
       <Viewer>
         {shots && shot && (
-          <>
+          <Stage>
             <Row>
               <NavButton
                 type="button"
@@ -146,7 +150,7 @@ export function ListViewPage() {
                 {page + 1} / {shots.length}
               </Count>
             </Bar>
-          </>
+          </Stage>
         )}
       </Viewer>
 

@@ -17,7 +17,6 @@ import {
   LOBBY_PASSAGE_ENTER,
   LOBBY_PASSAGE_STAND,
   LOBBY_PASSAGE_WALK_SPEED,
-  LOBBY_ROUTE,
   LOBBY_START,
 } from './ProjectsLobby.constants'
 
@@ -71,7 +70,7 @@ function standOutsideDoor(): void {
 
 /** 맵 → 로비. 건물 문으로 걸어 들어가기 시작할 때 부른다. */
 export function enterLobby(): void {
-  useSceneTransitionStore.getState().close(LOBBY_ROUTE)
+  useSceneTransitionStore.getState().close('lobby')
 }
 
 /**
@@ -83,7 +82,7 @@ export function enterLobby(): void {
 export function leaveLobby(): void {
   if (useSceneTransitionStore.getState().phase !== 'idle') return
   standOutsideDoor()
-  useSceneTransitionStore.getState().close('/')
+  useSceneTransitionStore.getState().close('map')
 }
 
 /**

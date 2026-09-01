@@ -7,6 +7,7 @@ import { getStationEntry } from '../../stations'
 import { useCameraStore } from '../../state/useCameraStore'
 import { useStationStore } from '../../state/useStationStore'
 import { Station } from './Station'
+import { isAfterTouchDrag, registerTouchTarget } from '../touchMove'
 
 /** 스테이션에서 이만큼 안으로 들어오면 근접으로 본다. 거리 기준은 스테이션이 정한다(영역 테두리·중심점). */
 const NEAR_RADIUS = 2
@@ -48,10 +49,19 @@ export function Stations() {
   // 그래서 우클릭 홀드로 이동하는 중에 좌클릭을 더 누르면 pointerdown이 아예 발생하지 않아
   // R3F 이벤트로는 클릭을 잡을 수 없다(buttons 값만 바뀐 pointermove로 온다).
   // mousedown은 버튼마다 매번 발생하므로 이걸 듣고, 커서 밑을 직접 쏴서 어느 스테이션인지 판정한다.
+  // 탭으로 열 수 있는 것으로 등록한다. 이동 쪽이 이것을 보고 탭을 여는 쪽에 넘긴다.
+  useEffect(() => {
+    const object = groupRef.current
+    if (!object) return
+    return registerTouchTarget(object)
+  })
+
   useEffect(() => {
     const canvas = gl.domElement
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return
+      // 손가락으로 끌어 이동한 직후에는 받지 않는다. 뗀 자리에서 흉내 낸 마우스 이벤트가 뒤따라온다.
+      if (isAfterTouchDrag()) return
       const group = groupRef.current
       if (!group) return
 
