@@ -131,14 +131,22 @@ export function InteriorInput({ blocked, snapStairs }: InteriorInputProps) {
       pendingTouch.current = false
     }
 
+    // 브라우저가 제스처를 가져가면 뗀 이벤트 대신 이것이 온다. 탭으로 치지 않고 상태만 비운다.
+    const cancel = () => {
+      holding.current = false
+      pendingTouch.current = false
+    }
+
     canvas.addEventListener('pointerdown', onPointerDown)
     canvas.addEventListener('pointermove', track)
     // 캔버스 밖에서 떼도 멈춘다.
     window.addEventListener('pointerup', stop)
+    window.addEventListener('pointercancel', cancel)
     return () => {
       canvas.removeEventListener('pointerdown', onPointerDown)
       canvas.removeEventListener('pointermove', track)
       window.removeEventListener('pointerup', stop)
+      window.removeEventListener('pointercancel', cancel)
     }
   }, [aim, camera, gl, isBlocked])
 

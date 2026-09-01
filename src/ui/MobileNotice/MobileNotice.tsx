@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { LIST_ROUTE } from '../../routes'
 import { MOBILE_NOTICE, ROTATE_NOTICE, SHOW_MOBILE_NOTICE } from './MobileNotice.constants'
 import { useCoarsePointer, usePortrait } from './MobileNotice.hooks'
 import { Action, Body, Overlay, Title } from './MobileNotice.styled'
@@ -15,8 +17,15 @@ import { Action, Body, Overlay, Title } from './MobileNotice.styled'
  */
 export function MobileNotice() {
   const [read, setRead] = useState(false)
+  const navigate = useNavigate()
   const coarse = useCoarsePointer()
   const portrait = usePortrait()
+
+  // 버튼 문구대로 목록 보기를 연다. 맵으로 들어온 경우엔 이미 옮겨진 뒤라 안내만 걷힌다.
+  const openList = () => {
+    navigate(LIST_ROUTE)
+    setRead(true)
+  }
 
   if (!coarse) return null
 
@@ -25,7 +34,7 @@ export function MobileNotice() {
       <Overlay>
         <Title>{MOBILE_NOTICE.title}</Title>
         <Body>{MOBILE_NOTICE.body}</Body>
-        <Action type="button" onClick={() => setRead(true)}>
+        <Action type="button" onClick={openList}>
           {MOBILE_NOTICE.action}
         </Action>
       </Overlay>

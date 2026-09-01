@@ -29,6 +29,17 @@ export const WorldMapSheet = styled.div`
   background-repeat: repeat;
   background-clip: padding-box;
   box-shadow: 0 6px 14px rgba(58, 58, 58, 0.22);
+
+  /*
+   * 좁은 화면에서는 시트가 절반 이하로 줄어드는데 테두리와 여백은 그대로라 맵이 그만큼 눌린다.
+   * 시트를 키우고 둘을 함께 줄인다. 높이는 주소창이 접힌 높이를 따르도록 dvh로 잰다.
+   */
+  @media (pointer: coarse) {
+    width: min(94vw, 94dvh);
+    height: min(94vw, 94dvh);
+    padding: 10px;
+    border-width: 8px;
+  }
 `
 
 export const WorldMapTitle = styled.h2`
@@ -40,6 +51,13 @@ export const WorldMapTitle = styled.h2`
   font-size: 28px;
   font-weight: 400;
   color: ${({ theme }) => theme.colors.text};
+
+  /* 줄어든 시트에 견주면 기본 크기가 지도를 덮는다. */
+  @media (pointer: coarse) {
+    top: 8px;
+    left: 12px;
+    font-size: 18px;
+  }
 `
 
 export const WorldMapClose = styled.button`
@@ -61,6 +79,14 @@ export const WorldMapClose = styled.button`
 
   &:hover {
     background: ${({ theme }) => theme.colors.border};
+  }
+
+  @media (pointer: coarse) {
+    top: 6px;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+    font-size: 18px;
   }
 `
 

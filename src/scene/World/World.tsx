@@ -56,8 +56,17 @@ export function World() {
       holding.current = false
       pendingTouch.current = false
     }
+    // 브라우저가 제스처를 가져가면 뗀 이벤트 대신 이것이 온다. 탭으로 치지 않고 상태만 비운다.
+    const cancel = () => {
+      holding.current = false
+      pendingTouch.current = false
+    }
     window.addEventListener('pointerup', stop)
-    return () => window.removeEventListener('pointerup', stop)
+    window.addEventListener('pointercancel', cancel)
+    return () => {
+      window.removeEventListener('pointerup', stop)
+      window.removeEventListener('pointercancel', cancel)
+    }
   }, [camera, gl, markMoved])
 
   // 누르고 있는 동안 매 프레임 현재 커서 밑 바닥 지점을 목표로 갱신 → 계속 이동
