@@ -14,7 +14,8 @@ function* corners(box: Box3): Generator<Vector3> {
 /**
  * 지금 카메라에 담긴 링크 자리를 찾는다.
  *
- * 링크를 그리는 쪽이 판에 주소를 실어 두므로(`userData.linkUrl`) 무엇이 링크인지 여기서 알 필요가 없다.
+ * 누를 자리를 그리는 쪽이 판에 주소(`userData.linkUrl`)나 복사할 값(`userData.copyText`)을 실어 두므로
+ * 무엇이 링크인지 여기서 알 필요가 없다.
  * 화면 밖에 있는 것은 다른 장의 링크라 뺀다 — 장끼리 멀리 떼어 세워 두어 겹치지 않는다.
  *
  * 값은 그림 크기 대비 백분율이다. 이미지를 줄여 띄워도 링크가 따라온다.
@@ -24,7 +25,8 @@ export function collectShotLinks(root: Object3D, camera: Camera): ListShotLink[]
 
   root.traverse((object) => {
     const url = object.userData?.linkUrl
-    if (typeof url !== 'string') return
+    const copy = object.userData?.copyText
+    if (typeof url !== 'string' && typeof copy !== 'string') return
 
     _box.setFromObject(object)
     if (_box.isEmpty()) return
@@ -45,7 +47,8 @@ export function collectShotLinks(root: Object3D, camera: Camera): ListShotLink[]
     if (maxX < -1 || minX > 1 || maxY < -1 || minY > 1) return
 
     links.push({
-      url,
+      url: typeof url === 'string' ? url : undefined,
+      copy: typeof copy === 'string' ? copy : undefined,
       left: ((minX + 1) / 2) * 100,
       top: ((1 - maxY) / 2) * 100,
       width: ((maxX - minX) / 2) * 100,

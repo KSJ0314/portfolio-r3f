@@ -33,6 +33,7 @@ Career의 칸 셋에 자리가 없어 미뤄 뒀고, 어디에 담을지는 이�
 | `tagline` | string | 한 줄 소개 |
 | `intro` | string | 자기소개 본문(줄바꿈 포함) |
 | `email` | string | 이메일 |
+| `phone` | string | 전화번호 |
 | `links` | array<{label, url}> | 링크(깃허브 등, 개수 가변) |
 | `location` | string | 거주 지역 |
 

@@ -234,7 +234,8 @@ export function IntroPageHUD() {
   useEffect(() => {
     const { width, height, showOutline, ...layout } = values
     setArea({ width, height })
-    setLayout(layout)
+    // 연락처 배치는 패널에 두지 않아 기본값을 그대로 실어 보낸다.
+    setLayout({ ...L, ...layout })
     setShowOutline(showOutline)
   }, [values, setArea, setLayout, setShowOutline])
 

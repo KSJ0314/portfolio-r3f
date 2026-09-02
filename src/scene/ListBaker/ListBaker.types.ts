@@ -22,7 +22,10 @@ export interface ListScreen {
 
 /** 그림 위에 얹는 링크 한 자리. 값은 그림 크기 대비 백분율이라 이미지를 줄여도 따라온다. */
 export interface ListShotLink {
-  url: string
+  /** 새 탭으로 열 주소. 복사만 하는 자리에는 없다. */
+  url?: string
+  /** 누르면 클립보드에 담을 값. 여는 자리에는 없다. */
+  copy?: string
   left: number
   top: number
   width: number
