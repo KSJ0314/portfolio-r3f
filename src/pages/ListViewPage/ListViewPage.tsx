@@ -138,7 +138,7 @@ export function ListViewPage() {
                     width: `${link.width}%`,
                     height: `${link.height}%`,
                   }
-                  if (link.url) {
+                  if (link.kind === 'open') {
                     return (
                       <LinkArea
                         key={link.url}
@@ -152,15 +152,15 @@ export function ListViewPage() {
                   }
                   return (
                     <CopyArea
-                      key={link.copy}
+                      key={link.value}
                       type="button"
                       onClick={() =>
-                        copy(link.copy as string, {
+                        copy(link.value, {
                           left: link.left + link.width / 2,
                           top: link.top,
                         })
                       }
-                      aria-label={`${link.copy} 복사`}
+                      aria-label={`${link.value} 복사`}
                       style={place}
                     />
                   )

@@ -20,17 +20,23 @@ export interface ListScreen {
   zoom: number
 }
 
-/** 그림 위에 얹는 링크 한 자리. 값은 그림 크기 대비 백분율이라 이미지를 줄여도 따라온다. */
-export interface ListShotLink {
-  /** 새 탭으로 열 주소. 복사만 하는 자리에는 없다. */
-  url?: string
-  /** 누르면 클립보드에 담을 값. 여는 자리에는 없다. */
-  copy?: string
+/** 그림 위에 얹는 자리의 크기. 값은 그림 크기 대비 백분율이라 이미지를 줄여도 따라온다. */
+interface ListShotRect {
   left: number
   top: number
   width: number
   height: number
 }
+
+/**
+ * 그림 위에 얹는 누를 자리 한 곳.
+ *
+ * 여는 것과 복사하는 것 중 **하나만** 갖는다. 둘 다 담을 수 있게 두면 한쪽이 조용히 무시되고,
+ * 값이 없는 자리도 만들어져 쓰는 쪽이 다시 걸러야 한다.
+ */
+export type ListShotLink =
+  | ({ kind: 'open'; url: string } & ListShotRect)
+  | ({ kind: 'copy'; value: string } & ListShotRect)
 
 /** 구운 한 장. `url`은 blob 주소라 쓰는 쪽이 화면을 떠날 때 되돌린다. */
 export interface ListShot {

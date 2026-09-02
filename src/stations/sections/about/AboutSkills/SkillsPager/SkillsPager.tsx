@@ -28,9 +28,10 @@ export function SkillsPager({ page, count, onPage, x, y, size }: SkillsPagerProp
   }, [])
 
   if (count < 2) return null
-  const hasPrev = page > 0
   const hasNext = page < count - 1
   // 다음이 오른쪽 끝을 차지하고 이전은 그 왼쪽에 선다. 다음이 없으면 이전이 그 자리를 쓴다.
+  // 다음 폭을 재기 전에는 이전을 두지 않는다. 폭이 0이면 두 글씨가 같은 자리에 겹친다.
+  const hasPrev = page > 0 && (!hasNext || nextWidth > 0)
   const prevX = hasNext ? x - nextWidth - size * PAGER_GAP_RATIO : x
 
   return (

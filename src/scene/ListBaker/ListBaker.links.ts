@@ -24,9 +24,10 @@ export function collectShotLinks(root: Object3D, camera: Camera): ListShotLink[]
   const links: ListShotLink[] = []
 
   root.traverse((object) => {
-    const url = object.userData?.linkUrl
-    const copy = object.userData?.copyText
-    if (typeof url !== 'string' && typeof copy !== 'string') return
+    // 빈 문자열은 누를 것이 없는 자리라 값이 없는 것으로 다룬다.
+    const url = typeof object.userData?.linkUrl === 'string' ? object.userData.linkUrl : ''
+    const copy = typeof object.userData?.copyText === 'string' ? object.userData.copyText : ''
+    if (!url && !copy) return
 
     _box.setFromObject(object)
     if (_box.isEmpty()) return
@@ -46,14 +47,15 @@ export function collectShotLinks(root: Object3D, camera: Camera): ListShotLink[]
     // 화면(-1~1) 밖이면 이 장에 없는 링크다.
     if (maxX < -1 || minX > 1 || maxY < -1 || minY > 1) return
 
-    links.push({
-      url: typeof url === 'string' ? url : undefined,
-      copy: typeof copy === 'string' ? copy : undefined,
+    const rect = {
       left: ((minX + 1) / 2) * 100,
       top: ((1 - maxY) / 2) * 100,
       width: ((maxX - minX) / 2) * 100,
       height: ((maxY - minY) / 2) * 100,
-    })
+    }
+    // 여는 쪽을 먼저 본다. 둘 다 실린 판은 두지 않으므로 여기서 하나로 정해진다.
+    if (url) links.push({ kind: 'open', url, ...rect })
+    else if (copy) links.push({ kind: 'copy', value: copy, ...rect })
   })
 
   return links
