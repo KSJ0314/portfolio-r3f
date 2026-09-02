@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 24 24" fill="none">
+  <!-- 세워 둔 단말기. 위쪽에 수화구를 홈으로 파고 아래쪽에 버튼을 둔다. -->
+  <rect x="6" y="2" width="12" height="20" rx="2.5" stroke="#3a3a3a" stroke-width="2"/>
+  <path d="M10.5 5.5h3" stroke="#3a3a3a" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="12" cy="18.5" r="1.1" fill="#3a3a3a"/>
+</svg>

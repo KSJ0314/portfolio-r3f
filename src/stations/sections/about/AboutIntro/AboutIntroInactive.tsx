@@ -11,6 +11,8 @@ import type { StationInactiveProps } from '../../../registry'
 import type { TroikaTextMesh } from '../../../types'
 import { AREA_Y, CONTENT_Y, INK, OUTLINE_Y } from './AboutIntro.constants'
 import type { ProfileDoc } from './AboutIntro.types'
+import { IntroContact, type ContactLine } from './IntroContact'
+import { CONTACT_ICONS, GITHUB_HOST } from './IntroContact/IntroContact.constants'
 import { ProfilePhoto } from './ProfilePhoto'
 
 /** Firestore에는 줄바꿈이 `\n` 두 글자로 들어 있다. 실제 개행으로 바꿔야 3D 텍스트가 줄을 나눈다. */
@@ -83,6 +85,10 @@ export function AboutIntroInactive({ station }: StationInactiveProps) {
     quoteBarGap,
     photoBottom,
     photoHeight,
+    contactTop,
+    contactSize,
+    contactGap,
+    contactLineHeight,
   } = layout
   // 여백 안쪽이 내용이 놓이는 상자다. 요소별 여백은 여기서 각자 더 들어간다.
   const innerWidth = width - paddingX * 2
@@ -90,6 +96,31 @@ export function AboutIntroInactive({ station }: StationInactiveProps) {
   const introX = -halfWidth + paddingX + introLeft
   const introY = taglineY - taglineSize - introTop
   const photoY = -halfHeight + paddingY + photoBottom
+  // 인용 막대와 같은 세로선에서 시작해 본문 아래로 이어진다.
+  const contactX = introX - quoteBarGap - quoteBarWidth
+  // 본문이 몇 줄로 접히는지에 따라 끝나는 높이가 달라지므로 측정한 높이 아래에 둔다.
+  const contactY = introY - introHeight - contactTop
+
+  // 값이 있는 줄만 그린다. 전화번호와 이메일은 눌러 복사하고 GitHub은 새 탭으로 연다.
+  const contactLines = useMemo<ContactLine[]>(() => {
+    const lines: ContactLine[] = []
+    if (profile?.phone) {
+      lines.push({ icon: CONTACT_ICONS.phone, text: profile.phone, copy: profile.phone })
+    }
+    if (profile?.email) {
+      lines.push({ icon: CONTACT_ICONS.mail, text: profile.email, copy: profile.email })
+    }
+    // 주소는 그대로 적으면 길어 스킴을 떼고 보여주되, 여는 것은 원래 주소다.
+    const github = profile?.links?.find((link) => link.url.includes(GITHUB_HOST))
+    if (github) {
+      lines.push({
+        icon: CONTACT_ICONS.github,
+        text: github.url.replace(/^https?:\/\//, ''),
+        open: github.url,
+      })
+    }
+    return lines
+  }, [profile])
 
   return (
     <>
@@ -158,6 +189,22 @@ export function AboutIntroInactive({ station }: StationInactiveProps) {
           >
             {withLineBreaks(profile.intro)}
           </Text>
+        )}
+
+        {/* 연락처는 아이콘 텍스처를 기다리므로 자기 경계 안에 둔다.
+            누르는 판은 페이지가 열려 있는 동안에만 둬 항공뷰에서 스테이션 활성화를 가로막지 않는다. */}
+        {contactLines.length > 0 && (
+          <Suspense fallback={null}>
+            <IntroContact
+              lines={contactLines}
+              x={contactX}
+              y={contactY}
+              size={contactSize}
+              gap={contactGap}
+              lineHeight={contactLineHeight}
+              interactive={phase === 'active'}
+            />
+          </Suspense>
         )}
 
         {/* 사진은 자기 경계를 갖는다. 글씨는 Firestore 데이터를 기다리고 사진은 텍스처를 기다려

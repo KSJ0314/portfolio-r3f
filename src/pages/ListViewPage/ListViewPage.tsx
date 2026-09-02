@@ -11,6 +11,8 @@ import {
   BackSlot,
   Bar,
   Count,
+  CopiedBadge,
+  CopyArea,
   Cover,
   CoverProgress,
   Dot,
@@ -26,6 +28,9 @@ import {
 } from './ListViewPage.styled'
 import type { ListShot } from '../../scene/ListBaker'
 
+/** 복사했다고 알리는 표시를 띄워 두는 시간(ms). */
+const COPIED_MS = 800
+
 /**
  * 목록 보기 — 주요 화면을 한 장씩 넘겨 보는 페이지.
  *
@@ -33,7 +38,8 @@ import type { ListShot } from '../../scene/ListBaker'
  * 다 구우면 굽는 자리를 걷어 **페이지에는 이미지만 남는다.** 내려받기도 그 이미지를 그대로 준다.
  *
  * 그림은 화면을 꽉 채우지 않는다 — 남는 자리에 좌우 넘김·인디케이터·쪽 번호가 들어간다.
- * 구운 그림에는 누를 것이 없으므로 링크는 그 자리에 투명한 판을 덮어 살린다.
+ * 구운 그림에는 누를 것이 없으므로 누를 자리에 투명한 판을 덮어 살린다.
+ * 주소는 새 탭으로 열고, 연락처처럼 복사하는 자리는 클립보드에 담고 그 자리에 알린다.
  */
 export function ListViewPage() {
   const navigate = useNavigate()
@@ -44,6 +50,24 @@ export function ListViewPage() {
   const [page, setPage] = useState(0)
   const [pdf, setPdf] = useState<Blob | null>(null)
   const [pdfRatio, setPdfRatio] = useState(0)
+  // 복사했다고 알리는 자리. 한 번에 하나만 띄운다.
+  const [copied, setCopied] = useState<{ left: number; top: number } | null>(null)
+
+  // 표시를 걷는 일은 상태에 묶어 둔다. 다시 누르면 새 상태라 시간도 다시 시작한다.
+  useEffect(() => {
+    if (!copied) return
+    const timer = window.setTimeout(() => setCopied(null), COPIED_MS)
+    return () => window.clearTimeout(timer)
+  }, [copied])
+
+  const copy = useCallback((value: string, at: { left: number; top: number }) => {
+    navigator.clipboard
+      ?.writeText(value)
+      .then(() => setCopied(at))
+      .catch(() => {
+        // 클립보드가 막힌 환경이다. 복사되지 않았으므로 알리지 않는다.
+      })
+  }, [])
 
   // blob 주소는 스스로 사라지지 않는다. 페이지를 떠날 때 되돌린다.
   useEffect(() => {
@@ -107,21 +131,48 @@ export function ListViewPage() {
 
               <Frame>
                 <Shot src={shot.url} alt={`${page + 1}번째 화면`} />
-                {shot.links.map((link) => (
-                  <LinkArea
-                    key={link.url}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={link.url}
-                    style={{
-                      left: `${link.left}%`,
-                      top: `${link.top}%`,
-                      width: `${link.width}%`,
-                      height: `${link.height}%`,
-                    }}
-                  />
-                ))}
+                {shot.links.map((link) => {
+                  const place = {
+                    left: `${link.left}%`,
+                    top: `${link.top}%`,
+                    width: `${link.width}%`,
+                    height: `${link.height}%`,
+                  }
+                  if (link.kind === 'open') {
+                    return (
+                      <LinkArea
+                        key={link.url}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={link.url}
+                        style={place}
+                      />
+                    )
+                  }
+                  return (
+                    <CopyArea
+                      key={link.value}
+                      type="button"
+                      onClick={() =>
+                        copy(link.value, {
+                          left: link.left + link.width / 2,
+                          top: link.top,
+                        })
+                      }
+                      aria-label={`${link.value} 복사`}
+                      style={place}
+                    />
+                  )
+                })}
+                {copied && (
+                  <CopiedBadge
+                    style={{ left: `${copied.left}%`, top: `${copied.top}%` }}
+                    role="status"
+                  >
+                    복사했습니다
+                  </CopiedBadge>
+                )}
               </Frame>
 
               <NavButton

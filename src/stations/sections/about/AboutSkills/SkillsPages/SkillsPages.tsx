@@ -1,11 +1,22 @@
 import { useCallback, useMemo, useState } from 'react'
+import { Text } from '@react-three/drei'
+import { BODY_FONT, HAND_FONT } from '../../../../../content/fonts'
+import { INK } from '../AboutSkills.constants'
 import { useCollection } from '../../../../../lib/firebase'
 import { useSkillsPageStore } from '../../../../../state/useSkillsPageStore'
 import { LoadFailed } from '../../../../LoadFailed'
 import { useStationGate } from '../../../../useStationGate'
 import { SkillsPager } from '../SkillsPager'
 import { SkillItem } from './SkillItem'
-import { SKILL_PAGES, SKILLS_CONTENT_Y } from './SkillsPages.constants'
+import {
+  SKILL_PAGES,
+  SKILLS_CONTENT_Y,
+  SKILLS_GROUP_GAP,
+  SKILLS_GROUP_NAMES_GAP,
+  SKILLS_GROUP_NAMES_LINE_HEIGHT,
+  SKILLS_GROUP_NAMES_SEPARATOR,
+  SKILLS_GROUPS_PER_COLUMN,
+} from './SkillsPages.constants'
 import type { SkillDoc, SkillsPagesProps } from './SkillsPages.types'
 
 /**
@@ -17,6 +28,9 @@ import type { SkillDoc, SkillsPagesProps } from './SkillsPages.types'
  *
  * 몇 쪽을 그릴지는 스스로 갖되 밖에서 정해 줄 수도 있다 — 목록 보기는 페이지를 넘기지 않고
  * 쪽마다 한 화면씩 늘어놓는다.
+ *
+ * **이름만 나열하는 페이지**(`plain`)는 설명과 숙련도가 없어 높이가 글자 크기로 정해지므로
+ * 측정을 기다리지 않는다. 문서 하나가 `groups`에 묶음을 담고, 묶음 단위로 두 열에 나눠 놓는다.
  */
 export function SkillsPages({ page: fixedPage, showPager = true }: SkillsPagesProps = {}) {
   const area = useSkillsPageStore((s) => s.area)
@@ -53,6 +67,17 @@ export function SkillsPages({ page: fixedPage, showPager = true }: SkillsPagesPr
 
   const items = useMemo(() => columns.flat(), [columns])
   const columnWidth = (area.width - list.paddingX * 2 - list.columnGap) / 2
+  const spec = SKILL_PAGES[page]
+
+  // 이름만 나열하는 페이지. 정해진 개수만큼 한 열에 쌓고 넘치면 다음 열로 넘긴다.
+  const plainColumns = useMemo(() => {
+    if (!spec?.plain) return []
+    const groups = columns.flat().flatMap((skill) => skill.groups ?? [])
+    const columnCount = Math.ceil(groups.length / SKILLS_GROUPS_PER_COLUMN)
+    return Array.from({ length: columnCount }, (_, index) =>
+      groups.slice(index * SKILLS_GROUPS_PER_COLUMN, (index + 1) * SKILLS_GROUPS_PER_COLUMN),
+    )
+  }, [spec, columns])
 
   // 열마다 위에서부터 높이를 쌓아 자리를 잡는다.
   const placed = useMemo(() => {
@@ -67,9 +92,10 @@ export function SkillsPages({ page: fixedPage, showPager = true }: SkillsPagesPr
     })
   }, [columns, heights, area, list, columnWidth])
 
+  // 이름만 나열하는 페이지는 잴 것이 없다.
   // 항목 높이가 다 모여야 자리가 잡힌다. 그전에는 겹쳐 보이므로 상세 전체를 마저 잡아둔다.
   // 빈 페이지(전부 비활성 등)는 잴 것이 없으므로 측정이 끝난 것으로 본다 — 아니면 영영 감춰진다.
-  const measured = items.every((skill) => heights[skill.id] !== undefined)
+  const measured = spec?.plain || items.every((skill) => heights[skill.id] !== undefined)
   useStationGate(`skills:layout:${page}`, !measured)
 
   return (
@@ -80,6 +106,60 @@ export function SkillsPages({ page: fixedPage, showPager = true }: SkillsPagesPr
       {/* 읽기가 실패하면 목록도 페이지 넘김도 뜻이 없으므로 그 자리에 한 줄만 둔다. */}
       {error ? (
         <LoadFailed size={list.nameSize} onRetry={refetch} />
+      ) : spec?.plain ? (
+        <>
+          {plainColumns.map((column, index) => {
+            const x = -area.width / 2 + list.paddingX + index * (columnWidth + list.columnGap)
+            let y = area.height / 2 - list.top
+            return column.map((group) => {
+              const labelY = y
+              const namesY = y - list.nameSize - SKILLS_GROUP_NAMES_GAP
+              // 이름이 한 줄이라 묶음 높이는 제목과 그 한 줄로 정해진다.
+              y = namesY - list.bodySize * SKILLS_GROUP_NAMES_LINE_HEIGHT - SKILLS_GROUP_GAP
+              return (
+                <group key={group.label}>
+                  <Text
+                    font={HAND_FONT}
+                    position={[x, labelY, 0]}
+                    anchorX="left"
+                    anchorY="top"
+                    fontSize={list.nameSize}
+                    color={INK}
+                    raycast={() => null}
+                  >
+                    {group.label}
+                  </Text>
+
+                  <Text
+                    font={BODY_FONT}
+                    position={[x, namesY, 0]}
+                    anchorX="left"
+                    anchorY="top"
+                    fontSize={list.bodySize}
+                    lineHeight={SKILLS_GROUP_NAMES_LINE_HEIGHT}
+                    maxWidth={columnWidth}
+                    textAlign="left"
+                    color={INK}
+                    raycast={() => null}
+                  >
+                    {group.names.join(SKILLS_GROUP_NAMES_SEPARATOR)}
+                  </Text>
+                </group>
+              )
+            })
+          })}
+
+          {showPager && (
+            <SkillsPager
+              page={page}
+              count={SKILL_PAGES.length}
+              onPage={setPage}
+              x={area.width / 2 - pager.right}
+              y={-area.height / 2 + pager.bottom}
+              size={pager.size}
+            />
+          )}
+        </>
       ) : (
         <>
           <group>

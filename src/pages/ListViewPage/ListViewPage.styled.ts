@@ -189,6 +189,29 @@ export const LinkArea = styled.a`
   display: block;
 `
 
+/** 누르면 값을 복사하는 자리. 여는 자리와 같이 그림 위에 투명하게 덮는다. */
+export const CopyArea = styled.button`
+  position: absolute;
+  display: block;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+`
+
+/** 복사했다고 알리는 표시. 누른 자리 위에 잠시 떠 있다가 사라진다. */
+export const CopiedBadge = styled.span`
+  position: absolute;
+  transform: translate(-50%, -100%);
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.surface};
+  font-size: 13px;
+  white-space: nowrap;
+  pointer-events: none;
+`
+
 /** 좌우 넘김 버튼. 갈 곳이 없으면 자리는 두고 흐리게 둔다 — 그림이 좌우로 흔들리지 않게. */
 export const NavButton = styled.button`
   width: 44px;
