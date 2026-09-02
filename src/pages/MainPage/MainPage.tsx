@@ -7,6 +7,7 @@ import { WorldMap } from '../../ui/WorldMap'
 import { Credits } from '../../ui/Credits'
 import { DevHUD } from '../../ui/DevHUD'
 import { CrayonStudio } from '../../tools/CrayonStudio'
+import { GithubButton } from '../../ui/GithubButton'
 import { ListViewButton } from '../../ui/ListViewButton'
 import { REDIRECT_MOBILE_TO_LIST, useCoarsePointer } from '../../ui/MobileNotice'
 import { LIST_ROUTE } from '../../routes'
@@ -49,6 +50,8 @@ export function MainPage() {
       {idle && <CrayonStudio />}
       {/* 가져다 쓴 에셋의 출처. CC-BY는 방문자가 볼 수 있는 곳에 밝히도록 요구한다. */}
       {idle && <Credits />}
+      {/* 이 포트폴리오의 코드를 바로 열어 볼 수 있게 둔다. */}
+      {idle && <GithubButton />}
       {/* 3D를 돌아다니지 않고 주요 화면만 훑는 자리. */}
       <ListViewButton />
     </>
