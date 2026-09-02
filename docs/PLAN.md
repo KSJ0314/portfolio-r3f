@@ -31,7 +31,6 @@
 | 스타일 | styled-components v6 + ThemeProvider |
 | 데이터/백엔드 | Firebase Firestore (+App Check) |
 | 출력 | jspdf |
-| 저장(페인팅) | localforage (IndexedDB) — Phase 11 |
 | 폰트 | Pretendard(본문) · Gamja Flower(손글씨) — 둘 다 self-host |
 | 개발 보조 | leva (텍스처·라이트·카메라 값 튜닝) |
 | 배포 | Vercel (Git 연동 자동 CI/CD, public 레포) |
@@ -102,7 +101,7 @@ src/
     sections/   # about(AboutIntro …) · projects(+demos) · guestbook
   ui/           # PrintView(Phase 9) · Minimap · ThemeToggle · DevHUD(dev 전용 HUD 묶음)
   state/        # zustand 스토어
-  lib/          # firebase · raycast · storage(localforage)
+  lib/          # firebase · raycast
   content/      # 로컬 콘텐츠/상수
   theme/        # light/dark 토큰 · styled.d.ts
   styles/       # GlobalStyle
@@ -129,11 +128,11 @@ src/
 | | 전시 칸의 프로젝트별 상세를 채우는 절차·기준은 [PROJECT_PAGES.md](./PROJECT_PAGES.md) |
 | **9. 인쇄/PDF 출력** ★ | 스테이션 구현이 전부 끝난 뒤, 콘텐츠 전체를 인쇄 문서(PrintView) 레이아웃으로 한 번에 설계·구현 ([DECISIONS 013]) |
 | **10. 폴리싱** | 로딩, 성능(Draco·instancing), SEO, 반응형·모바일(마우스 없는 기기는 가로 화면·터치 조작) |
-| **11. 캐릭터 + 페인팅** (후순위·변경가능) | 휴머노이드 + 첫 진입 등장 모션 + 페인팅(브러시·스포이드·패턴) + localforage 저장. MECCHA CHAMELEON 영감(위장 게임 루프 제외, 아바타 커스터마이징 용도) |
+| **11. 캐릭터** | 맵과 실내가 함께 쓰는 모델. 이동 방향 회전과 걷기 애니메이션, 활성화 시 대상 바라보기 ([DECISIONS 055]) |
 | **12. 테마·후처리·접근성** (후순위) | 낮/밤 전환 연출(테마 완성), Bloom·네온, 접근성 |
 
 - 범례: ★ = MVP 핵심 · ☆ = 아트 전용 단계
-- **우선순위**: 콘텐츠 & 맵 & 프로젝트 데모 우선 / 캐릭터 & 페인팅 최후순위(변경 가능).
+- **우선순위**: 콘텐츠 & 맵 & 프로젝트 데모 우선 / 캐릭터 최후순위.
 - **기능→아트 순서**: 이동·상호작용·2D/3D 전환은 임시 Box로 먼저(2·3) 검증 → 아트 디렉션(4)·맵 베이스(5) 확정 → 콘텐츠(7) → 스테이션 실제 모델(8)로 교체. 동선이 바뀌어도 아트 재작업을 최소화.
 - **인쇄는 맨 뒤로**: 스테이션마다 인쇄 레이아웃을 따로 만들면 문서 전체의 흐름·페이지 구성을 잡을 수 없다. 콘텐츠가 모두 확정된 뒤 한 번에 설계한다.
 - 초기엔 캐릭터 없이 클릭으로 카메라만 이동. 필요 시 `BoxGeometry` 임시 오브젝트.
@@ -154,9 +153,9 @@ src/
 
 ## 결정 로그 (요약)
 
-- 캐릭터: 백지 휴머노이드 페인팅 아바타(MECCHA CHAMELEON 영감) — **최후순위, 변경 가능**
+- 캐릭터: 직접 제작한 모델을 맵·실내가 공유하고 이동은 각 방이 맡는다 — 페인팅은 폐기 ([DECISIONS 056])
 - 이동: 우클릭 홀드 이동(고정 속도) / 카메라: 캐릭터 팔로우(3인칭), 기울어진 항공뷰(Orthographic)
-- 페인팅: 3D 표면 직접 붓질 + 풀세트(브러시·스포이드·패턴), 별도 UI, 부스+상시버튼, IndexedDB 저장
+- 바닥 낙서: 크레파스 스튜디오와 두 겹을 공유하는 추가 기능 후보 — 보류 ([DECISIONS 017])
 - 테마: 통합 토글(라이트=낮 / 다크=밤+네온)
 - 스테이션: 종이 위 그림 → 좌클릭 시 제자리에서 3D로 전환·활성화, 전환 연출은 스테이션마다 다름, 닫으면 항공뷰 복귀, `id → 전용 컴포넌트` 레지스트리
 - 스테이션 영역: 종이 위 사각형이 클릭 판정 범위이자 근접 판정 기준 / 닫기는 근접 이탈·나가기 요소·ESC
