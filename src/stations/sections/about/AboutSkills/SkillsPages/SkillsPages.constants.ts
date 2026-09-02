@@ -12,7 +12,24 @@ export const SKILLS_CONTENT_Y = 0.02
 export const SKILL_PAGES: SkillPage[] = [
   { columns: [['Frontend']] },
   { columns: [['Mobile'], ['Backend']] },
+  // 상세를 적지 않고 다뤄 본 것만 나열하는 페이지다.
+  { columns: [['etc']], plain: true },
 ]
+
+/** 묶음 이름을 제목에서 내리는 거리. 글자 크기와 색은 앞 페이지 설명과 같은 값을 쓴다. */
+export const SKILLS_GROUP_NAMES_GAP = 0.12
+
+/** 이름을 한 줄로 이을 때 쓰는 구분 기호. */
+export const SKILLS_GROUP_NAMES_SEPARATOR = ', '
+
+/** 이름 줄 간격(글자 크기 배수). 열 폭에서 접히면 이 간격으로 쌓인다. */
+export const SKILLS_GROUP_NAMES_LINE_HEIGHT = 1.6
+
+/** 한 열에 담는 묶음 수. 이보다 많으면 다음 열로 넘어간다. */
+export const SKILLS_GROUPS_PER_COLUMN = 4
+
+/** 묶음과 묶음 사이 간격. */
+export const SKILLS_GROUP_GAP = 0.35
 
 /** 목록 배치 기본값. 눈으로 맞추는 값이라 HUD로 조절한다. */
 export const SKILLS_LIST_LAYOUT = {

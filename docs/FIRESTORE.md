@@ -47,6 +47,10 @@ Career의 칸 셋에 자리가 없어 미뤄 뒀고, 어디에 담을지는 이�
 | `level` | number (1~5) | 숙련도(이름 옆 별 개수) |
 | `description` | string[] | 상세 설명(줄 단위 배열) |
 | `active` | boolean | 화면에 낼지. 없으면 낸다 — 문서를 추가하며 빠뜨려도 조용히 사라지지 않게 ([DECISIONS 021]) |
+| `groups` | array<{label, names[]}> | 이름만 나열하는 문서가 담는 묶음. 이 값이 있으면 `name`·`level`·`description` 없이 묶음별로 이름만 표시한다 |
+
+`category`가 `etc`인 문서 하나가 상세를 적지 않는 기술을 `groups`에 담는다.
+기술마다 문서를 두면 개수만큼 문서가 늘어나므로 한 문서에 묶는다.
 
 **experiences** (경력 1건 = 문서 1개, `order` 없음 — `startDate` 기준 최신순 정렬)
 
