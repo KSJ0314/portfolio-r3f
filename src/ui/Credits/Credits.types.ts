@@ -17,6 +17,12 @@ export interface CreditModelProps {
    * 실내(로비)만 자기 등으로 밝히므로 그쪽에만 준다. 다른 모델의 빛은 건드리지 않는다.
    */
   tuneLights?: boolean
+  /**
+   * 씬과 캐시를 나눠 따로 로드할지.
+   * 씬에서 애니메이션이 도는 모델은 복제하면 그 순간의 자세와 뼈대 상태를 물려받는다.
+   * 따로 로드한 것은 씬이 손본 재질도 물려받지 못하므로 여기서 같은 처리를 적용한다.
+   */
+  ownInstance?: boolean
 }
 
 export interface CreditStickerProps {

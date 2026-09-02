@@ -6,6 +6,8 @@ interface LobbyTriggerState {
   /** 한 번이라도 연 적 있는 트리거. 누를 수 있다는 표시를 걷는 기준이다. */
   seen: Record<string, boolean>
   activate: (id: string) => void
+  /** 연 적이 있다고 표시한다. 카메라를 돌리지 않고 넘어가는 트리거가 쓴다. */
+  markSeen: (id: string) => void
   close: () => void
   /** 로비에 다시 들어오면 처음 상태로. */
   reset: () => void
@@ -23,6 +25,10 @@ export const useLobbyTriggerStore = create<LobbyTriggerState>((set, get) => ({
   activate: (id) => {
     if (get().activeId === id) return
     set((s) => ({ activeId: id, seen: s.seen[id] ? s.seen : { ...s.seen, [id]: true } }))
+  },
+  markSeen: (id) => {
+    if (get().seen[id]) return
+    set((s) => ({ seen: { ...s.seen, [id]: true } }))
   },
   close: () => {
     if (get().activeId === null) return
