@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { Vector3 } from 'three'
+import { turnCharacterTo } from '../../CharacterModel'
 import { useCameraStore } from '../../../state/useCameraStore'
 import { useMapDecorationsStore } from '../../../state/useMapDecorationsStore'
 import { type StationPhase, useStationStore } from '../../../state/useStationStore'
@@ -25,6 +26,9 @@ function boardPoint(): Vector3 {
  *
  * 걸어오는 동안에는 이동을 잠근다 — 영역 밖으로 걸어 나가 닫는 경우엔 우클릭을 누른 채라,
  * 잠그지 않으면 보낸 목표점이 매 프레임 커서로 덮어써진다.
+ *
+ * **이미 데려온 뒤인지는 스토어(`carReturned`)에 둔다.** 로비를 다녀오면 맵이 다시 마운트돼
+ * 컴포넌트에 든 기록이 사라지는데, 등장 조건은 스토어에 남아 곧바로 참이라 다시 걸어가게 된다.
  */
 export function useReturnOnClose(returned: boolean): void {
   const sent = useRef(false)
@@ -57,7 +61,7 @@ export function useReturnOnClose(returned: boolean): void {
   // 두 번째 종료에서 다시 잠기는데, 그때는 풀어 줄 쪽이 없어 이동이 영영 막힌다.
   useEffect(() => {
     const check = (state: { activeId: string | null; phase: StationPhase }) => {
-      if (sent.current) return
+      if (sent.current || useMapDecorationsStore.getState().carReturned) return
       if (state.activeId !== PROJECTS_CAR_AFTER_STATION || state.phase !== 'exiting') return
       sent.current = true
       useCameraStore.getState().setTarget(boardPoint())
@@ -72,6 +76,8 @@ export function useReturnOnClose(returned: boolean): void {
 
   useEffect(() => {
     if (!returned || started.current) return
+    // 이미 데려온 뒤에 다시 마운트된 것(로비를 다녀옴)이면 그 자리에 그대로 둔다.
+    if (useMapDecorationsStore.getState().carReturned) return
     started.current = true
 
     // 닫히는 순간을 놓쳤으면 여기서 잠근다.
@@ -83,6 +89,10 @@ export function useReturnOnClose(returned: boolean): void {
       if (state.walking) return
       unsubscribe.current()
       unsubscribe.current = () => {}
+      // 차 앞에 서면 차 쪽으로 몸을 돌린다. 나타난 차를 등지고 서 있지 않게.
+      const decorations = useMapDecorationsStore.getState()
+      turnCharacterTo(decorations.car.startX, decorations.car.startZ)
+      decorations.markCarReturned()
       releaseLock()
     })
   }, [returned, acquireLock, releaseLock])

@@ -3,6 +3,7 @@ import { useTheme } from 'styled-components'
 import { STATIONS, getSection } from '../../content/stations'
 import { CAMERA_BOUNDS, useCameraStore } from '../../state/useCameraStore'
 import { teleportToStand } from '../../stations/registry'
+import { useCoarsePointer } from '../MobileNotice'
 import {
   StationMarker,
   WorldMapBackdrop,
@@ -19,13 +20,12 @@ import type { WorldMapProps } from './WorldMap.types'
  */
 const MAP_RADIUS = CAMERA_BOUNDS * Math.SQRT2 + 4
 
-/** 확대 배율. 클수록 크게 보이고 그만큼 가장자리가 잘린다. */
+/**
+ * 확대 배율. 클수록 크게 보이고 그만큼 가장자리가 잘린다.
+ * 좁은 화면에서는 지도가 작아 마커와 이름이 눌리므로 가장자리를 내주고 더 당긴다.
+ */
 const ZOOM = 1.2
-
-const VIEW_RADIUS = MAP_RADIUS / ZOOM
-
-/** 원점(Intro)이 위에서 1/4 지점에 오도록 뷰박스를 아래로 내린다. */
-const VIEW_TOP = -VIEW_RADIUS / 2
+const ZOOM_COARSE = 1.8
 
 /**
  * 맵 전체를 보는 월드맵 — 미니맵을 누르면 열린다.
@@ -43,6 +43,10 @@ export function WorldMap({ onClose }: WorldMapProps) {
   const cos = Math.cos(viewAngle)
   const sin = Math.sin(viewAngle)
   const playerRef = useRef<SVGCircleElement>(null)
+
+  const viewRadius = MAP_RADIUS / (useCoarsePointer() ? ZOOM_COARSE : ZOOM)
+  // 원점(Intro)이 위에서 1/4 지점에 오도록 뷰박스를 아래로 내린다.
+  const viewTop = -viewRadius / 2
 
   // 걷는 중에 열었으면 캐릭터가 계속 움직이므로 마커 좌표만 매 프레임 다시 쓴다.
   useEffect(() => {
@@ -82,7 +86,7 @@ export function WorldMap({ onClose }: WorldMapProps) {
         </WorldMapClose>
 
         <WorldMapSvg
-          viewBox={`${-VIEW_RADIUS} ${VIEW_TOP} ${2 * VIEW_RADIUS} ${2 * VIEW_RADIUS}`}
+          viewBox={`${-viewRadius} ${viewTop} ${2 * viewRadius} ${2 * viewRadius}`}
         >
           {/* 자리가 정해진 스테이션만 지도에 놓는다. */}
           {STATIONS.map((station) => {

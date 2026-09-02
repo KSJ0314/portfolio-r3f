@@ -1,13 +1,20 @@
-import { useRef } from 'react'
-import { type Mesh, Vector3 } from 'three'
+import { Suspense, useRef } from 'react'
+import { Vector3 } from 'three'
+import type { Group } from 'three'
 import { useFrame } from '@react-three/fiber'
+import {
+  CharacterModel,
+  faceMoveDirection,
+  headingTo,
+  takeFacePoint,
+} from '../../../../../scene/CharacterModel'
+import type { CharacterModelHandle } from '../../../../../scene/CharacterModel'
+import { useCharacterStore } from '../../../../../state/useCharacterStore'
 import { useInteriorStore } from '../../../../../state/useInteriorStore'
 import {
   isSceneCovered,
   useSceneTransitionStore,
 } from '../../../../../state/useSceneTransitionStore'
-import { useThemeStore } from '../../../../../state/useThemeStore'
-import { themes } from '../../../../../theme/themes'
 import { interiorFloorHeight, pushOutOfInteriorBlockers } from '../Interior.collision'
 import {
   INTERIOR_CHARACTER_RADIUS,
@@ -28,9 +35,10 @@ const ARRIVE_EPSILON = 1e-4
 const MAX_DELTA = 1 / 20
 
 const _next = new Vector3()
+const _moved = new Vector3()
 
 /**
- * 실내의 임시 캐릭터. 맵과 같이 매 프레임 목표점을 향해 고정 속도로 한 걸음씩 옮긴다.
+ * 실내의 캐릭터. 맵과 같이 매 프레임 목표점을 향해 고정 속도로 한 걸음씩 옮기고, 간 방향으로 몸을 돌린다.
  *
  * 다른 점은 **높이**다. 옮긴 자리에서 밟을 바닥을 찾아 y를 거기에 맞추므로,
  * 경사 콜라이더로 만들어 둔 계단을 미끄러지듯 오르내린다.
@@ -41,15 +49,19 @@ const _next = new Vector3()
  * 밟을 바닥이 계속 이어지는 방에서 쓴다.
  */
 export function InteriorCharacter({ southLimit }: InteriorCharacterProps) {
-  const ref = useRef<Mesh>(null)
-  const mode = useThemeStore((s) => s.mode)
-  const theme = themes[mode]
+  const ref = useRef<Group>(null)
+  const model = useRef<CharacterModelHandle>(null)
+  const heading = useRef(0)
   const position = useInteriorStore((s) => s.position)
   const target = useInteriorStore((s) => s.target)
+  // 정면·도는 시간·동작 배속은 모델의 성질이라 맵과 같은 값을 보고, 크기·밝기만 방이 정한다.
+  const { facing, turnSeconds, walkRate } = useCharacterStore((s) => s.placement)
+  const { height, brightness } = useCharacterStore((s) => s.interior)
 
   useFrame((_, delta) => {
     const walk = useInteriorStore.getState()
     const covered = isSceneCovered(useSceneTransitionStore.getState().phase)
+    const dt = Math.min(delta, MAX_DELTA)
 
     _next.copy(position)
     const dx = target.x - position.x
@@ -63,8 +75,8 @@ export function InteriorCharacter({ southLimit }: InteriorCharacterProps) {
       target.copy(position)
     } else if (dist > ARRIVE_EPSILON) {
       // 연출 이동은 걸음 속도를 따로 줄 수 있다. 주지 않았으면 평소 속도다.
-      const speed = walk.walkSpeed ?? INTERIOR_MOVE_SPEED
-      const step = speed * Math.min(delta, MAX_DELTA)
+      const moveSpeed = walk.walkSpeed ?? INTERIOR_MOVE_SPEED
+      const step = moveSpeed * dt
       const ratio = dist <= step ? 1 : step / dist
       _next.set(position.x + dx * ratio, position.y, position.z + dz * ratio)
       // 남쪽 한계에서 자른다. z만 되돌리므로 그 선을 따라 좌우로는 그대로 걸어진다.
@@ -74,10 +86,14 @@ export function InteriorCharacter({ southLimit }: InteriorCharacterProps) {
       pushOutOfInteriorBlockers(_next, INTERIOR_CHARACTER_RADIUS, INTERIOR_CHARACTER_SIZE[1])
     }
 
+    // 몸이 도는 것은 평면에서만 본다. 계단을 오르며 y만 바뀐 프레임에 방향이 0으로 튀지 않게.
+    _moved.set(_next.x - position.x, 0, _next.z - position.z)
+
     const ground = interiorFloorHeight(_next.x, _next.z, position.y)
     if (ground === null) {
       // 허공이라 디딜 곳이 없다. 걸음을 물리고 목표점도 거둔다 — 그러지 않으면 매 프레임 다시 민다.
       target.copy(position)
+      _moved.set(0, 0, 0)
     } else {
       position.set(_next.x, ground, _next.z)
     }
@@ -87,13 +103,34 @@ export function InteriorCharacter({ southLimit }: InteriorCharacterProps) {
     const left = Math.hypot(target.x - position.x, target.z - position.z)
     if (walk.walking && left <= ARRIVE_EPSILON) walk.endWalk()
 
-    ref.current?.position.set(position.x, position.y + INTERIOR_CHARACTER_SIZE[1] / 2, position.z)
+    const group = ref.current
+    if (group) {
+      group.position.copy(position)
+      faceMoveDirection(group, _moved, heading, facing, turnSeconds, dt)
+      // 밖에서 넘긴 방향이 있으면 목표 각을 그것으로 덮는다. **간 방향보다 나중에** 놓아야 한다 —
+      // 도착한 그 프레임은 아직 걸음이 남아 있어, 먼저 놓으면 진행 방향이 도로 덮어 신호가 사라진다.
+      const face = takeFacePoint()
+      if (face) heading.current = headingTo(position.x, position.z, face.x, face.z, facing)
+    }
+    // 이번 프레임 실제 걸음 속도(유닛/초). 걷기 동작이 이 값을 보고 재생·배속을 정한다.
+    model.current?.applyMotion(dt > 0 ? _moved.length() / dt : 0)
   })
 
   return (
-    <mesh ref={ref}>
-      <boxGeometry args={[...INTERIOR_CHARACTER_SIZE]} />
-      <meshStandardMaterial color={theme.colors.accent} />
-    </mesh>
+    <group ref={ref}>
+      {/* 경계를 자기 안에 둔다. 밖에 두면 모델을 받는 동안 방이 함께 사라졌다 돌아온다. */}
+      <Suspense fallback={null}>
+        <CharacterModel
+          ref={model}
+          motion="run"
+          baseSpeed={INTERIOR_MOVE_SPEED}
+          height={height}
+          walkRate={walkRate}
+          brightness={brightness}
+          // 실내는 노출로 방 밝기를 잡으므로 캐릭터도 같은 톤 매핑을 타야 방과 따로 놀지 않는다.
+          toneMapped
+        />
+      </Suspense>
+    </group>
   )
 }

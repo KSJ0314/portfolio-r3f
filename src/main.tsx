@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import 'pretendard/dist/web/static/pretendard-dynamic-subset.css'
 import { configureDracoDecoder } from './lib/draco'
 import { startAnalytics } from './lib/firebase'
-import { Root } from './Root.tsx'
+import { App } from './App.tsx'
 
 // 압축된 모델을 받기 전에 디코더 자리를 잡아 둔다(기본값이 외부 CDN이다).
 configureDracoDecoder()
@@ -16,7 +16,7 @@ void startAnalytics()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <Root />
+      <App />
     </BrowserRouter>
   </StrictMode>,
 )

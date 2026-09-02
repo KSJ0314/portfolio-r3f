@@ -6,6 +6,12 @@ import {
   isSceneCovered,
   useSceneTransitionStore,
 } from '../../../../../state/useSceneTransitionStore'
+import {
+  beginTouchPress,
+  endTouchDrag,
+  isOverTouchTarget,
+  isTouchDragging,
+} from '../../../../../scene/touchMove'
 import { getInteriorWalkables, snapToInteriorStepZ } from '../Interior.collision'
 import type { InteriorInputProps } from './InteriorInput.types'
 
@@ -19,7 +25,8 @@ const _plane = new Plane(new Vector3(0, 1, 0), 0)
 const _hit = new Vector3()
 
 /**
- * 실내의 이동 입력 — 맵과 같이 **우클릭 홀드**다.
+ * 실내의 이동 입력. 맵과 같이 **우클릭 홀드**다.
+ * 마우스가 없는 기기에서는 터치 홀드가 그 자리를 대신한다.
  *
  * 맵은 바닥 판 하나에 R3F 포인터 핸들러를 걸지만, 여기서는 밟는 바닥이 모델 안에 흩어진
  * 콜라이더 여럿이라 캔버스 이벤트를 직접 듣고 그 목록에 쏜다.
@@ -40,6 +47,10 @@ export function InteriorInput({ blocked, snapStairs }: InteriorInputProps) {
   const setTarget = useInteriorStore((s) => s.setTarget)
   const holding = useRef(false)
   const pressTime = useRef(0)
+  /** 손가락이 닿았지만 아직 탭인지 끌기인지 정해지지 않은 상태. */
+  const pendingTouch = useRef(false)
+  /** 손가락의 화면 좌표(px). 탭의 범위를 넘었는지 재는 데 쓴다. */
+  const touchAt = useRef({ x: 0, y: 0 })
 
   /**
    * 지금 입력을 받지 않는 상태인지.
@@ -73,6 +84,7 @@ export function InteriorInput({ blocked, snapStairs }: InteriorInputProps) {
     const canvas = gl.domElement
 
     const track = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') touchAt.current = { x: e.clientX, y: e.clientY }
       const rect = canvas.getBoundingClientRect()
       _pointer.set(
         ((e.clientX - rect.left) / rect.width) * 2 - 1,
@@ -81,34 +93,75 @@ export function InteriorInput({ blocked, snapStairs }: InteriorInputProps) {
     }
 
     const onPointerDown = (e: PointerEvent) => {
-      if (e.button !== 2) return
+      const touch = e.pointerType === 'touch'
+      if (!touch && e.button !== 2) return
       if (isBlocked()) return
       track(e)
+
+      // 손가락은 버튼이 하나뿐이라 누르기와 이동이 겹친다. **열 수 있는 것 위에서만** 기다렸다가
+      // 탭인지 끌기인지 가르고, 빈 바닥이면 겹칠 것이 없으므로 곧바로 걷는다.
+      if (touch) {
+        beginTouchPress(e.clientX, e.clientY)
+        if (isOverTouchTarget(camera, canvas, e.clientX, e.clientY)) {
+          pendingTouch.current = true
+          return
+        }
+      }
+
       holding.current = true
       pressTime.current = performance.now()
       // 누른 즉시 그 지점을 목표로 고정한다 — 짧게 누른 클릭이 정확히 그리로 간다.
       aim()
     }
 
-    const stop = () => {
+    const stop = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') {
+        // 걷고 있었으면 뒤따라올 마우스 이벤트를 걸러 낸다.
+        if (holding.current) endTouchDrag()
+        // 걷기 전에 뗐으면 탭이다. 열 수 있는 것 위였으면 여는 쪽에 넘기고, 빈 바닥이면 그리로 간다.
+        else if (
+          pendingTouch.current &&
+          !isBlocked() &&
+          !isOverTouchTarget(camera, canvas, e.clientX, e.clientY)
+        ) {
+          aim()
+        }
+      }
       holding.current = false
+      pendingTouch.current = false
+    }
+
+    // 브라우저가 제스처를 가져가면 뗀 이벤트 대신 이것이 온다. 탭으로 치지 않고 상태만 비운다.
+    const cancel = () => {
+      holding.current = false
+      pendingTouch.current = false
     }
 
     canvas.addEventListener('pointerdown', onPointerDown)
     canvas.addEventListener('pointermove', track)
     // 캔버스 밖에서 떼도 멈춘다.
     window.addEventListener('pointerup', stop)
+    window.addEventListener('pointercancel', cancel)
     return () => {
       canvas.removeEventListener('pointerdown', onPointerDown)
       canvas.removeEventListener('pointermove', track)
       window.removeEventListener('pointerup', stop)
+      window.removeEventListener('pointercancel', cancel)
     }
-  }, [aim, gl, isBlocked])
+  }, [aim, camera, gl, isBlocked])
 
   // 누르고 있는 동안 커서 밑을 계속 따라간다.
   // 임계 시간 전에는 다시 조준하지 않는다 — 짧은 클릭에서 캐릭터가 움직이며 커서 밑 지점이 밀려
   // 목표점이 클릭 지점을 넘어서는 것을 막는다.
   useFrame(() => {
+    // 손가락은 닿는 순간 걷지 않는다. 오래 누르거나 끌기 시작하면 그때부터 이동으로 넘어간다.
+    if (pendingTouch.current) {
+      if (isBlocked()) return
+      if (!isTouchDragging(touchAt.current.x, touchAt.current.y)) return
+      pendingTouch.current = false
+      holding.current = true
+      pressTime.current = 0
+    }
     if (!holding.current) return
     if (isBlocked()) return
     if (performance.now() - pressTime.current < HOLD_THRESHOLD) return

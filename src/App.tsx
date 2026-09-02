@@ -1,48 +1,45 @@
-import { useLayoutEffect, useState } from 'react'
-import { Experience } from './scene/Experience'
-import { SceneGate } from './ui/SceneGate'
-import { Minimap } from './ui/Minimap'
-import { WorldMap } from './ui/WorldMap'
-import { Credits } from './ui/Credits'
-import { DevHUD } from './ui/DevHUD'
-import { CrayonStudio } from './tools/CrayonStudio'
-import { ListViewButton } from './ui/ListViewButton'
-import { StationLifecycle } from './stations'
-import { ensureOutsideBuilding } from './stations/sections/projects/ProjectsLobby'
-import { useStationStore } from './state/useStationStore'
+import { Route, Routes } from 'react-router-dom'
+import { ThemeProvider } from 'styled-components'
+import { GlobalStyle } from './styles/GlobalStyle'
+import { themes } from './theme/themes'
+import { useThemeStore } from './state/useThemeStore'
+import { MainPage } from './pages/MainPage'
+import { CrayonStudioPage } from './pages/CrayonStudioPage'
+import { ListViewPage } from './pages/ListViewPage'
+import { ProjectsLobbyPage } from './pages/ProjectsLobbyPage'
+import { ProjectsGalleryPage } from './pages/ProjectsGalleryPage'
+import { CRAYON_ROUTE, GALLERY_ROUTE, LIST_ROUTE, LOBBY_ROUTE, MAIN_ROUTE } from './routes'
+import { SceneTransition } from './ui/SceneTransition'
+import { MobileNotice } from './ui/MobileNotice'
+import { AppErrorBoundary } from './ui/AppErrorBoundary'
+import { ErrorPage } from './ui/ErrorPage'
 
-/** 메인 페이지(`/`) — 3D 포트폴리오. 테마·전역 스타일은 `Root`가 감싼다. */
-function App() {
-  // 스테이션이 열려 있는 동안에는 미니맵·구석 버튼을 두지 않는다. 완전히 닫힌 뒤(idle)에만 다시 나타난다.
-  const idle = useStationStore((s) => s.phase === 'idle')
-  const [worldMapOpen, setWorldMapOpen] = useState(false)
-
-  // 주소가 맵이면 건물 밖에 서 있어야 한다. 브라우저 뒤로가기는 주소만 되돌리고 앱 상태는
-  // 건드리지 않아, 그대로 두면 문이 다시 열리며 진입 연출이 통째로 재생된다.
-  // 첫 화면에서 그리기 전에 맞춰야 한 프레임도 어긋나 보이지 않는다.
-  useLayoutEffect(() => {
-    ensureOutsideBuilding()
-  }, [])
+/**
+ * 앱 셸. 테마·전역 스타일·라우트를 갖고, 라우트보다 위에 있어야 하는 것(전환 덮개·안내)을 둔다.
+ * 화면 하나하나는 `pages/` 밑의 페이지 컴포넌트가 그린다.
+ */
+export function App() {
+  const mode = useThemeStore((s) => s.mode)
 
   return (
-    <>
-      <Experience />
-      {/* 바닥·캐릭터·Intro가 다 준비될 때까지 첫 화면을 덮는다(로딩 연출은 폴리싱 단계에서). */}
-      <SceneGate />
-      {/* 활성 스테이션의 2D 상세 자리 + ESC 종료 + 미구현 스테이션 fallback */}
-      <StationLifecycle />
-      {/* 테마 토글은 밤 테마를 제대로 구현할 때 다시 단다(지금은 종이만 어두워진다). */}
-      {idle && <Minimap onOpen={() => setWorldMapOpen(true)} />}
-      {worldMapOpen && <WorldMap onClose={() => setWorldMapOpen(false)} />}
-      {/* leva 튜닝 패널은 dev 전용이라 프로덕션 번들에서 빠진다. */}
-      {import.meta.env.DEV && <DevHUD />}
-      {idle && <CrayonStudio />}
-      {/* 가져다 쓴 에셋의 출처. CC-BY는 방문자가 볼 수 있는 곳에 밝히도록 요구한다. */}
-      {idle && <Credits />}
-      {/* 3D를 돌아다니지 않고 주요 화면만 훑는 자리. */}
-      <ListViewButton />
-    </>
+    <ThemeProvider theme={themes[mode]}>
+      <GlobalStyle />
+      {/* 어느 화면이 깨지든 여기까지 올라온다. 씬 안은 `SceneErrorBoundary`가 따로 받는다. */}
+      <AppErrorBoundary>
+        <Routes>
+          <Route path={MAIN_ROUTE} element={<MainPage />} />
+          <Route path={LOBBY_ROUTE} element={<ProjectsLobbyPage />} />
+          <Route path={GALLERY_ROUTE} element={<ProjectsGalleryPage />} />
+          <Route path={LIST_ROUTE} element={<ListViewPage />} />
+          <Route path={CRAYON_ROUTE} element={<CrayonStudioPage />} />
+          {/* SPA rewrite로 오타 주소도 여기까지 오므로, 받아 줄 자리를 끝에 둔다. */}
+          <Route path="*" element={<ErrorPage message="찾으시는 페이지가 없습니다." action="home" />} />
+        </Routes>
+      </AppErrorBoundary>
+      {/* 장면 전환 덮개도 라우트보다 위다 — 페이지가 통째로 갈리는 동안 남아 화면을 덮는다. */}
+      <SceneTransition />
+      {/* 마우스 없는 기기 안내. 어느 화면에서나 같으므로 라우트가 아니라 여기 하나만 둔다. */}
+      <MobileNotice />
+    </ThemeProvider>
   )
 }
-
-export default App

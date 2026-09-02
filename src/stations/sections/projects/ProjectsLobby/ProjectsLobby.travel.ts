@@ -17,7 +17,6 @@ import {
   LOBBY_PASSAGE_ENTER,
   LOBBY_PASSAGE_STAND,
   LOBBY_PASSAGE_WALK_SPEED,
-  LOBBY_ROUTE,
   LOBBY_START,
 } from './ProjectsLobby.constants'
 
@@ -71,7 +70,7 @@ function standOutsideDoor(): void {
 
 /** 맵 → 로비. 건물 문으로 걸어 들어가기 시작할 때 부른다. */
 export function enterLobby(): void {
-  useSceneTransitionStore.getState().close(LOBBY_ROUTE)
+  useSceneTransitionStore.getState().close('lobby')
 }
 
 /**
@@ -83,15 +82,15 @@ export function enterLobby(): void {
 export function leaveLobby(): void {
   if (useSceneTransitionStore.getState().phase !== 'idle') return
   standOutsideDoor()
-  useSceneTransitionStore.getState().close('/')
+  useSceneTransitionStore.getState().close('map')
 }
 
 /**
  * 통로로 걸어갈 수 있는 자리에 서 있는지.
  *
- * **1층에서 계단 난간 사이에 있을 때만** 받는다. 2층이나 계단 위에서 누르면 캐릭터가 난간을
+ * **1층에서 계단 끝선 안쪽에 있을 때만** 받는다. 2층이나 계단 위에서 누르면 캐릭터가 난간을
  * 헤집으며 돌아가고, 그 길은 보여 줄 만한 그림이 아니다.
- * 난간 안쪽 폭은 모델에서 잰 값이라 아직 재지 않았으면(방이 뜨기 전) 어디에 서 있든 아니다.
+ * 그 폭은 모델에서 잰 값이라 아직 재지 않았으면(방이 뜨기 전) 어디에 서 있든 아니다.
  */
 export function canWalkToPassage(): boolean {
   const { position, walking } = useInteriorStore.getState()

@@ -1,0 +1,6 @@
+export { CharacterModel } from './CharacterModel'
+export { faceMoveDirection, headingTo } from './CharacterModel.turn'
+export { takeFacePoint, turnCharacterTo } from './CharacterModel.face'
+export { CHARACTER_CLIPS, CHARACTER_FACING, CHARACTER_URL } from './CharacterModel.constants'
+export type { CharacterMotion } from './CharacterModel.constants'
+export type { CharacterModelHandle, CharacterModelProps } from './CharacterModel.types'

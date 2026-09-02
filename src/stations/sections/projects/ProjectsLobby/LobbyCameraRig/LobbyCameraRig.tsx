@@ -6,11 +6,7 @@ import { useLobbyGeometryStore } from '../../../../../state/useLobbyGeometryStor
 import { useLobbyPageStore } from '../../../../../state/useLobbyPageStore'
 import { useInteriorStore } from '../../../../../state/useInteriorStore'
 import { useLobbyTriggerStore } from '../../../../../state/useLobbyTriggerStore'
-import {
-  LOBBY_CAMERA_LIMIT,
-  LOBBY_START,
-  LOBBY_TRIGGER_FOCUS,
-} from '../ProjectsLobby.constants'
+import { LOBBY_CAMERA_LIMIT, LOBBY_START, LOBBY_TRIGGER_FOCUS } from '../ProjectsLobby.constants'
 import { LOBBY_BOOK_TRIGGER } from '../LobbyBook'
 
 /** 화면 기준 오른쪽·위를 구할 때 쓰는 기준 축. */
@@ -62,9 +58,10 @@ function applyShift(
 /**
  * 실내 팔로우 카메라. 캐릭터와의 고정 오프셋을 지키며 따라간다.
  *
- * 다만 **캐릭터를 그대로 따라가지는 않는다.** 방이 좁아 그대로 따라가면 화면이 계속 흔들리므로,
- * 제한을 건 기준점(`LOBBY_CAMERA_LIMIT`)을 따라간다. 자세를 그 점으로 잡아 각도·구도는 그대로이고
- * 캐릭터만 화면 안에서 움직인다.
+ * 다만 **캐릭터를 그대로 따라가지는 않는다.** 방이 좁아 그대로 따라가면 화면이 계속 흔들린다.
+ * 제한을 건 기준점을 따라가므로 각도·구도는 그대로이고 캐릭터만 화면 안에서 움직인다.
+ * 좌우는 **화면이 덮는 폭만큼 방 양 끝에서 물러선** 범위다(전시 공간과 같은 방식).
+ * 깊이는 계단 중턱을 넘어선 만큼의 절반만 따라간다.
  *
  * 트리거를 열면 **그쪽을 본다.** 진행도 하나를 굴려 평소 자세와 포커스 자세를 섞으므로,
  * 자리와 바라보는 점이 함께 움직여 도는 도중에도 구도가 어긋나지 않는다.
@@ -85,6 +82,7 @@ export function LobbyCameraRig() {
   const camera = useLobbyPageStore((s) => s.camera)
   const activeId = useLobbyTriggerStore((s) => s.activeId)
   const triggers = useLobbyGeometryStore((s) => s.triggers)
+  const bounds = useLobbyGeometryStore((s) => s.bounds)
   const tuning = useLobbyPageStore((s) => s.trigger)
 
   /** 포커스로 넘어간 정도(0~1). 자리와 바라보는 점을 이 하나로 섞는다. */
@@ -133,21 +131,27 @@ export function LobbyCameraRig() {
       cam.updateProjectionMatrix()
     }
 
+    // 좌우로 따라갈 범위. 화면이 덮는 폭만큼 방 양 끝에서 물러선다(전시 공간과 같은 방식).
+    // 상수 하나로 두면 화면비가 넓어질 때 그 폭만 커져 벽 바깥이 드러난다.
+    // 방을 아직 재지 않았으면 시작 자리 기준 폭으로 따라간다.
+    _offset.set(camera.x, camera.y, camera.z)
+    const halfHeight = Math.tan(MathUtils.degToRad(camera.fov) / 2) * _offset.length()
+    const halfWidth = halfHeight * cam.aspect
+    const measured = bounds.maxX > bounds.minX
+    const roomCenter = (bounds.minX + bounds.maxX) / 2
+    const roomLimit = (bounds.maxX - bounds.minX) / 2 - halfWidth
+    const centerX = measured ? roomCenter : LOBBY_START[0]
+    const limitX = measured ? roomLimit : LOBBY_CAMERA_LIMIT.x
+
     // 따라갈 기준점. 캐릭터를 그대로 따라가지 않고 제한 안에서만 움직인다.
     // 깊이는 절반 지점을 **넘어선 만큼**에만 비율이 걸려, 그 앞에서는 시작 자리에 묶인다.
     _anchor.set(
-      MathUtils.clamp(
-        position.x,
-        LOBBY_START[0] - LOBBY_CAMERA_LIMIT.x,
-        LOBBY_START[0] + LOBBY_CAMERA_LIMIT.x,
-      ),
+      limitX > 0 ? MathUtils.clamp(position.x, centerX - limitX, centerX + limitX) : centerX,
       // 높이는 그대로 따라간다. 계단을 오르면 카메라도 함께 올라야 방이 화면에 남는다.
       position.y,
       LOBBY_START[1] +
         Math.min(0, position.z - LOBBY_CAMERA_LIMIT.followZ) * LOBBY_CAMERA_LIMIT.followRate,
     )
-
-    _offset.set(camera.x, camera.y, camera.z)
 
     // 트리거를 보는 만큼 기준점과 오프셋을 그쪽으로 섞는다. 둘을 같은 진행도로 굴려야
     // 도는 도중에 바라보는 점만 앞서가거나 하지 않는다.

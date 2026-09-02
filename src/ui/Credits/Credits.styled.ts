@@ -8,6 +8,17 @@ export const Backdrop = styled.div`
   place-items: center;
   padding: 24px;
   background: rgba(20, 20, 28, 0.45);
+
+  /*
+   * 좁은 화면에서는 여백에 내줄 자리가 없다.
+   * 높이는 dvh로 잡는다. inset은 주소창이 접힌 높이를 따르지 않아 패널이 화면보다 크게 잡힌다.
+   */
+  @media (pointer: coarse) {
+    height: 100dvh;
+    padding: 12px;
+    /* 가운데 정렬은 칸을 자식 높이만큼 늘려 패널의 height가 화면을 넘는다. 칸을 그대로 채우게 한다. */
+    place-items: stretch;
+  }
 `
 
 export const Panel = styled.div`
@@ -24,6 +35,16 @@ export const Panel = styled.div`
   color: ${({ theme }) => theme.colors.text};
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
   font-family: ${({ theme }) => theme.fonts.body};
+
+  /* 좁은 화면에서는 상한을 두지 않고 남은 자리를 그대로 쓴다. */
+  @media (pointer: coarse) {
+    width: auto;
+    height: auto;
+    /* 내용이 넘쳐도 패널이 늘어나지 않아야 Body가 줄어든다. */
+    min-height: 0;
+    gap: 10px;
+    padding: 12px;
+  }
 `
 
 export const Title = styled.h2`
@@ -33,6 +54,11 @@ export const Title = styled.h2`
   font-family: ${({ theme }) => theme.fonts.hand};
   font-size: 28px;
   font-weight: 400;
+
+  /* 제목이 차지하는 높이만큼 목록과 미리보기가 줄어든다. */
+  @media (pointer: coarse) {
+    font-size: 20px;
+  }
 `
 
 export const CloseButton = styled.button`
@@ -75,6 +101,11 @@ export const List = styled.ul`
   padding: 0;
   overflow-y: auto;
   list-style: none;
+
+  /* 목록 폭을 줄여 오른쪽 미리보기가 눌리지 않게 한다. */
+  @media (pointer: coarse) {
+    flex: 0 0 140px;
+  }
 `
 
 /** 고른 항목만 테두리를 둬 표시한다. 목록이 짧아 다른 강조는 두지 않는다. */

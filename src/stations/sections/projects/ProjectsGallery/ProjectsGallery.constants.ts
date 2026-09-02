@@ -7,9 +7,6 @@ import {
   GALLERY_NAMEPLATE_PLATE_MATERIAL,
 } from './GalleryNameplates/GalleryNameplates.constants'
 
-/** 전시 공간 라우트. 로비(`/projects`) 안쪽이라 그 아래에 둔다. */
-export const GALLERY_ROUTE = '/projects/gallery'
-
 /** 전시 공간 모델. 직접 만든 것이라 출처 표기(`content/credits.ts`) 대상이 아니다. */
 export const GALLERY_MODEL_URL = '/assets/gallery.glb'
 

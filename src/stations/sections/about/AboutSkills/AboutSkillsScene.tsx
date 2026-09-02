@@ -6,7 +6,7 @@ import { useCameraStore } from '../../../../state/useCameraStore'
 import { useSkillsPageStore } from '../../../../state/useSkillsPageStore'
 import { useSkillsSequenceStore } from '../../../../state/useSkillsSequenceStore'
 import { useStationStore } from '../../../../state/useStationStore'
-import { type StationDetailProps, walkToStand } from '../../../registry'
+import { type StationDetailProps, faceStation, walkToStand } from '../../../registry'
 import { SKILLS_LOGO_SECONDS, SKILLS_TURN_EASE, SKILLS_TURN_SECONDS } from './AboutSkills.constants'
 import { SkillsExit } from './SkillsExit'
 import { SkillsPages } from './SkillsPages'
@@ -113,6 +113,8 @@ export function AboutSkillsScene({ phase }: StationDetailProps) {
       // 캐릭터가 자리에 선 뒤에 카메라를 넘겨받고, 다 돌면 공구상자에게 차례를 넘긴다.
       unsubscribe = useCameraStore.subscribe((next, prev) => {
         if (!prev.walking || next.walking) return
+        // 카메라가 도는 것과 함께 캐릭터도 페이지 쪽으로 몸을 돌린다.
+        faceStation('about-skills')
         timeline = gsap.timeline({ onComplete: complete })
         timeline.to(state, turn)
         timeline.call(() => setLogoTurn(true))

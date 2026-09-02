@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
 import { Box3, PointLight, SpotLight, Vector3, type Object3D } from 'three'
+import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import { useCreditsPreviewStore } from '../../state/useCreditsPreviewStore'
 import { InteriorEnvironment } from '../../stations/sections/projects/interior'
 import {
@@ -24,7 +25,9 @@ export function CreditModel({ url, tuneLights }: CreditModelProps) {
 
   const { model, scale, offset, lights, baseIntensity } = useMemo(() => {
     // 씬 안에서 같은 모델을 쓰고 있을 수 있어 원본을 그대로 넣지 않는다.
-    const model = scene.clone(true)
+    // 뼈대가 있는 모델은 그냥 복제하면 사본이 **원본의 뼈대**를 보고 휘어, 씬에 서 있는
+    // 캐릭터를 따라 화면 밖에서 그려진다. 뼈대까지 이어 복제해야 제자리에 선다.
+    const model = cloneSkinned(scene)
 
     // 판정에만 쓰고 씬에서는 그리지 않는 것들. 미리보기에 남으면 방을 상자로 덮는다.
     // 경계 상자를 재기 전에 걷어야 크기 정규화도 실물 기준이 된다.

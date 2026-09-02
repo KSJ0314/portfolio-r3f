@@ -1,8 +1,11 @@
 import styled from 'styled-components'
 import {
   CORNER_BUTTON_GAP,
+  CORNER_BUTTON_GAP_COARSE,
   CORNER_BUTTON_MARGIN,
+  CORNER_BUTTON_MARGIN_COARSE,
   CORNER_BUTTON_SIZE,
+  CORNER_BUTTON_SIZE_COARSE,
 } from './CornerButton.constants'
 
 /**
@@ -28,6 +31,20 @@ export const CornerButton = styled.button<{ $slot: number }>`
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+
+  /* 좁은 화면에서는 크기·여백을 줄인다. 자리 계산은 위와 같은 규칙을 그 값으로 다시 한다. */
+  @media (pointer: coarse) {
+    right: ${({ $slot }) =>
+      CORNER_BUTTON_MARGIN_COARSE + $slot * (CORNER_BUTTON_SIZE_COARSE + CORNER_BUTTON_GAP_COARSE)}px;
+    bottom: ${CORNER_BUTTON_MARGIN_COARSE}px;
+    width: ${CORNER_BUTTON_SIZE_COARSE}px;
+    height: ${CORNER_BUTTON_SIZE_COARSE}px;
+
+    & > svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {

@@ -11,6 +11,7 @@ import {
 } from '../../../../../state/useSceneTransitionStore'
 import { GALLERY_TO_LOBBY_TRIGGER } from '../ProjectsGallery.constants'
 import { leaveGallery } from '../ProjectsGallery.travel'
+import { isAfterTouchDrag, registerTouchTarget } from '../../../../../scene/touchMove'
 
 const _raycaster = new Raycaster()
 const _pointer = new Vector2()
@@ -51,11 +52,20 @@ export function GalleryTriggers() {
     leaveGallery()
   })
 
+  // 탭으로 열 수 있는 것으로 등록한다. 이동 쪽이 이것을 보고 탭을 여는 쪽에 넘긴다.
+  useEffect(() => {
+    const object = group.current
+    if (!object) return
+    return registerTouchTarget(object)
+  })
+
   useEffect(() => {
     const canvas = gl.domElement
 
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return
+      // 손가락으로 끌어 이동한 직후에는 받지 않는다. 뗀 자리에서 흉내 낸 마우스 이벤트가 뒤따라온다.
+      if (isAfterTouchDrag()) return
       // 이미 넘어가는 중이면 받지 않는다. 연타해도 가던 곳이 바뀌지 않아야 한다.
       if (isSceneCovered(useSceneTransitionStore.getState().phase)) return
       if (useGalleryFocusStore.getState().focusedBay !== null) return

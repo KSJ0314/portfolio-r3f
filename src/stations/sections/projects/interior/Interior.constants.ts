@@ -32,5 +32,20 @@ export const INTERIOR_BLOCKER_FOOT_RATIO = 0.3
 /** 캐릭터 반폭. 막는 상자에서 이만큼 떨어져 선다. */
 export const INTERIOR_CHARACTER_RADIUS = 0.25
 
-/** 캐릭터 박스 크기 — 맵의 임시 캐릭터와 같은 비율로 두되 실내 축척에 맞춘다. */
+/**
+ * 캐릭터 **판정** 몸통 크기. 막는 것과 겹치는지 볼 때 쓴다.
+ * 보이는 키(`INTERIOR_CHARACTER`)와 따로 두는 이유는, 이 값을 바꾸면 난간·문틀을
+ * 지나는 판정까지 함께 달라지기 때문이다.
+ */
 export const INTERIOR_CHARACTER_SIZE: readonly [number, number, number] = [0.4, 0.55, 0.4]
+
+/** 실내 캐릭터의 크기·밝기. 눈으로 맞춰야 하는 값이라 HUD로 조절한다. */
+export const INTERIOR_CHARACTER = {
+  /** 모델 세로의 월드 크기. 방이 맵보다 좁은 축척이라 맵보다 작다. */
+  height: 0.85,
+  /**
+   * 텍스처 색에 곱하는 밝기.
+   * 실내는 노출(`LOBBY_EXPOSURE`)로 방 전체 밝기를 잡으므로 캐릭터도 그 톤 매핑을 함께 탄다.
+   */
+  brightness: 1.6,
+}

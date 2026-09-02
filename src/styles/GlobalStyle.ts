@@ -21,4 +21,12 @@ export const GlobalStyle = createGlobalStyle`
     overflow: hidden;
     transition: background 0.6s ease, color 0.6s ease;
   }
+
+  /*
+   * 손가락으로 끌어 캐릭터를 움직이는 동안 브라우저가 그것을 스크롤·확대로 가져가지 않게 한다.
+   * 씬 캔버스에만 걸어 다른 화면의 스크롤은 그대로 둔다.
+   */
+  canvas {
+    touch-action: none;
+  }
 `

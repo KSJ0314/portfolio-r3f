@@ -1,5 +1,11 @@
 import type { DocBase } from '../../../../../lib/firebase'
 
+/** 이름만 나열하는 페이지의 묶음. 제목 아래에 이름을 늘어놓는다. */
+export interface SkillGroup {
+  label: string
+  names: string[]
+}
+
 /** Firestore `skills` 문서. `level`은 화면에 쓰지 않지만 스키마에는 있다. */
 export interface SkillDoc extends DocBase {
   name: string
@@ -7,6 +13,8 @@ export interface SkillDoc extends DocBase {
   order: number
   level: number
   description: string[]
+  /** 이름만 나열하는 문서가 담는 묶음. 이 값이 있으면 `name` 대신 이것을 펼친다. */
+  groups?: SkillGroup[]
   /** 화면에 낼지. 없으면 낸다 — 문서를 추가하며 빠뜨려도 조용히 사라지지 않게. */
   active?: boolean
 }
@@ -17,6 +25,8 @@ export interface SkillDoc extends DocBase {
  */
 export interface SkillPage {
   columns: readonly (readonly string[])[]
+  /** 이름만 나열하는 페이지인지. 설명과 숙련도를 그리지 않고 `groups`를 펼친다. */
+  plain?: boolean
 }
 
 /** 목록이 받는 것. 둘 다 주지 않으면 스스로 페이지를 넘기는 평소 모습이다. */

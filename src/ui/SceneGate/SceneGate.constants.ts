@@ -4,10 +4,12 @@
  *
  * Intro는 글씨와 사진이 준비되는 시점이 달라 경계가 나뉘어 있으므로 둘 다 확인한다.
  * 스테이션이 마운트됐다는 것만으로는 글씨가 준비됐다고 볼 수 없다 — 글씨는 Firestore를 기다린다.
+ *
+ * **캐릭터 모델은 기다리지 않는다.** 파일이 커서 아래 시간 안에 못 들어오면 새로고침을 되풀이한다.
+ * 시작 자리가 첫 화면에 보이는 Intro 영역 밖이라 늦게 나타나도 화면에서 드러나지 않는다.
  */
 export const REQUIRED_KEYS = [
   'ground',
-  'character',
   'station:about-intro',
   'intro-text',
   'intro-photo',

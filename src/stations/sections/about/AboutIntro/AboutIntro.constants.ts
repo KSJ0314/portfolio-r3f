@@ -32,6 +32,14 @@ export interface IntroPageLayout {
   photoBottom: number
   /** 하단 사진 높이. 가로는 사진 비율로 따라간다. */
   photoHeight: number
+  /** 연락처를 본문 아래로 얼마나 띄울지. */
+  contactTop: number
+  /** 연락처 글씨 크기. 아이콘도 이 크기를 따른다. */
+  contactSize: number
+  /** 아이콘과 글씨 사이 간격. */
+  contactGap: number
+  /** 연락처 줄 간격(글씨 크기 배수). */
+  contactLineHeight: number
   /** 나가기 화살표의 길이. 화살촉 크기는 여기에 비례한다. */
   exitArrowSize: number
   /** 나가기 화살표를 오른쪽 끝에서 얼마나 들일지. */
@@ -76,6 +84,10 @@ export const DEFAULT_INTRO_PAGE_LAYOUT: IntroPageLayout = {
   quoteBarGap: 0.3,
   photoBottom: 0,
   photoHeight: 3.3,
+  contactTop: 0.7,
+  contactSize: 0.2,
+  contactGap: 0.18,
+  contactLineHeight: 1.7,
   // 화살표 자체의 값은 화살표가 갖는다. 여기서는 페이지 배치 기본값으로 실어 HUD에 넘길 뿐이다.
   exitArrowSize: EXIT_ARROW.size,
   exitArrowRight: EXIT_ARROW.right,

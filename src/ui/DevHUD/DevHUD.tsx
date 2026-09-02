@@ -1,4 +1,5 @@
 import { CareerPageHUD } from './CareerPageHUD'
+import { CharacterHUD } from './CharacterHUD'
 import { CreditsHUD } from './CreditsHUD'
 import { DebugHUD } from './DebugHUD'
 import { GridPaperHUD } from './GridPaperHUD'
@@ -21,6 +22,7 @@ export function DevHUD() {
       <DebugHUD />
       <GridPaperHUD />
       <IntroPageHUD />
+      <CharacterHUD />
       <SkillsPageHUD />
       <CareerPageHUD />
       <ProjectsPageHUD />

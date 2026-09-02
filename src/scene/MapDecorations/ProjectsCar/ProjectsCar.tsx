@@ -21,11 +21,14 @@ import { usePointerCursor } from '../../usePointerCursor'
 import { useAfterStation } from '../../useAfterStation'
 import {
   PROJECTS_CAR_AFTER_STATION,
+  PROJECTS_CAR_BOARD_TURN,
   PROJECTS_CAR_HEADING,
   PROJECTS_CAR_URL,
 } from './ProjectsCar.constants'
 import { useReturnOnClose } from './ProjectsCar.hooks'
 import { disposeCar, splitCar } from './ProjectsCar.wheels'
+import { turnCharacterTo } from '../../CharacterModel'
+import { isAfterTouchDrag, registerTouchTarget } from '../../touchMove'
 
 /**
  * 연출의 단계.
@@ -206,9 +209,21 @@ function CarRide({ placement }: { placement: ProjectsCarPlacement }) {
       if (state.walking) return
       unsubscribe.current()
       unsubscribe.current = () => {}
-      board()
+      // 옆을 본 채로 사라지지 않게 차 쪽으로 돌아본 뒤에 태운다.
+      // 타는 순간 캐릭터를 감추므로 도는 시간을 두지 않으면 화면에 남지 않는다.
+      turnCharacterTo(at.current.x, at.current.z)
+      tweens.current.push(gsap.delayedCall(PROJECTS_CAR_BOARD_TURN, board))
     })
   }, [advance, acquireLock, board, placement])
+
+  // 인터랙션 대상으로 등록한다.
+  // 탈 수 있는 동안만 두어 달리는 중에는 판정에서 빠진다.
+  useEffect(() => {
+    if (stage !== 'ready') return
+    const object = place.current
+    if (!object) return
+    return registerTouchTarget(object)
+  })
 
   // 좌클릭은 R3F 포인터 이벤트가 아니라 캔버스 mousedown을 직접 듣는다.
   // 우클릭 홀드로 이동하는 중에 좌클릭을 더 누르면 pointerdown이 아예 발생하지 않기 때문이다.
@@ -218,6 +233,8 @@ function CarRide({ placement }: { placement: ProjectsCarPlacement }) {
     const canvas = gl.domElement
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return
+      // 손가락으로 끌어 이동한 직후에는 받지 않는다. 뗀 자리에서 흉내 낸 마우스 이벤트가 뒤따라온다.
+      if (isAfterTouchDrag()) return
       const group = place.current
       if (!group) return
 

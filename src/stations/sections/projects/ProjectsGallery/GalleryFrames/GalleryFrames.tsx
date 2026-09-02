@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
 import { type Group, Raycaster, Vector2 } from 'three'
+import { turnCharacterTo } from '../../../../../scene/CharacterModel'
 import { usePointerCursor } from '../../../../../scene/usePointerCursor'
 import { useGalleryFocusStore } from '../../../../../state/useGalleryFocusStore'
 import { useGalleryGeometryStore } from '../../../../../state/useGalleryGeometryStore'
@@ -10,6 +11,7 @@ import {
 } from '../../../../../state/useSceneTransitionStore'
 import { frameRect } from './GalleryFrames.bounds'
 import { GALLERY_FRAME_HIT_LIFT } from './GalleryFrames.constants'
+import { isAfterTouchDrag, registerTouchTarget } from '../../../../../scene/touchMove'
 
 const _raycaster = new Raycaster()
 const _pointer = new Vector2()
@@ -41,11 +43,20 @@ export function GalleryFrames() {
     [artworks, plates],
   )
 
+  // 탭으로 열 수 있는 것으로 등록한다. 이동 쪽이 이것을 보고 탭을 여는 쪽에 넘긴다.
+  useEffect(() => {
+    const object = group.current
+    if (!object) return
+    return registerTouchTarget(object)
+  })
+
   useEffect(() => {
     const canvas = gl.domElement
 
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return
+      // 손가락으로 끌어 이동한 직후에는 받지 않는다. 뗀 자리에서 흉내 낸 마우스 이벤트가 뒤따라온다.
+      if (isAfterTouchDrag()) return
       // 넘어가는 중이거나 이미 보고 있는 동안에는 받지 않는다.
       if (isSceneCovered(useSceneTransitionStore.getState().phase)) return
       if (useGalleryFocusStore.getState().focusedBay !== null) return
@@ -62,7 +73,10 @@ export function GalleryFrames() {
       const hit = _raycaster
         .intersectObjects(hits.children, true)
         .find((it) => typeof it.object.userData.bay === 'number')
-      if (hit) useGalleryFocusStore.getState().focus(hit.object.userData.bay as number)
+      if (!hit) return
+      // 카메라가 액자로 다가가는 동안 캐릭터도 그 칸 쪽으로 몸을 돌린다.
+      turnCharacterTo(hit.object.position.x, hit.object.position.z)
+      useGalleryFocusStore.getState().focus(hit.object.userData.bay as number)
     }
 
     canvas.addEventListener('mousedown', onMouseDown)
