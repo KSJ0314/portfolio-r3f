@@ -202,7 +202,7 @@ export function Crosswalk() {
           // 눕히면 로컬 +y가 월드 -z라, 아래로 미는 값이 +z다.
           position={[0, 0, height / 2]}
           rotation={[-Math.PI / 2, 0, 0]}
-          reveal={seconds}
+          reveal={revealSeconds}
           // 바닥 장식일 뿐이라 클릭·이동 판정에서 뺀다.
           raycast={() => null}
         />
