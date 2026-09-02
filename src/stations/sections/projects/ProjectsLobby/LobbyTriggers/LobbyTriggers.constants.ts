@@ -4,6 +4,15 @@
  */
 export const LOBBY_TRIGGER_MARKER_GAP = 0.2
 
+/**
+ * 통로 표시를 트리거 남쪽 면에서 로비 쪽으로 더 빼는 거리.
+ * 문틀을 감싼 상자의 중심에 두면 문 안쪽에 잠겨 보인다.
+ */
+export const LOBBY_PASSAGE_MARKER_FORWARD = 2
+
+/** 통로 표시를 트리거 윗면에서 아래로 내리는 거리. 문틀 상자가 높아 그대로 두면 천장 가까이 뜬다. */
+export const LOBBY_PASSAGE_MARKER_DROP = 0.4
+
 /** 표시 원뿔 크기. 실내 축척이 맵보다 작아 맵(0.5)보다 작게 둔다. */
 export const LOBBY_TRIGGER_MARKER_SIZE = 0.15
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Text } from '@react-three/drei'
 import { useLoader, useThree } from '@react-three/fiber'
-import { Raycaster, SRGBColorSpace, TextureLoader, Vector2, type Group } from 'three'
+import { Mesh, Raycaster, SRGBColorSpace, TextureLoader, Vector2, type Group } from 'three'
 import { BODY_FONT } from '../../../../../content/fonts'
 import type { TroikaTextMesh } from '../../../../types'
 import { isAfterTouchDrag, registerTouchTarget } from '../../../../../scene/touchMove'
@@ -180,7 +180,8 @@ export function IntroContact({
               position={[x + width / 2, lineY[index], CONTACT_HIT_LIFT]}
               userData={{ contactIndex: index, linkUrl: line.open, copyText: line.copy }}
               // 닫혀 있는 동안에는 레이에 걸리지 않게 둔다. 판은 목록 보기를 위해 남긴다.
-              raycast={interactive ? undefined : () => null}
+              // 켤 때 `undefined`를 주면 R3F가 무시해 꺼진 채로 남으므로 원래 메서드를 직접 준다.
+              raycast={interactive ? Mesh.prototype.raycast : () => null}
               {...(interactive ? cursor : {})}
             >
               <planeGeometry args={[width, size * CONTACT_HIT_HEIGHT]} />

@@ -65,7 +65,7 @@ export const LOBBY_BOOK_PAPER = '#ffffff'
 export const LOBBY_BOOK_INK = '#3a352e'
 
 /** 곁들이는 글(요약)의 색. 본문보다 물러나 있다. */
-export const LOBBY_BOOK_INK_SOFT = '#6d665d'
+export const LOBBY_BOOK_INK_SOFT = '#5c564e'
 
 /**
  * 글자 크기와 간격 — 전부 **안전 영역 높이 대비 비율**이다.
