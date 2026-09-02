@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
 import { type Group, Raycaster, Vector2 } from 'three'
+import { turnCharacterTo } from '../../../../../scene/CharacterModel'
 import { usePointerCursor } from '../../../../../scene/usePointerCursor'
 import { useGalleryFocusStore } from '../../../../../state/useGalleryFocusStore'
 import { useGalleryGeometryStore } from '../../../../../state/useGalleryGeometryStore'
@@ -72,7 +73,10 @@ export function GalleryFrames() {
       const hit = _raycaster
         .intersectObjects(hits.children, true)
         .find((it) => typeof it.object.userData.bay === 'number')
-      if (hit) useGalleryFocusStore.getState().focus(hit.object.userData.bay as number)
+      if (!hit) return
+      // 카메라가 액자로 다가가는 동안 캐릭터도 그 칸 쪽으로 몸을 돌린다.
+      turnCharacterTo(hit.object.position.x, hit.object.position.z)
+      useGalleryFocusStore.getState().focus(hit.object.userData.bay as number)
     }
 
     canvas.addEventListener('mousedown', onMouseDown)

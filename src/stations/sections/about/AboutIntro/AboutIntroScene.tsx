@@ -5,7 +5,7 @@ import gsap from 'gsap'
 import { useCameraStore } from '../../../../state/useCameraStore'
 import { useIntroPageStore } from '../../../../state/useIntroPageStore'
 import { useStationStore } from '../../../../state/useStationStore'
-import type { StationDetailProps } from '../../../registry'
+import { type StationDetailProps, faceStation } from '../../../registry'
 import { CONTENT_Y } from './AboutIntro.constants'
 import { ExitArrow } from './ExitArrow'
 
@@ -93,6 +93,9 @@ export function AboutIntroScene({ station, phase }: StationDetailProps) {
     if (phase !== 'entering' && phase !== 'exiting') return
     const entering = phase === 'entering'
 
+    // 카메라가 도는 것과 함께 캐릭터도 페이지 쪽으로 몸을 돌린다.
+    if (entering) faceStation(station.id)
+
     const state = { progress: entering ? 0 : 1 }
     const tween = gsap.to(state, {
       progress: entering ? 1 : 0,
@@ -108,7 +111,7 @@ export function AboutIntroScene({ station, phase }: StationDetailProps) {
     return () => {
       tween.kill()
     }
-  }, [phase, applyPose])
+  }, [phase, station, applyPose])
 
   // 나가기 화살표는 완전히 활성인 동안에만 둔다(진입·종료 애니메이션 중에는 안 보인다).
   if (phase !== 'active' || !station.position) return null

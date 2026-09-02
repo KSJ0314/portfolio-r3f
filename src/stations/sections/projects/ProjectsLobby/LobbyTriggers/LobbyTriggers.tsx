@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
 import { type Group, Raycaster, Vector2 } from 'three'
 import { ClickMarker } from '../../../../../scene/ClickMarker'
+import { turnCharacterTo } from '../../../../../scene/CharacterModel'
 import { isAfterTouchDrag, registerTouchTarget } from '../../../../../scene/touchMove'
 import { usePointerCursor } from '../../../../../scene/usePointerCursor'
 import { useLobbyGeometryStore } from '../../../../../state/useLobbyGeometryStore'
@@ -89,6 +90,9 @@ export function LobbyTriggers() {
         if (canWalkToPassage()) walkIntoPassage()
         return
       }
+      // 카메라가 그것을 보러 도는 동안 캐릭터도 같은 쪽으로 몸을 돌린다.
+      const trigger = useLobbyGeometryStore.getState().triggers[id]
+      if (trigger) turnCharacterTo(trigger.x, trigger.z)
       useLobbyTriggerStore.getState().activate(id)
     }
 

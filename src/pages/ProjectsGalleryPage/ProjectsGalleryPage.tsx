@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BackButton } from '../../ui/BackButton'
 import { GalleryPageHUD } from '../../ui/DevHUD/GalleryPageHUD'
+import { InteriorCharacterHUD } from '../../ui/DevHUD/InteriorCharacterHUD'
 import { useCoarsePointer } from '../../ui/MobileNotice'
 import { GalleryScene } from '../../stations/sections/projects/ProjectsGallery/GalleryScene'
 import { goBackFromGallery } from '../../stations/sections/projects/ProjectsGallery/ProjectsGallery.travel'
@@ -30,7 +31,12 @@ export function ProjectsGalleryPage() {
       <BackButton label="Back" color="#000000" onClick={goBackFromGallery} />
 
       {/* leva 튜닝 패널은 dev 전용이고 좁은 화면에서는 두지 않는다. 라우트마다 하나씩 둔다. */}
-      {import.meta.env.DEV && !mobile && <GalleryPageHUD />}
+      {import.meta.env.DEV && !mobile && (
+        <>
+          <GalleryPageHUD />
+          <InteriorCharacterHUD />
+        </>
+      )}
     </>
   )
 }

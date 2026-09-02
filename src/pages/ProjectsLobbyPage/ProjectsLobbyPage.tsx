@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useLobbyTriggerStore } from '../../state/useLobbyTriggerStore'
 import { BackButton } from '../../ui/BackButton'
 import { LobbyPageHUD } from '../../ui/DevHUD/LobbyPageHUD'
+import { InteriorCharacterHUD } from '../../ui/DevHUD/InteriorCharacterHUD'
 import { useCoarsePointer } from '../../ui/MobileNotice'
 import { LobbyScene } from '../../stations/sections/projects/ProjectsLobby/LobbyScene'
 import { goBack } from '../../stations/sections/projects/ProjectsLobby/ProjectsLobby.travel'
@@ -37,7 +38,12 @@ export function ProjectsLobbyPage() {
       />
 
       {/* leva 튜닝 패널은 dev 전용이고 좁은 화면에서는 두지 않는다. 맵과 라우트가 달라 따로 둔다. */}
-      {import.meta.env.DEV && !mobile && <LobbyPageHUD />}
+      {import.meta.env.DEV && !mobile && (
+        <>
+          <LobbyPageHUD />
+          <InteriorCharacterHUD />
+        </>
+      )}
     </>
   )
 }

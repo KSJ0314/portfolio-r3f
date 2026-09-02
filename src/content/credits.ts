@@ -1,4 +1,5 @@
 import type { PaperStickerParams } from '../lib/PaperSticker'
+import { CHARACTER_URL } from '../scene/CharacterModel'
 import { PROJECTS_CAR_URL } from '../scene/MapDecorations/ProjectsCar/ProjectsCar.constants'
 import { TROPHY_URL } from '../stations/sections/about/AboutCareer/CareerTrophy/CareerTrophy.constants'
 import {
@@ -67,6 +68,7 @@ export interface AssetCredit {
  */
 const AI_WORK = { author: '김소중', license: 'AI 생성 (GPT)' } as const
 const AI_MODEL_WORK = { author: '김소중', license: 'AI 도구로 제작 (Blender + Claude MCP)' } as const
+const AI_CHARACTER_WORK = { author: '김소중', license: 'AI 생성 (Meshy AI)' } as const
 
 /**
  * 화면에 싣는 에셋 출처.
@@ -148,6 +150,14 @@ export const ASSET_CREDITS: AssetCredit[] = [
       url: SPEC_URL,
       params: { ...CAREER_PAPER_PARAMS, border: CAREER_SPEC.border },
     },
+  },
+  {
+    title: '캐릭터',
+    ...AI_CHARACTER_WORK,
+    // 재질 밝기를 씬에서 되올려 둔 데다 톤 매핑까지 빼, 여기 광량 그대로면 색이 씻긴다.
+    lightScale: 0.6,
+    cameraYaw: -45,
+    preview: { kind: 'model', url: CHARACTER_URL },
   },
   {
     title: '프로젝트 전시관 로비',

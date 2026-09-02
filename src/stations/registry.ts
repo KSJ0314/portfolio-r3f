@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import { Vector3 } from 'three'
 import { type Station, getStation } from '../content/stations'
+import { turnCharacterTo } from '../scene/CharacterModel'
 import { useCameraStore } from '../state/useCameraStore'
 import type { StationPhase } from '../state/useStationStore'
 import {
@@ -77,6 +78,14 @@ export interface StationEntry {
    */
   distanceTo?: (point: Vector3, station: Station) => number
   /**
+   * 근접해야 열리는 스테이션이면 영역 테두리에서 바깥으로 둘 여유 거리.
+   *
+   * **등록하지 않으면 거리를 보지 않는다** — 어디에 서 있든 눌러서 열 수 있고, 걸어서 멀어져도
+   * 닫히지 않는다. 종이 위에 그려진 스테이션은 눌러 읽는 페이지라 서 있는 자리를 따질 것이 없다.
+   * 들어가는 곳이 정해진 스테이션(건물 문)만 등록해, 그 앞에 선 사람만 열 수 있게 한다.
+   */
+  nearRadius?: number
+  /**
    * 활성화할 때 캐릭터가 서는 자리(월드 x, z).
    * 데려가는 것은 공통층(`walkToStand`)이 맡고, 언제 데려갈지는 스테이션이 자기 연출 순서에서 정한다.
    * 등록하지 않으면 진입 이동이 없다.
@@ -118,6 +127,8 @@ export const STATION_REGISTRY: Record<string, StationEntry> = {
   'projects': {
     Inactive: ProjectsBuildingInactive,
     distanceTo: projectsBuildingDistanceTo,
+    // 문 앞 구역이 곧 판정 범위다. 여유를 두면 표시된 구역보다 넓어져 건물 옆에서도 열린다.
+    nearRadius: 0,
     // 문 자리를 모델에서 재므로 값이 아니라 함수다. 재기 전이면 null이라 진입 이동을 건너뛴다.
     stand: projectsBuildingStand,
     Scene: ProjectsBuildingScene,
@@ -138,6 +149,16 @@ function resolveStand(station: Station): readonly [number, number] | null {
   if (!stand) return null
   if (typeof stand !== 'function') return stand
   return stand(useCameraStore.getState().position, station)
+}
+
+/**
+ * 캐릭터를 그 스테이션 중심 쪽으로 **한 번** 돌린다. 활성화하는 순간 옆을 본 채로 페이지가 열리지 않게.
+ * 계속 바라보게 두지는 않으므로 다시 걸으면 진행 방향이 그 자리를 덮는다.
+ * 자리가 없는 스테이션은 바라볼 곳도 없다.
+ */
+export function faceStation(id: string): void {
+  const center = getStation(id)?.position
+  if (center) turnCharacterTo(center[0], center[1])
 }
 
 /**

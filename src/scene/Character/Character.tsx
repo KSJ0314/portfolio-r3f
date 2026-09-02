@@ -1,45 +1,36 @@
-import { useEffect, useRef } from 'react'
+import { Suspense, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Vector3 } from 'three'
-import type { Mesh } from 'three'
+import type { Group } from 'three'
 import { pushOutOfBlockers } from '../../state/useBlockersStore'
-import { useSceneReadyStore } from '../../state/useSceneReadyStore'
-import { useThemeStore } from '../../state/useThemeStore'
-import { themes } from '../../theme/themes'
 import { useCameraStore } from '../../state/useCameraStore'
+import { useCharacterStore } from '../../state/useCharacterStore'
 import { isMovementLocked, useStationStore } from '../../state/useStationStore'
+import { CharacterModel, faceMoveDirection, headingTo, takeFacePoint } from '../CharacterModel'
+import type { CharacterModelHandle } from '../CharacterModel'
+import { ARRIVE_EPSILON, CHARACTER_RADIUS, MOVE_SPEED } from './Character.constants'
 
-/** 이동 속도(유닛/초). 거리와 무관하게 항상 일정. */
-const MOVE_SPEED = 4
-
-/** 목표점에 닿았다고 보는 거리. */
-const ARRIVE_EPSILON = 1e-4
-
-/** 막는 것과 얼마나 떨어져 서는지. 캐릭터 박스의 반폭이라 몸이 벽에 파묻히지 않는다. */
-const CHARACTER_RADIUS = 0.3
-
-const _dir = new Vector3()
+const _step = new Vector3()
+const _moved = new Vector3()
 const _prev = new Vector3()
 
 /**
- * 임시 캐릭터 플레이스홀더. 매 프레임 목표점(target)을 향해 고정 속도로 한 걸음씩 이동한다.
+ * 맵의 캐릭터. 매 프레임 목표점(target)을 향해 고정 속도로 한 걸음씩 옮기고, 간 방향으로 몸을 돌린다.
  * 우클릭을 누르고 있으면 목표점이 커서를 따라 갱신되어 계속 이동한다.
- * Phase 7에서 실제 캐릭터·걷기 애니메이션으로 교체.
+ *
+ * 모델은 자기 Suspense 경계 안에서 불러온다 — 이동·회전은 모델을 기다리지 않고 그대로 돈다.
  */
 export function Character() {
-  const ref = useRef<Mesh>(null)
-  const mode = useThemeStore((s) => s.mode)
-  const theme = themes[mode]
+  const ref = useRef<Group>(null)
+  const model = useRef<CharacterModelHandle>(null)
+  const heading = useRef(0)
   const position = useCameraStore((s) => s.position)
   const target = useCameraStore((s) => s.target)
   // 탈것에 탄 동안에는 감춘다. 위치는 그대로 도므로 카메라는 평소처럼 따라간다.
   const hidden = useCameraStore((s) => s.hidden)
-
-  // 지금은 불러오는 것이 없어 즉시 준비된다. 나중에 텍스처·모델이 붙으면 그때부터 실제로 기다린다.
-  const markReady = useSceneReadyStore((s) => s.markReady)
-  useEffect(() => {
-    markReady('character')
-  }, [markReady])
+  const { facing, turnSeconds, height, walkRate, brightness } = useCharacterStore(
+    (s) => s.placement,
+  )
 
   useFrame((_, delta) => {
     _prev.copy(position)
@@ -56,7 +47,7 @@ export function Character() {
       if (dist <= step) {
         position.copy(target)
       } else {
-        position.add(_dir.subVectors(target, position).normalize().multiplyScalar(step))
+        position.add(_step.subVectors(target, position).normalize().multiplyScalar(step))
       }
     }
     // 건물 같은 것을 통과하지 못하게 밀어낸다. 걸음을 옮긴 뒤에 되돌리므로 벽을 따라 미끄러진다.
@@ -69,15 +60,37 @@ export function Character() {
       const stuck = delta > 0 && position.distanceTo(_prev) <= ARRIVE_EPSILON
       if (arrived || stuck) endWalk()
     }
-    ref.current?.position.set(position.x, 0.4, position.z)
-    // 이번 프레임 실제 이동 속도(유닛/초) 기록 — 디버그/튜닝용(구독 알림 없이 in-place).
-    useCameraStore.getState().motion.speed = delta > 0 ? position.distanceTo(_prev) / delta : 0
+
+    _moved.subVectors(position, _prev)
+    const group = ref.current
+    if (group) {
+      group.position.set(position.x, 0, position.z)
+      faceMoveDirection(group, _moved, heading, facing, turnSeconds, delta)
+      // 밖에서 넘긴 방향이 있으면 목표 각을 그것으로 덮는다. **간 방향보다 나중에** 놓아야 한다 —
+      // 도착한 그 프레임은 아직 걸음이 남아 있어, 먼저 놓으면 진행 방향이 도로 덮어 신호가 사라진다.
+      const face = takeFacePoint()
+      if (face) heading.current = headingTo(position.x, position.z, face.x, face.z, facing)
+    }
+    // 이번 프레임 실제 이동 속도(유닛/초). 걷기 동작과 디버그 표시가 함께 본다.
+    const speed = delta > 0 ? _moved.length() / delta : 0
+    model.current?.applyMotion(speed)
+    useCameraStore.getState().motion.speed = speed
   })
 
   return (
-    <mesh ref={ref} visible={!hidden}>
-      <boxGeometry args={[0.6, 0.8, 0.6]} />
-      <meshStandardMaterial color={theme.colors.accent} />
-    </mesh>
+    <group ref={ref} visible={!hidden}>
+      {/* 경계를 자기 안에 둔다. 밖에 두면 모델을 받는 동안 곁의 것들이 함께 사라졌다 돌아온다. */}
+      <Suspense fallback={null}>
+        <CharacterModel
+          ref={model}
+          baseSpeed={MOVE_SPEED}
+          height={height}
+          walkRate={walkRate}
+          brightness={brightness}
+          // 종이와 같이 그린 색이 그대로 나와야 한다(DECISIONS 010).
+          toneMapped={false}
+        />
+      </Suspense>
+    </group>
   )
 }

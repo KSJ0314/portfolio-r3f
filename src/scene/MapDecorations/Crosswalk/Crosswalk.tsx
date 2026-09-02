@@ -8,6 +8,7 @@ import { useDevicePerfStore } from '../../../state/useDevicePerfStore'
 import { useMapDecorationsStore } from '../../../state/useMapDecorationsStore'
 import { type StationPhase, useStationStore } from '../../../state/useStationStore'
 import { moveToStand, walkToStand } from '../../../stations/registry'
+import { turnCharacterTo } from '../../CharacterModel'
 import { useAfterStation } from '../../useAfterStation'
 import {
   CROSSWALK,
@@ -58,14 +59,19 @@ export function Crosswalk() {
   const { scale, x, z, rotation, seconds } = useMapDecorationsStore((s) => s.crosswalk)
   const redraw = useMapDecorationsStore((s) => s.crosswalkRedraw)
   const markDrawn = useMapDecorationsStore((s) => s.markCrosswalkDrawn)
+  const markReturned = useMapDecorationsStore((s) => s.markCrosswalkReturned)
+  // 이미 데려와 그은 뒤에 다시 마운트된 것(로비를 다녀옴)이면 처음부터 그려 둔다.
   const returned = useAfterStation(CROSSWALK_AFTER_STATION)
-  const [drawing, setDrawing] = useState(false)
+  const [drawing, setDrawing] = useState(() => useMapDecorationsStore.getState().crosswalkReturned)
+  // 한 번 그은 뒤에는 연출 없이 붙인다 — 다시 마운트될 때마다 그어지면 이미 본 것을 또 본다.
+  // HUD "다시 그리기"는 이 신호를 내리므로 그때는 연출이 그대로 돈다.
+  const drawnBefore = useMapDecorationsStore((s) => s.crosswalkDrawn)
 
   // 그어지는 연출은 매 프레임 알갱이를 찍어 텍스처를 다시 올리는 일이라 기기를 탄다.
   // 버거운 기기에서는 연출을 빼고 완성된 그림을 바로 붙인다.
   // 아직 재지 않았으면(null) 지금까지의 동작인 연출 쪽으로 둔다.
   const strained = useDevicePerfStore((s) => s.tier === 'strained')
-  const revealSeconds = strained ? 0 : seconds
+  const revealSeconds = strained || drawnBefore ? 0 : seconds
 
   const height = CROSSWALK.height * scale
 
@@ -126,7 +132,8 @@ export function Crosswalk() {
   // 두 번째 종료에서 다시 잠기는데, 그때는 풀어 줄 쪽이 없어 이동이 영영 막힌다.
   useEffect(() => {
     const check = (s: { activeId: string | null; phase: StationPhase }) => {
-      if (sent.current || s.activeId !== CROSSWALK_AFTER_STATION || s.phase !== 'exiting') return
+      if (sent.current || useMapDecorationsStore.getState().crosswalkReturned) return
+      if (s.activeId !== CROSSWALK_AFTER_STATION || s.phase !== 'exiting') return
       if (!moveToStand(CROSSWALK_AFTER_STATION)) return
       sent.current = true
       acquireLock()
@@ -140,6 +147,8 @@ export function Crosswalk() {
 
   useEffect(() => {
     if (!returned || started.current) return
+    // 이미 데려온 뒤에 다시 마운트된 것이면 그 자리에 그대로 둔다.
+    if (useMapDecorationsStore.getState().crosswalkReturned) return
     started.current = true
 
     // 닫히는 순간을 놓쳤으면 여기서 잠근다.
@@ -147,6 +156,7 @@ export function Crosswalk() {
 
     // 자리를 등록하지 않은 스테이션은 데려올 곳이 없으니 기다리지 않고 곧장 긋는다.
     if (!walkToStand(CROSSWALK_AFTER_STATION)) {
+      markReturned()
       const timer = window.setTimeout(() => setDrawing(true), 0)
       cleanup.current = () => window.clearTimeout(timer)
       return
@@ -157,11 +167,14 @@ export function Crosswalk() {
       // 자리에 닿으면 Character가 walking을 끈다. 이펙트 몸통이 아니라 구독 콜백이라 여기서 상태를 바꾼다.
       if (s.walking) return
       unsubscribe()
+      // 그어지는 것을 등지고 서 있지 않게 횡단보도 쪽으로 몸을 돌린다.
+      turnCharacterTo(x, z)
+      markReturned()
       log('자리 도착 — %s', useDevicePerfStore.getState().tier === 'strained' ? '그림 붙이기' : '긋기 시작')
       setDrawing(true)
     })
     cleanup.current = unsubscribe
-  }, [returned, acquireLock])
+  }, [returned, acquireLock, markReturned, x, z])
 
   // 다 그으면 잠금을 풀고 차례를 넘긴다. 다시 그리기(HUD)로 연출이 재생되면 그 신호도 다시 낸다.
   useEffect(() => {
