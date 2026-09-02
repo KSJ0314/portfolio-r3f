@@ -7,15 +7,18 @@ const log = createLogger('station:lifecycle')
  * 스테이션 활성화 라이프사이클.
  *
  * ```
- * idle ──근접 + 좌클릭──> entering ──진입 애니 끝(enterComplete)──> active
+ * idle ──────좌클릭──────> entering ──진입 애니 끝(enterComplete)──> active
  *                        [이동 잠금]                                 │
  *                              근접 이탈 · 나가기 요소 클릭 · ESC ───┘
  *                                                  ↓
  *                        exiting ──종료 애니 끝(exitComplete)──> idle
  * ```
  *
+ * - **근접을 따지는 것은 반경을 등록한 스테이션뿐이다**(건물 문처럼 들어가는 곳이 정해진 경우).
+ *   나머지는 어디에 서 있든 눌러서 열고 멀어져도 닫히지 않는다. 그 판단은 근접을 재는
+ *   `scene/Stations`가 하고 여기서는 라이프사이클만 다룬다.
  * - **이동 잠금은 진입 애니메이션 중에만 걸린다.**
- *   `active`에서는 평소처럼 이동할 수 있고, **걸어서 근접 범위를 벗어나면 그것이 곧 종료**다.
+ *   `active`에서는 평소처럼 이동할 수 있고, **근접 범위를 벗어나면 그것이 곧 종료**다(그 스테이션에 한해).
  *   종료 애니메이션 중에도 이동은 막지 않는다 — 걸어나가다 멈칫하지 않게.
  * - **닫기는 근접 이탈 · 스테이션이 제공하는 나가기 요소 · ESC 세 가지**다. 우클릭(이동)은 닫지 않는다.
  * - 진입·종료 애니메이션과 그동안의 카메라 연출은 전적으로 스테이션 구현의 몫이며, 끝났을 때
@@ -39,9 +42,9 @@ interface StationState {
    * 여기 둔다 — 라우트가 갈려 맵이 다시 마운트돼도 남아야 장식이 사라지지 않는다.
    */
   visited: Record<string, boolean>
-  /** 근접 스테이션 갱신. 활성 스테이션에서 멀어지면 그대로 종료를 건다. */
+  /** 근접 스테이션 갱신. 멀어져 닫는 판단은 근접을 재는 쪽(`scene/Stations`)이 한다. */
   setNear: (id: string | null) => void
-  /** 근접한 스테이션을 활성화한다(idle에서만). 진입 애니메이션이 시작되고 이동이 잠긴다. */
+  /** 스테이션을 활성화한다(idle에서만). 진입 애니메이션이 시작되고 이동이 잠긴다. */
   activate: (id: string) => void
   /** 스테이션 구현이 진입 애니메이션을 마쳤음을 알린다 → 이동 잠금 해제. */
   enterComplete: () => void
@@ -66,19 +69,13 @@ export const useStationStore = create<StationState>((set, get) => ({
   // 첫 화면 Intro는 `activate`를 거치지 않으므로 처음부터 열어본 것으로 둔다.
   visited: { 'about-intro': true },
   setNear: (id) => {
-    if (get().nearId !== id) {
-      log('근접 %s → %s', get().nearId ?? '없음', id ?? '없음')
-      set({ nearId: id })
-    }
-    // 걸어서 멀어지는 것이 곧 닫기다. 값이 바뀌는 순간이 아니라 매번 확인한다 —
-    // 활성 스테이션이 처음부터 근접 밖이면 전환이 일어나지 않아 영영 안 닫힌다.
-    // requestClose는 active에서만 받으므로 반복 호출은 무시된다.
-    const { activeId, phase } = get()
-    if (phase === 'active' && activeId !== null && id !== activeId) get().requestClose()
+    if (get().nearId === id) return
+    log('근접 %s → %s', get().nearId ?? '없음', id ?? '없음')
+    set({ nearId: id })
   },
   activate: (id) => {
-    const { phase, nearId, visited } = get()
-    if (phase !== 'idle' || nearId !== id) return
+    const { phase, visited } = get()
+    if (phase !== 'idle') return
     log('%s 열기 — 진입 애니메이션 시작', id)
     set({
       activeId: id,

@@ -109,6 +109,12 @@ interface MapDecorationsState {
    * 걷는 시간이 거리에 따라 달라져 지연(delay) 상수로는 차례를 맞출 수 없다.
    */
   crosswalkDrawn: boolean
+  /**
+   * 횡단보도 자리로 캐릭터를 데려오는 이동을 이미 마쳤는지.
+   * **컴포넌트가 아니라 여기 둔다** — 로비를 다녀오면 맵이 다시 마운트돼 컴포넌트에 든 기록이
+   * 사라지고, 등장 조건은 스토어에 남아 곧바로 참이라 데려오는 이동이 다시 돈다.
+   */
+  crosswalkReturned: boolean
   /** 세워 두는 신호등의 배치·그림자. */
   trafficLight: TrafficLightPlacement
   /** 프로젝트 구역으로 데려다주는 자동차의 배치·연출. */
@@ -120,6 +126,8 @@ interface MapDecorationsState {
    * 주행 시간이 거리·속도에 따라 달라져 지연(delay) 상수로는 차례를 맞출 수 없다.
    */
   carArrived: boolean
+  /** 차 앞자리로 캐릭터를 데려오는 이동을 이미 마쳤는지. `crosswalkReturned`와 같은 이유로 여기 둔다. */
+  carReturned: boolean
   setGuide: (guide: GuideArrowPlacement) => void
   redrawGuide: () => void
   setHint: (hint: RightClickHintPlacement) => void
@@ -127,11 +135,15 @@ interface MapDecorationsState {
   redrawCrosswalk: () => void
   /** 횡단보도를 다 그었음을 알린다. */
   markCrosswalkDrawn: () => void
+  /** 횡단보도 자리로 데려오는 이동을 마쳤음을 알린다. */
+  markCrosswalkReturned: () => void
   setTrafficLight: (trafficLight: TrafficLightPlacement) => void
   setCar: (car: ProjectsCarPlacement) => void
   redrawCar: () => void
   /** 자동차가 도착했음을 알린다. */
   markCarArrived: () => void
+  /** 차 앞자리로 데려오는 이동을 마쳤음을 알린다. */
+  markCarReturned: () => void
 }
 
 /**
@@ -146,10 +158,12 @@ export const useMapDecorationsStore = create<MapDecorationsState>((set, get) => 
   crosswalk: { ...CROSSWALK_PLACEMENT },
   crosswalkRedraw: 0,
   crosswalkDrawn: false,
+  crosswalkReturned: false,
   trafficLight: { ...TRAFFIC_LIGHT_PLACEMENT },
   car: { ...PROJECTS_CAR_PLACEMENT },
   carRedraw: 0,
   carArrived: false,
+  carReturned: false,
   setGuide: (guide) => set({ guide }),
   redrawGuide: () => set((s) => ({ guideRedraw: s.guideRedraw + 1 })),
   setHint: (hint) => set({ hint }),
@@ -157,15 +171,26 @@ export const useMapDecorationsStore = create<MapDecorationsState>((set, get) => 
   // 다시 그리면 연출이 처음부터 재생되므로 다 그었다는 신호도 내린다 — 뒤이어 나오는 장식이
   // 그리는 동안 서 있으면 안 된다. 다 그으면 횡단보도가 다시 켠다.
   redrawCrosswalk: () =>
-    set((s) => ({ crosswalkRedraw: s.crosswalkRedraw + 1, crosswalkDrawn: false })),
+    set((s) => ({
+      crosswalkRedraw: s.crosswalkRedraw + 1,
+      crosswalkDrawn: false,
+      crosswalkReturned: false,
+    })),
   markCrosswalkDrawn: () => {
     if (!get().crosswalkDrawn) set({ crosswalkDrawn: true })
+  },
+  markCrosswalkReturned: () => {
+    if (!get().crosswalkReturned) set({ crosswalkReturned: true })
   },
   setTrafficLight: (trafficLight) => set({ trafficLight }),
   setCar: (car) => set({ car }),
   // 다시 재생하면 아직 도착하지 않은 상태로 돌아간다 — 뒤이어 나올 것이 그동안 서 있으면 안 된다.
-  redrawCar: () => set((s) => ({ carRedraw: s.carRedraw + 1, carArrived: false })),
+  redrawCar: () =>
+    set((s) => ({ carRedraw: s.carRedraw + 1, carArrived: false, carReturned: false })),
   markCarArrived: () => {
     if (!get().carArrived) set({ carArrived: true })
+  },
+  markCarReturned: () => {
+    if (!get().carReturned) set({ carReturned: true })
   },
 }))

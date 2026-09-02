@@ -9,15 +9,15 @@ import { useStationStore } from '../../state/useStationStore'
 import { Station } from './Station'
 import { isAfterTouchDrag, registerTouchTarget } from '../touchMove'
 
-/** 스테이션에서 이만큼 안으로 들어오면 근접으로 본다. 거리 기준은 스테이션이 정한다(영역 테두리·중심점). */
-const NEAR_RADIUS = 2
-
 const _raycaster = new Raycaster()
 const _pointer = new Vector2()
 
 /**
  * 스테이션 배치 + 근접 판정 + 좌클릭 활성화.
- * 매 프레임 캐릭터에서 가장 가까운 스테이션을 찾아 스토어(nearId)에 반영한다.
+ *
+ * **근접을 따지는 것은 반경을 등록한 스테이션뿐이다**(건물 문처럼 들어가는 곳이 정해진 경우).
+ * 나머지는 종이 위에 그려진 페이지라 어디에 서 있든 눌러서 열고, 걸어서 멀어져도 닫히지 않는다.
+ * 반경을 등록한 스테이션은 그 구역을 벗어나는 것이 곧 닫기이므로 그 판단도 여기서 한다.
  */
 export function Stations() {
   const { camera, gl } = useThree()
@@ -27,21 +27,37 @@ export function Stations() {
     // 캐릭터 위치는 좌표만 바뀌므로 구독 없이 getState로 읽는다.
     const pos = useCameraStore.getState().position
     let nearest: string | null = null
-    let best = NEAR_RADIUS
+    let best = Infinity
     for (const station of STATIONS) {
       // 자리가 정해지지 않은 스테이션은 종이 위에 없으므로 근접도 없다.
       const at = station.position
       if (!at) continue
+      const entry = getStationEntry(station.id)
+      // 반경을 등록하지 않았으면 거리를 보지 않는 스테이션이라 근접 대상이 아니다.
+      if (entry?.nearRadius === undefined) continue
       // 거리 재는 법은 스테이션이 등록한 것을 쓴다(영역이 있으면 그 테두리 기준).
       // 등록하지 않았으면 배치 좌표까지의 거리로 잰다.
-      const distanceTo = getStationEntry(station.id)?.distanceTo
-      const dist = distanceTo ? distanceTo(pos, station) : Math.hypot(pos.x - at[0], pos.z - at[1])
-      if (dist < best) {
+      const dist = entry.distanceTo
+        ? entry.distanceTo(pos, station)
+        : Math.hypot(pos.x - at[0], pos.z - at[1])
+      if (dist <= entry.nearRadius && dist < best) {
         best = dist
         nearest = station.id
       }
     }
-    useStationStore.getState().setNear(nearest)
+
+    const store = useStationStore.getState()
+    store.setNear(nearest)
+    // 구역을 벗어나는 것이 곧 닫기다. 거리를 보지 않는 스테이션은 그렇게 닫히지 않는다.
+    const { activeId, phase } = store
+    if (
+      phase === 'active' &&
+      activeId !== null &&
+      activeId !== nearest &&
+      getStationEntry(activeId)?.nearRadius !== undefined
+    ) {
+      store.requestClose()
+    }
   })
 
   // 좌클릭 활성화는 R3F의 포인터 이벤트(onClick·onPointerDown)를 쓰지 않고 mousedown을 직접 듣는다.
@@ -73,10 +89,13 @@ export function Stations() {
       _raycaster.setFromCamera(_pointer, camera)
 
       // 커서가 맞힌 스테이션(id는 각 Station이 userData에 실어둔다).
-      // 근접·idle 여부는 스토어(activate)가 판정하므로 여기서 다시 보지 않는다.
       const hit = _raycaster.intersectObjects(group.children, true)[0]
       const stationId = hit?.object.userData.stationId
-      if (typeof stationId === 'string') useStationStore.getState().activate(stationId)
+      if (typeof stationId !== 'string') return
+      // 근접해야 열리는 스테이션은 그 구역 안에서만 받는다. idle 여부는 스토어가 본다.
+      const near = getStationEntry(stationId)?.nearRadius === undefined
+      if (!near && useStationStore.getState().nearId !== stationId) return
+      useStationStore.getState().activate(stationId)
     }
 
     canvas.addEventListener('mousedown', onMouseDown)
