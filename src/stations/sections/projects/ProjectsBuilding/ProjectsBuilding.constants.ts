@@ -43,7 +43,7 @@ export const PROJECTS_CENTER: readonly [number, number] = [
  * 값은 모델 좌표라 건물 크기를 바꾸면 배율이 곱해져 함께 커진다.
  *
  * 건물 전체가 아니라 여기 들어와야 문을 누를 수 있다.
- * 공통층이 판정에 `NEAR_RADIUS`(2)를 더 얹으므로, 실제로 반응하는 범위는 이 사각형보다 그만큼 넓다.
+ * 레지스트리에 여유 거리를 0으로 등록하므로 이 사각형이 곧 반응하는 범위다.
  */
 export const PROJECTS_NEAR = { forward: 0.3, width: 0.98, depth: 0.78 }
 

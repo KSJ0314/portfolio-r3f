@@ -41,8 +41,9 @@ interface CameraState {
    */
   followOffset: Vector3
   /**
-   * 이동 관련 실시간 값. position처럼 set 없이 in-place로 갱신(구독 알림 없음) — 디버그/튜닝용.
-   * `speed`: 이번 프레임 실제 이동 속도(유닛/초). Character가 매 프레임 기록.
+   * 이동 관련 실시간 값. position처럼 set 없이 in-place로 갱신(구독 알림 없음).
+   * `speed`: 이번 프레임 실제 이동 속도(유닛/초). Character가 매 프레임 기록하고,
+   * 걷기 동작을 재생할지와 그 배속을 정하는 데 쓴다(디버그 표시도 같은 값을 본다).
    */
   motion: { speed: number }
   /**

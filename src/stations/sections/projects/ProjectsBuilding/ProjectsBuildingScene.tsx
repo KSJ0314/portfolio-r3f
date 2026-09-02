@@ -8,7 +8,7 @@ import { useProjectsPageStore } from '../../../../state/useProjectsPageStore'
 import { useProjectsSequenceStore } from '../../../../state/useProjectsSequenceStore'
 import { useSceneTransitionStore } from '../../../../state/useSceneTransitionStore'
 import { useStationStore } from '../../../../state/useStationStore'
-import { type StationDetailProps, walkToStand } from '../../../registry'
+import { type StationDetailProps, faceStation, walkToStand } from '../../../registry'
 import { enterLobby } from '../ProjectsLobby/ProjectsLobby.travel'
 import {
   PROJECTS_ID,
@@ -236,6 +236,8 @@ export function ProjectsBuildingScene({ phase }: StationDetailProps) {
     if (entering) {
       // 걷는 것과 도는 것을 같이 시작한다. 자리를 등록하지 않았으면 카메라만 돈다.
       walkToStand(PROJECTS_ID)
+      // 카메라가 도는 것과 함께 캐릭터도 건물 쪽으로 몸을 돌린다.
+      faceStation(PROJECTS_ID)
       turn()
     } else if (useProjectsSequenceStore.getState().doorClosed) {
       // 열린 적이 없으면 기다릴 것이 없다.

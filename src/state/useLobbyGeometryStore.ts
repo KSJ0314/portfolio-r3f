@@ -15,7 +15,7 @@ interface LobbyGeometryState {
   /** 트리거 이름(`Trigger_Book` 등) → 잰 값. */
   triggers: Record<string, InteriorTrigger>
   /**
-   * 계단 난간 **안쪽** 좌우 폭(월드 x). 통로로 곧장 갈 수 있는 길이 이만큼이다.
+   * 계단의 **바깥 끝선** 좌우 폭(월드 x). 통로로 곧장 갈 수 있는 길이 이만큼이다.
    * 좌우가 뒤집혀 있으면(잰 적 없음) 아직 아무 데도 아니다.
    */
   corridor: { minX: number; maxX: number }

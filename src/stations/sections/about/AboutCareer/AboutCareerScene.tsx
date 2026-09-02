@@ -6,7 +6,7 @@ import { useCameraStore } from '../../../../state/useCameraStore'
 import { useCareerPageStore } from '../../../../state/useCareerPageStore'
 import { useCareerSequenceStore } from '../../../../state/useCareerSequenceStore'
 import { useStationStore } from '../../../../state/useStationStore'
-import { type StationDetailProps, walkToStand } from '../../../registry'
+import { type StationDetailProps, faceStation, walkToStand } from '../../../registry'
 import { CAREER_TURN_EASE, CAREER_TURN_SECONDS } from './AboutCareer.constants'
 import { aboutCareerDistanceTo } from './AboutCareer.distance'
 import { CareerColumns } from './CareerColumns'
@@ -95,6 +95,8 @@ export function AboutCareerScene({ phase }: StationDetailProps) {
 
     /** 카메라와 로고를 함께 시작한다. 둘은 같은 시간·이징이라 한 동작으로 보인다. */
     const turn = () => {
+      // 카메라가 도는 것과 함께 캐릭터도 페이지 쪽으로 몸을 돌린다.
+      if (entering) faceStation(CAREER_ID)
       setLogoTurn(entering)
       tween = gsap.to(state, {
         progress: entering ? 1 : 0,

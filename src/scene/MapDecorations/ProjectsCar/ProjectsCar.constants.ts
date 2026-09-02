@@ -12,6 +12,9 @@ export const PROJECTS_CAR_AFTER_STATION = 'about-career'
  */
 export const PROJECTS_CAR_HEADING = -90
 
+/** 차 앞에 서서 차 쪽으로 도는 시간(초). 곧바로 감추면 도는 것이 보이지 않는다. */
+export const PROJECTS_CAR_BOARD_TURN = 0.35
+
 /**
  * 배치·연출 기본값. 눈으로 맞춰야 하는 값이라 HUD로 조절한다.
  * 등장·도착 자리는 확정된 값이고 나머지는 시작 추정값이다.

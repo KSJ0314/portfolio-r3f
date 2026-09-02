@@ -296,11 +296,13 @@ export function LobbyModel() {
         return
       }
 
-      // 난간 안쪽 면이 통로로 곧장 갈 수 있는 폭이다. 상수로 박으면 모델을 다시 내보낼 때 어긋난다.
+      // 계단 바깥 끝선이 통로로 곧장 갈 수 있는 폭이다. 이 안쪽이면 통로로 향할 때 계단을
+      // 타고 오르지 않는다. 난간 안쪽으로 잡으면 계단 폭보다 훨씬 좁아 설 자리가 거의 없다.
+      // 상수로 박으면 모델을 다시 내보낼 때 어긋난다.
       if (mesh.name === LOBBY_RAIL_LEFT || mesh.name === LOBBY_RAIL_RIGHT) {
         box.setFromObject(mesh)
-        if (mesh.name === LOBBY_RAIL_LEFT) corridor.minX = box.max.x
-        else corridor.maxX = box.min.x
+        if (mesh.name === LOBBY_RAIL_LEFT) corridor.minX = box.min.x
+        else corridor.maxX = box.max.x
       }
 
       // 경계 상자로 뭉개지 않고 면으로 읽는다 — 기울여 놓은 난간·벽이 그대로 살아난다.
