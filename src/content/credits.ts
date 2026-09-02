@@ -23,8 +23,11 @@ import { PROJECTS_BUILDING_URL } from '../stations/sections/projects/ProjectsBui
  * `crosswalk`는 횡단보도와 그 곁의 신호등을 함께 세우는 한 벌이라 전용 항목으로 둔다.
  */
 export type CreditPreview =
-  /** `tuneLights`는 모델에 담겨 온 광원을 미리보기용으로 조절할지. 실내(로비)만 해당한다. */
-  | { kind: 'model'; url: string; tuneLights?: boolean }
+  /**
+   * `tuneLights`는 모델에 담겨 온 광원을 미리보기용으로 조절할지. 실내(로비)만 해당한다.
+   * `ownInstance`는 씬과 캐시를 나눠 따로 로드할지. 씬에서 애니메이션이 도는 모델만 해당한다.
+   */
+  | { kind: 'model'; url: string; tuneLights?: boolean; ownInstance?: boolean }
   | { kind: 'sticker'; url: string; params?: Partial<PaperStickerParams> }
   | { kind: 'crosswalk' }
 
@@ -157,7 +160,8 @@ export const ASSET_CREDITS: AssetCredit[] = [
     // 재질 밝기를 씬에서 되올려 둔 데다 톤 매핑까지 빼, 여기 광량 그대로면 색이 씻긴다.
     lightScale: 0.6,
     cameraYaw: -45,
-    preview: { kind: 'model', url: CHARACTER_URL },
+    // 씬에서 애니메이션이 도는 모델이라 캐시를 나눠 쓴다. 복제하면 그 순간의 자세를 물려받는다.
+    preview: { kind: 'model', url: CHARACTER_URL, ownInstance: true },
   },
   {
     title: '프로젝트 전시관 로비',

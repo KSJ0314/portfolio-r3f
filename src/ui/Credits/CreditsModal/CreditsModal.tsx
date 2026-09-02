@@ -43,7 +43,13 @@ function CloseIcon() {
 function CreditPreviewObject({ preview }: { preview: CreditPreview }) {
   switch (preview.kind) {
     case 'model':
-      return <CreditModel url={preview.url} tuneLights={preview.tuneLights} />
+      return (
+        <CreditModel
+          url={preview.url}
+          tuneLights={preview.tuneLights}
+          ownInstance={preview.ownInstance}
+        />
+      )
     case 'sticker':
       return <CreditSticker url={preview.url} params={preview.params} />
     case 'crosswalk':

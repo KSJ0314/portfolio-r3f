@@ -11,6 +11,8 @@ import { useLobbyTriggerStore } from '../../../../../state/useLobbyTriggerStore'
 import { LOBBY_MARKED_TRIGGERS, LOBBY_TRAVEL_TRIGGERS } from '../ProjectsLobby.constants'
 import { canWalkToPassage, walkIntoPassage } from '../ProjectsLobby.travel'
 import {
+  LOBBY_PASSAGE_MARKER_DROP,
+  LOBBY_PASSAGE_MARKER_FORWARD,
   LOBBY_TRIGGER_MARKER_BOB_SECONDS,
   LOBBY_TRIGGER_MARKER_FADE_SECONDS,
   LOBBY_TRIGGER_MARKER_SPIN_SECONDS,
@@ -66,8 +68,11 @@ export function LobbyTriggers() {
       if (e.button !== 0) return
       // 손가락으로 끌어 이동한 직후에는 받지 않는다. 뗀 자리에서 흉내 낸 마우스 이벤트가 뒤따라온다.
       if (isAfterTouchDrag()) return
-      // 이미 보고 있는 동안에는 받지 않는다. 커서도 걷혀 있어 누를 수 있다고 보이지도 않는다.
-      if (useLobbyTriggerStore.getState().activeId !== null) return
+      // 보고 있는 동안의 클릭은 닫기다. 모달 바깥을 누르는 것과 같게 어디를 눌러도 나온다.
+      if (useLobbyTriggerStore.getState().activeId !== null) {
+        useLobbyTriggerStore.getState().close()
+        return
+      }
       const plates = group.current
       if (!plates) return
 
@@ -87,7 +92,10 @@ export function LobbyTriggers() {
 
       const id = hit.object.userData.triggerId as string
       if (LOBBY_TRAVEL_TRIGGERS[id]) {
-        if (canWalkToPassage()) walkIntoPassage()
+        if (!canWalkToPassage()) return
+        // 카메라를 돌리는 트리거가 아니라 activate를 거치지 않는다. 표시는 여기서 걷는다.
+        useLobbyTriggerStore.getState().markSeen(id)
+        walkIntoPassage()
         return
       }
       // 카메라가 그것을 보러 도는 동안 캐릭터도 같은 쪽으로 몸을 돌린다.
@@ -113,16 +121,29 @@ export function LobbyTriggers() {
             <meshBasicMaterial transparent opacity={0} depthWrite={false} />
           </mesh>
 
-          {/* 한 번 열고 나면 걷는다 — 어디를 눌러야 하는지 알려 주는 것이 할 일의 전부다. */}
-          <ClickMarker
-            visible={LOBBY_MARKED_TRIGGERS.includes(name) && !seen[name]}
-            y={trigger.height / 2 + tuning.markerGap}
-            size={tuning.markerSize}
-            bob={tuning.markerBob}
-            bobSeconds={LOBBY_TRIGGER_MARKER_BOB_SECONDS}
-            spinSeconds={LOBBY_TRIGGER_MARKER_SPIN_SECONDS}
-            fadeSeconds={LOBBY_TRIGGER_MARKER_FADE_SECONDS}
-          />
+          {/* 한 번 열고 나면 걷는다 — 어디를 눌러야 하는지 알려 주는 것이 할 일의 전부다.
+              통로는 문틀을 감싼 상자라 중심에 두면 표시가 문 안쪽에 잠긴다. 로비 쪽 면 앞으로 뺀다. */}
+          <group
+            position={
+              LOBBY_TRAVEL_TRIGGERS[name]
+                ? [
+                    0,
+                    -LOBBY_PASSAGE_MARKER_DROP,
+                    trigger.depth / 2 + LOBBY_PASSAGE_MARKER_FORWARD,
+                  ]
+                : [0, 0, 0]
+            }
+          >
+            <ClickMarker
+              visible={LOBBY_MARKED_TRIGGERS.includes(name) && !seen[name]}
+              y={trigger.height / 2 + tuning.markerGap}
+              size={tuning.markerSize}
+              bob={tuning.markerBob}
+              bobSeconds={LOBBY_TRIGGER_MARKER_BOB_SECONDS}
+              spinSeconds={LOBBY_TRIGGER_MARKER_SPIN_SECONDS}
+              fadeSeconds={LOBBY_TRIGGER_MARKER_FADE_SECONDS}
+            />
+          </group>
         </group>
       ))}
     </group>

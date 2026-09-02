@@ -218,7 +218,7 @@ export const LOBBY_CAMERA_SHIFT = { x: 0, y: -0.85 }
  * 누를 수 있다는 표시를 띄울 트리거.
  * 통로 문처럼 생김새만으로 지나갈 곳이 읽히는 것은 표시를 두지 않는다.
  */
-export const LOBBY_MARKED_TRIGGERS = [LOBBY_BOOK_TRIGGER]
+export const LOBBY_MARKED_TRIGGERS = [LOBBY_BOOK_TRIGGER, LOBBY_PASSAGE_TRIGGER]
 
 /**
  * 트리거를 열었을 때의 화면 — 카메라가 서는 자리(트리거 중심 기준)와 구도.
@@ -233,7 +233,7 @@ export const LOBBY_TRIGGER_FOCUS: Record<
   string,
   { offset: readonly [number, number, number]; shift: { x: number; y: number } }
 > = {
-  [LOBBY_BOOK_TRIGGER]: { offset: [0, 0.75, 0.95], shift: { x: 0, y: -1 } },
+  [LOBBY_BOOK_TRIGGER]: { offset: [0, 0.85, 0.7], shift: { x: 0, y: -0.85 } },
 }
 
 /** 트리거를 보러 도는 데 걸리는 시간(초). 닫힐 때도 같다. */
