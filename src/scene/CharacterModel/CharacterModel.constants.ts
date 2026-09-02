@@ -1,20 +1,14 @@
-/** 캐릭터가 어떤 걸음으로 다닐지. */
-export type CharacterMotion = 'w' | 'r'
+/** 캐릭터가 어떤 걸음으로 다닐지. 쓰는 쪽이 상황에 맞게 고른다. */
+export type CharacterMotion = 'walk' | 'run'
 
-/**
- * 동작별 모델 파일. 뼈대·몸집은 같고 담긴 동작만 다르다.
- * 한 파일에 동작이 하나씩이라 동작을 고르는 것이 곧 모델을 고르는 것이다.
- */
-const CHARACTER_URLS: Record<CharacterMotion, string> = {
-  w: '/assets/character_w.glb',
-  r: '/assets/character_r.glb',
+/** 걸음별 애니메이션 클립 이름. 한 파일에 둘 다 들어 있다. */
+export const CHARACTER_CLIPS: Record<CharacterMotion, string> = {
+  walk: 'Walking',
+  run: 'Running',
 }
 
-/** 쓸 동작. **여기만 바꾸면** 맵·실내·에셋 출처가 함께 변경된다. 'w' | 'r'*/
-export const CHARACTER_MOTION: CharacterMotion = 'r'
-
-/** 지금 쓰는 캐릭터 모델 파일. */
-export const CHARACTER_URL = CHARACTER_URLS[CHARACTER_MOTION]
+/** 캐릭터 모델 파일. */
+export const CHARACTER_URL = '/assets/character.glb'
 
 /** 걷는 것으로 보는 최소 속도(유닛/초). 이보다 느리면 선 것으로 판단한다. */
 export const WALK_EPSILON = 0.05

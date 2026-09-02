@@ -2,7 +2,7 @@ import { useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react'
 import { useAnimations, useGLTF } from '@react-three/drei'
 import { Box3, Mesh, MeshPhysicalMaterial, MeshStandardMaterial } from 'three'
 import type { Group } from 'three'
-import { CHARACTER_URL, WALK_EPSILON } from './CharacterModel.constants'
+import { CHARACTER_CLIPS, CHARACTER_URL, WALK_EPSILON } from './CharacterModel.constants'
 import type { CharacterModelProps } from './CharacterModel.types'
 
 const _box = new Box3()
@@ -21,6 +21,7 @@ const _box = new Box3()
  */
 export function CharacterModel({
   ref,
+  motion,
   baseSpeed,
   height,
   walkRate,
@@ -30,7 +31,10 @@ export function CharacterModel({
   const fit = useRef<Group>(null)
   const { scene, animations } = useGLTF(CHARACTER_URL)
   const { actions } = useAnimations(animations, fit)
-  const clip = animations[0]?.name
+  // 한 파일에 걸음 둘이 들어 있어 이름으로 고른다. 없으면 담긴 첫 동작으로 둔다.
+  const clip =
+    animations.find((animation) => animation.name === CHARACTER_CLIPS[motion])?.name ??
+    animations[0]?.name
 
   /**
    * 내보낸 재질을 이 씬에 맞게 고친다. 모델 파일은 손대지 않는다(DECISIONS 032).

@@ -122,6 +122,7 @@ export function InteriorCharacter({ southLimit }: InteriorCharacterProps) {
       <Suspense fallback={null}>
         <CharacterModel
           ref={model}
+          motion="run"
           baseSpeed={INTERIOR_MOVE_SPEED}
           height={height}
           walkRate={walkRate}

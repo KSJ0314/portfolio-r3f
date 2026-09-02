@@ -83,6 +83,7 @@ export function Character() {
       <Suspense fallback={null}>
         <CharacterModel
           ref={model}
+          motion="run"
           baseSpeed={MOVE_SPEED}
           height={height}
           walkRate={walkRate}
