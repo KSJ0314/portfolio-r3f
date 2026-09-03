@@ -15,7 +15,7 @@ import { StationLifecycle } from '../../stations'
 import { ensureOutsideBuilding } from '../../stations/sections/projects/ProjectsLobby'
 import { useStationStore } from '../../state/useStationStore'
 
-/** 메인 페이지(`/`) — 3D 포트폴리오. 테마·전역 스타일·라우트는 `App`이 감싼다. */
+/** 메인 페이지(`/portfolio`) — 3D 포트폴리오. 테마·전역 스타일·라우트는 `App`이 감싼다. */
 export function MainPage() {
   // 스테이션이 열려 있는 동안에는 미니맵·구석 버튼을 두지 않는다. 완전히 닫힌 뒤(idle)에만 다시 나타난다.
   const idle = useStationStore((s) => s.phase === 'idle')

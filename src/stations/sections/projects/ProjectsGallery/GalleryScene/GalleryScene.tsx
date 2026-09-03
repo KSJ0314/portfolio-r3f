@@ -1,5 +1,6 @@
 import { Suspense, useCallback, useLayoutEffect, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
+import { configureDracoDecoder } from '../../../../../lib/draco'
 import { useCollection } from '../../../../../lib/firebase/hooks'
 import { SceneArrival } from '../../../../../scene/SceneArrival'
 import { SceneErrorBoundary } from '../../../../../scene/SceneErrorBoundary'
@@ -25,6 +26,9 @@ import {
   GALLERY_FILL,
   GALLERY_START,
 } from '../ProjectsGallery.constants'
+
+// 전시 공간 모델이 Draco로 압축돼 있어, 받기 전에 디코더 자리를 잡아 둔다.
+configureDracoDecoder()
 
 /** 시작 자리에 팔로우 오프셋을 더한 것이 첫 카메라 자리다 — 그래야 첫 프레임부터 자세가 맞다. */
 const CAMERA_POSITION: [number, number, number] = [

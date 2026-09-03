@@ -7,7 +7,10 @@ import type { SceneDestination } from './state/useSceneTransitionStore'
  * **씬은 이 파일을 알지 못한다** — 장면을 옮기는 쪽은 주소가 아니라 목적지 이름을 알리고,
  * 그것을 주소로 바꾸는 일은 라우팅을 아는 `ui/SceneTransition`이 한다.
  */
-export const MAIN_ROUTE = '/'
+/** 진입 주소. 3D 포트폴리오로 넘긴다 — 이력서와 포트폴리오는 각자 주소로 배포한다. */
+export const ROOT_ROUTE = '/'
+export const MAIN_ROUTE = '/portfolio'
+export const RESUME_ROUTE = '/resume'
 export const LOBBY_ROUTE = '/projects'
 export const GALLERY_ROUTE = '/projects/gallery'
 export const LIST_ROUTE = '/list'

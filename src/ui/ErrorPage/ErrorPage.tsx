@@ -1,3 +1,4 @@
+import { MAIN_ROUTE } from '../../routes'
 import { ActionButton, ActionLink, Message, Page } from './ErrorPage.styled'
 import type { ErrorPageProps } from './ErrorPage.types'
 
@@ -13,7 +14,7 @@ export function ErrorPage({ message, action }: ErrorPageProps) {
     <Page>
       <Message>{message}</Message>
       {action === 'home' ? (
-        <ActionLink to="/">첫 화면으로 →</ActionLink>
+        <ActionLink to={MAIN_ROUTE}>첫 화면으로 →</ActionLink>
       ) : (
         <ActionButton onClick={() => window.location.reload()}>새로고침 →</ActionButton>
       )}
