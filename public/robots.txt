@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://kimsojung-portfolio.vercel.app/sitemap.xml
+Sitemap: https://kimsojung.vercel.app/sitemap.xml
