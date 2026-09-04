@@ -13,6 +13,8 @@ export interface ProjectContent {
   tagline: string
   /** 요약. 문단을 나눌 때는 빈 줄을 넣는다. */
   summary: string
+  /** 주요 업무. 줄마다 하나씩 쌓는다. */
+  duties: readonly string[]
   /** 성과. 줄마다 하나씩 쌓는다. */
   achievements: readonly string[]
   /** 여는 링크. 주소가 없으면 그 링크는 두지 않는다. */
@@ -32,6 +34,10 @@ export const PROJECT_CONTENTS: Record<number, ProjectContent> = {
     summary: `AI EMS는 응급환자 이송 과정에서 병원 선정에 소요되는 시간을 단축하여 환자의 골든타임을 확보하는 차세대 응급 이송 관제 시스템입니다.
 
 구급대원이 여러 병원에 개별적으로 전화하는 비효율적인 방식을 디지털 플랫폼 기반의 통합 관제 시스템으로 전환하여,\n구급차와 복수 병원 간 실시간 동시 커뮤니케이션을 가능하게 합니다.`,
+    duties: [
+      'Mobile - Kotlin 기반 Android 앱 개발',
+      'FE - React 아키텍처 설계(FSD + Atomic) 및 리드',
+    ],
     achievements: [
       'SSAFY 13기 최종 프로젝트 전국 1등',
       'OnDevice STT 구현',
@@ -54,6 +60,11 @@ export const PROJECT_CONTENTS: Record<number, ProjectContent> = {
     summary: `대부분의 영어 회화 연습 플랫폼은 사용자의 발화에서 구체적으로 어떤 부분의 발음이 잘못되었는지 명확한 피드백을 제공하지 못합니다.
 
 본 프로젝트는 사용자의 발음을 음소 단위로 분석하여,\n잘못된 발음을 정확히 짚어주고 교정 방향을 제시하는 세밀한 피드백을 제공합니다.`,
+    duties: [
+      'BE - Spring Boot 초기 구축 및 인증/인가 구현',
+      'FE - React 기반 주요 페이지 개발 및 핵심 기능 구현',
+      'Data Engineering - 데이터 파이프라인 구성 및 처리',
+    ],
     achievements: [
       'SSAFY 13기 특화 프로젝트 우수상',
       'Kafka + Apache Spark 기반 빅데이터 파이프라인 설계 및 구현',
@@ -74,6 +85,10 @@ export const PROJECT_CONTENTS: Record<number, ProjectContent> = {
     tagline: '게이미피케이션을 접목한 스터디 애플리케이션',
     summary: `AI 집중도 분석과 3D 캐릭터를 통해 객관적이고 재미있는 학습 경험을 제공하며
 게이미피케이션 요소로 지속적인 학습 동기를 부여하는 서비스입니다.`,
+    duties: [
+      'FE - React Native · Expo 기반 앱 프론트엔드 전담',
+      'Design - Figma 화면 설계 · 디자인 시스템 제작',
+    ],
     achievements: [
       'React Native · Expo 기반 앱 프론트엔드 전담',
       'Atomic 디자인 패턴을 적용한 프론트엔드 컴포넌트 구조 설계',
@@ -94,6 +109,13 @@ export const PROJECT_CONTENTS: Record<number, ProjectContent> = {
 기존에는 한 잔마다 폼을 제출해야 했고, 픽업 담당은 제출 명단을 엑셀에 옮겨 직접 돌려 뽑는 불편함이 있었습니다.
 
 여러 잔을 장바구니에 담아 한 번에 주문하고, 마감과 픽업 추첨은 정해진 시각에 자동으로 돌아갑니다.`,
+    duties: [
+      'FE - React 기반 웹, GitHub Pages 배포',
+      'BE - Firebase Firestore, 보안 룰로 마감·재추첨 제어',
+      'Desktop - Electron으로 빌드해 GitHub Releases 배포',
+      '개발 전 과정을 Claude Code로 진행해 두 달 만에 v1.10.0까지 릴리즈하며 운영. 변경 사항은 패치노트로 안내',
+      '사용자 요청과 버그 제보를 게시판으로 받아 반영',
+    ],
     achievements: [
       '구글폼 기반 주문을 대체 — 여러 잔 주문과 픽업 추첨을 한 곳에서 처리',
       'SSAFY 광주캠퍼스 교육생 대상 실서비스 운영 — 하루 평균 18잔 주문, 두 달 간 누적 방문 4.5천 회',

@@ -8,7 +8,7 @@ import { ResumeDivider } from './ResumeDivider'
 import { ResumeEducation, sortEducation, type EducationDoc } from './ResumeEducation'
 import { ResumeExperience, sortExperiences, type ExperienceDoc } from './ResumeExperience'
 import { ResumeHeader, type ResumeProfileDoc } from './ResumeHeader'
-import { ResumeEntryPlaceholder } from './ResumePlaceholder'
+import { projectTroubles, ResumeProject, toProjectItems, type ProjectDoc } from './ResumeProject'
 import { ResumeSection } from './ResumeSection'
 import { ResumeSkill, toSkillRows, type SkillDoc } from './ResumeSkill'
 import { ResumeSpec, sortSpecs, type SpecDoc } from './ResumeSpec'
@@ -36,6 +36,8 @@ export function ResumePage() {
   const skills = useMemo(() => toSkillRows(skillDocs), [skillDocs])
   const { data: specDocs } = useCollection<SpecDoc>('spec')
   const specs = useMemo(() => sortSpecs(specDocs), [specDocs])
+  const { data: projectDocs } = useCollection<ProjectDoc>('projects')
+  const projects = useMemo(() => toProjectItems(projectDocs), [projectDocs])
   const { company } = useParams()
   const coverLetter = getCoverLetter(company)
 
@@ -62,16 +64,25 @@ export function ResumePage() {
 
     /**
      * 항목마다 블록을 두는 영역. 한 항목이 커서 영역 전체가 한 장을 넘기는 곳에 쓴다.
-     * 제목은 첫 항목과 한 블록에 담아 제목만 장 끝에 남지 않게 한다.
+     * 항목을 다시 조각으로 나눠 받아, 조각이 넘치면 그 조각부터 다음 장에서 이어진다.
+     *
+     * 제목은 첫 조각과 한 블록에 담아 제목만 장 끝에 남지 않게 하고,
+     * 항목은 저마다 새 장에서 시작한다 — 앞 영역 끝에 붙으면 한 항목을 이어 읽기 어렵다.
      */
-    const pushSplitSection = (title: string, items: ReactNode[]) => {
-      const [first, ...rest] = items
-      list.push({ key: `${title}:0`, node: <ResumeSection title={title}>{first}</ResumeSection> })
-      rest.forEach((item, index) => {
-        list.push({
-          key: `${title}:${index + 1}`,
-          tight: true,
-          node: <ResumeSection>{item}</ResumeSection>,
+    const pushSplitSection = (title: string, items: ReactNode[][]) => {
+      items.forEach((parts, item) => {
+        parts.forEach((part, index) => {
+          const head = item === 0 && index === 0
+          list.push({
+            key: `${title}:${item}:${index}`,
+            tight: !head,
+            breakBefore: index === 0,
+            node: head ? (
+              <ResumeSection title={title}>{part}</ResumeSection>
+            ) : (
+              <ResumeSection>{part}</ResumeSection>
+            ),
+          })
         })
       })
     }
@@ -116,15 +127,16 @@ export function ResumePage() {
     }
 
     // 프로젝트는 항목마다 담을 내용이 많아 영역 전체가 한 장을 넘긴다.
-    pushSplitSection('프로젝트', [
-      <ResumeEntryPlaceholder />,
-      <ResumeEntryPlaceholder />,
-      <ResumeEntryPlaceholder />,
-      <ResumeEntryPlaceholder />,
-    ])
+    if (projects.length > 0) {
+      pushSplitSection(
+        '프로젝트',
+        // 트러블슈팅은 조각마다 블록이라 분량이 넘치면 그 갈래부터 다음 장에서 이어진다.
+        projects.map((item) => [<ResumeProject {...item} />, ...projectTroubles(item.projectKey)]),
+      )
+    }
 
     return list
-  }, [profile, coverLetter, experiences, education, awards, skills, specs])
+  }, [profile, coverLetter, experiences, education, awards, skills, specs, projects])
 
   return (
     <Page>

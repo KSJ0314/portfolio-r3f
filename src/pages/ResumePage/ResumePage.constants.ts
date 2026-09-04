@@ -11,7 +11,7 @@ export const A4_HEIGHT_MM = 297
 export const SHEET_PADDING_RATIO = 0.08
 
 /** 화면에서 한 장이 갖는 폭(px). 창 크기와 무관하게 고정이라 여백·글자 비율이 늘 같다. */
-export const SHEET_WIDTH = 800
+export const SHEET_WIDTH = 1000
 
 /** 화면에서 한 장 안쪽에 두는 여백(px). 폭이 고정이라 이 값도 고정이다. */
 export const SHEET_PADDING = Math.round(SHEET_WIDTH * SHEET_PADDING_RATIO)

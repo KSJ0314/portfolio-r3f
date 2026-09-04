@@ -7,7 +7,7 @@
  * 줄바꿈은 그대로 화면에 반영된다. 문단 사이는 빈 줄로 띄운다.
  */
 export const COVER_LETTERS: Record<string, string> = {
-  company: '자기소개 내용',
+  company: '자기소개 내용\n자기소개 내용\n자기소개 내용\n자기소개 내용\n자기소개 내용\n자기소개 내용\n자기소개 내용',
 }
 
 /** 그 키의 자기소개. 없으면 `undefined`이고, 그러면 영역 자체를 두지 않는다. */

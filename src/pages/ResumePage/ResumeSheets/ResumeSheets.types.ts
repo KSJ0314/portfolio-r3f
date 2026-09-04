@@ -7,6 +7,8 @@ import type { ReactNode } from 'react'
 export interface ResumeBlock {
   key: string
   tight?: boolean
+  /** 앞 장에 자리가 남아도 새 장에서 시작할지. 프로젝트처럼 장을 나눠 읽는 항목이 쓴다. */
+  breakBefore?: boolean
   node: ReactNode
 }
 

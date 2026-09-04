@@ -6,6 +6,7 @@ import { A4_HEIGHT_MM, A4_WIDTH_MM } from '../ResumePage.constants'
  *
  * 블록 높이는 미리 알 수 없어(글자 수·줄바꿈·글꼴에 따라 달라진다) 화면 밖에 한 번 그려 측정한다.
  * 한 장을 넘길 블록은 쪼개지 않고 통째로 다음 장에서 시작한다.
+ * `data-break`를 단 블록은 자리가 남아도 새 장에서 시작한다.
  *
  * 데이터가 늦게 와 내용이 늘거나 글꼴이 뒤늦게 적용되면 높이가 달라지므로 그때마다 다시 잰다.
  */
@@ -41,7 +42,8 @@ export function usePagination(measureRef: RefObject<HTMLElement | null>): number
       // 다만 장의 첫 블록은 그 여백을 두지 않으므로, 새 장을 열 때는 빼고 센다.
       const height = block.offsetHeight
       const alone = height - parseFloat(getComputedStyle(block).paddingTop)
-      if (current.length > 0 && used + height > available) {
+      const breaks = block.dataset.break !== undefined
+      if (current.length > 0 && (breaks || used + height > available)) {
         next.push(current)
         current = [index]
         used = alone

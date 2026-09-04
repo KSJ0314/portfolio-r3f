@@ -17,8 +17,8 @@ export function ResumeSheets({ blocks }: ResumeSheetsProps) {
     <>
       {/* 높이를 재는 자리. 실제 장과 같은 폭·여백이라 여기서 잰 높이가 그대로 쓰인다. */}
       <MeasureSheet ref={measureRef} aria-hidden>
-        {blocks.map(({ key, tight, node }) => (
-          <Block key={key} $tight={tight} data-block>
+        {blocks.map(({ key, tight, breakBefore, node }) => (
+          <Block key={key} $tight={tight} data-block data-break={breakBefore ? '' : undefined}>
             {node}
           </Block>
         ))}
