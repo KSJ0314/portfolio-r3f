@@ -11,6 +11,8 @@ import type { SceneDestination } from './state/useSceneTransitionStore'
 export const ROOT_ROUTE = '/'
 export const MAIN_ROUTE = '/portfolio'
 export const RESUME_ROUTE = '/resume'
+/** 회사별 자기소개를 싣는 이력서. 뒤에 붙는 값이 `content/coverLetters`의 키다. */
+export const RESUME_COMPANY_ROUTE = '/resume/:company'
 export const LOBBY_ROUTE = '/projects'
 export const GALLERY_ROUTE = '/projects/gallery'
 export const LIST_ROUTE = '/list'

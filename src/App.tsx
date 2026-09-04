@@ -10,6 +10,7 @@ import {
   LIST_ROUTE,
   LOBBY_ROUTE,
   MAIN_ROUTE,
+  RESUME_COMPANY_ROUTE,
   RESUME_ROUTE,
   ROOT_ROUTE,
 } from './routes'
@@ -54,6 +55,7 @@ export function App() {
             <Route path={ROOT_ROUTE} element={<Navigate to={MAIN_ROUTE} replace />} />
             <Route path={MAIN_ROUTE} element={<MainPage />} />
             <Route path={RESUME_ROUTE} element={<ResumePage />} />
+            <Route path={RESUME_COMPANY_ROUTE} element={<ResumePage />} />
             <Route path={LOBBY_ROUTE} element={<ProjectsLobbyPage />} />
             <Route path={GALLERY_ROUTE} element={<ProjectsGalleryPage />} />
             <Route path={LIST_ROUTE} element={<ListViewPage />} />
