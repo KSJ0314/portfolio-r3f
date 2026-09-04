@@ -6,7 +6,7 @@ import { useGalleryPageStore } from '../../../../../../state/useGalleryPageStore
 import type { TroikaTextMesh } from '../../../../../types'
 import { PageIcon } from '../PageIcon'
 import { PageLink } from '../PageLink'
-import { INTRO_PAGE_INK, INTRO_PAGE_SUB_INK } from './IntroPage.constants'
+import { INTRO_PAGE_ICONS, INTRO_PAGE_INK, INTRO_PAGE_SUB_INK } from './IntroPage.constants'
 import type { IntroPageProps } from './IntroPage.types'
 
 /** 잰 글 덩어리의 경계(그 글이 놓인 자리 기준). */
@@ -32,16 +32,18 @@ interface TextBounds {
  * 높이가 다 모이기 전에는 겹쳐 보이지만, 페이지는 확대가 도는 동안 감춰진 채 마운트되므로
  * 그 사이가 화면에 보이지 않는다.
  */
-export function IntroPage({
-  height,
-  title,
-  period,
-  tagline,
-  summary,
-  achievements,
-  firstIcon,
-  links = [],
-}: IntroPageProps) {
+export function IntroPage({ height, content }: IntroPageProps) {
+  const { title, period, tagline, summary, achievements } = content
+
+  // 수상이 있으면 성과 첫 줄 앞에 트로피를 붙인다. 내용은 사실만 갖고 아이콘은 여기서 정한다.
+  const firstIcon = content.awarded ? INTRO_PAGE_ICONS.trophy : undefined
+
+  // 주소가 없는 링크는 두지 않는다. 오른쪽 끝에서부터 늘어놓으므로 순서가 곧 자리다.
+  const links = [
+    { icon: INTRO_PAGE_ICONS.github, url: content.links.github },
+    { icon: INTRO_PAGE_ICONS.notion, url: content.links.notion },
+  ].filter((link): link is { icon: string; url: string } => Boolean(link.url))
+
   const [bounds, setBounds] = useState<Record<string, TextBounds>>({})
 
   const measure = useCallback(

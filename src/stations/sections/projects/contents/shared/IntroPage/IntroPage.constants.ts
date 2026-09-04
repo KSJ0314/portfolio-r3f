@@ -43,6 +43,13 @@ export const INTRO_PAGE_LAYOUT = {
   iconGap: 0.048,
 }
 
+/** 링크·성과에 쓰는 아이콘. 프로젝트마다 같은 파일이라 여기 둔다. */
+export const INTRO_PAGE_ICONS = {
+  github: '/images/github.svg',
+  notion: '/images/notion.svg',
+  trophy: '/images/trophy.svg',
+}
+
 /** 본문 잉크. 페이지 바탕이 밝아 진회색으로 둔다. */
 export const INTRO_PAGE_INK = '#3a3a3a'
 
