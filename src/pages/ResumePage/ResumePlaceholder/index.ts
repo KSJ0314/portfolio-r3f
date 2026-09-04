@@ -1,0 +1,1 @@
+export { ResumeEntryPlaceholder } from './ResumePlaceholder'

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useState, type RefObject } from 'react'
-import { A4_HEIGHT_MM, A4_WIDTH_MM } from './ResumePage.constants'
+import { A4_HEIGHT_MM, A4_WIDTH_MM } from '../ResumePage.constants'
 
 /**
  * 블록들을 A4 한 장에 들어가는 만큼씩 나눠 페이지를 만든다.

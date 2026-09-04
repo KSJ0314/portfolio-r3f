@@ -73,6 +73,7 @@ Career의 칸 셋에 자리가 없어 미뤄 뒀고, 어디에 담을지는 이�
 | `program` | string | 과정명 |
 | `startDate` | string ("YYYY-MM") | 시작 |
 | `endDate` | string ("YYYY-MM") \| null | 종료 |
+| `description` | string[] | 교육 내용 |
 
 **awards** (수상 1건 = 문서 1개, `order` 없음 — `date` 기준 정렬)
 
