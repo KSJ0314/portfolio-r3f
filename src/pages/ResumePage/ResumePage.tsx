@@ -1,9 +1,8 @@
 import { Fragment, useMemo, useRef, type ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
-import { getCoverLetter } from '../../content/coverLetters'
 import { useCollection, useDoc } from '../../lib/firebase/hooks'
 import { ResumeAward, sortAwards, type AwardDoc } from './ResumeAward'
-import { ResumeCoverLetter } from './ResumeCoverLetter'
+import { ResumeCoverLetter, type CoverLetterDoc } from './ResumeCoverLetter'
 import { ResumeDivider } from './ResumeDivider'
 import { ResumeDownload, ResumePrintStyle } from './ResumeDownload'
 import { ResumeEducation, sortEducation, type EducationDoc } from './ResumeEducation'
@@ -39,8 +38,10 @@ export function ResumePage() {
   const specs = useMemo(() => sortSpecs(specDocs), [specDocs])
   const { data: projectDocs } = useCollection<ProjectDoc>('projects')
   const projects = useMemo(() => toProjectItems(projectDocs), [projectDocs])
+  // 주소 뒷자리가 곧 문서 id다. 없으면(`/resume`) 읽지 않고 자기소개 영역도 두지 않는다.
   const { company } = useParams()
-  const coverLetter = getCoverLetter(company)
+  const { data: coverLetterDoc } = useDoc<CoverLetterDoc>('resume', company ?? '')
+  const coverLetter = coverLetterDoc?.content
   // 종이를 쌓아 둔 자리가 스스로 스크롤한다. 내려받기 버튼이 그 스크롤바 폭을 알아야 여백이 맞는다.
   const pageRef = useRef<HTMLElement>(null)
 

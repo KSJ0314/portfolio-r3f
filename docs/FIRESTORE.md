@@ -2,9 +2,9 @@
 
 > 컬렉션·데이터 접근·보안 규칙 정리. 데이터 레이어 구현은 `src/lib/firebase/`.
 
-## 컬렉션 (8개)
+## 컬렉션 (9개)
 
-`profile · skills · experiences · education · awards · spec · projects · guestbook`
+`profile · skills · experiences · education · awards · spec · projects · guestbook · resume`
 
 스테이션이 활성화되면 그 스테이션에 매핑된 컬렉션을 읽는다(매핑은 `src/content/stations.ts`의 `collections`).
 
@@ -20,6 +20,9 @@
 **이력서(`/resume`)는 스테이션이 아니라 화면 하나가 콘텐츠 7종을 모두 읽는다** —
 `profile`·`experiences`·`education`·`awards`·`skills`·`spec`·`projects`. 순서·개수·항목 값만 가져오고,
 화면에 맞춰 다듬어야 하는 글은 `content/`가 갖는다([DECISIONS 057]).
+
+**회사별 자기소개는 `resume` 컬렉션에서 읽는다.** 주소 뒷자리(`/resume/<키>`)가 곧 문서 id이고,
+그 id의 문서가 없으면 자기소개 영역을 두지 않는다. `/resume`처럼 뒷자리가 없으면 읽지 않는다.
 
 **`experiences`는 이력서에만 실린다.** Career의 칸 셋에 자리가 없어 맵의 스테이션에는 매핑되지 않았고,
 어느 스테이션에 담을지는 이후에 정한다.
@@ -116,6 +119,15 @@ Firebase는 다른 프로젝트와도 공유하는 DB라 최소 정보만 둔다
 Phase 8에서 **데이터가 아니라 페이지 컴포넌트**로 확정됐다 — 전시 칸에 보이는 글은 컬렉션이 아니라
 `contents/<key>/`에 직접 쓰고, Firestore가 맡는 것은 칸 개수·이름판 이름·로비 책 목록·`key`다. ([DECISIONS 040])
 
+**resume** (지원처 1곳 = 문서 1개). **문서 id가 곧 이력서 주소의 뒷자리**다 — `/resume/<문서 id>`.
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `content` | string | 자기소개 본문. 줄바꿈이 그대로 화면에 반영되고 문단 사이는 빈 줄로 띄운다 |
+
+지원하는 곳이 생기면 콘솔에서 문서를 추가한다. 글을 코드에 두면 지원처가 늘 때마다 배포해야 하고
+번들에 그대로 노출된다([DECISIONS 057]).
+
 **guestbook**: 필드 설계는 Phase 8(방명록 스테이션 구현)에서 정한다.
 
 `profile`의 `intro`는 줄바꿈을 `\n` **두 글자**로 담고 있다. 3D 텍스트에 넘길 때 실제 개행으로 바꿔야 줄이 나뉜다.
@@ -135,7 +147,10 @@ Phase 8에서 **데이터가 아니라 페이지 컴포넌트**로 확정됐다 
 **콘솔에서 직접 관리한다**(레포에 규칙 파일을 두지 않음).
 
 **잠금 완료(2026-08-27).** 콘텐츠 7종은 read 공개 / write 차단이고, `guestbook`과 그 밖의 경로는
-read·write 모두 차단이다. 브라우저 SDK로는 어디에도 쓸 수 없으므로 **콘텐츠를 더할 때는 콘솔에서
+read·write 모두 차단이다.
+
+**`resume`는 `get`만 열고 `list`는 막는다.** 컬렉션 나열을 허용하면 지원한 회사 전체와 그 자기소개가
+한 번에 읽힌다. `get`만 열면 주소를 아는 사람만 그 문서를 읽는다. 브라우저 SDK로는 어디에도 쓸 수 없으므로 **콘텐츠를 더할 때는 콘솔에서
 문서를 직접 추가한다.** `firestore.ts`의 개발용 쓰기 함수(`setDocData`/`addDocData`)는 그대로 두었으나
 이 규칙 아래에서는 통하지 않는다.
 

@@ -20,7 +20,7 @@ _작성 예정_
 - `/portfolio` — 3D 포트폴리오(`pages/MainPage`). 아래 씬 그래프가 여기다.
 - `/projects` — 프로젝트 건물 **안**(`pages/ProjectsLobbyPage` + `LobbyScene`). 맵과 **다른 Canvas·다른 카메라(원근)** 다. 세계가 통째로 달라 이동 상태·판정·카메라를 맵과 나눠 갖는다. (DECISIONS 034)
 - `/projects/gallery` — 로비 통로 안쪽 전시 공간(`pages/ProjectsGalleryPage` + `GalleryScene`). 로비와도 **다른 Canvas**다. 밟는 바닥·막는 것·카메라 규칙이 로비와 다르고, 모델은 완성된 방이 아니라 부품이라 Firestore `projects` 개수만큼 코드에서 조립한다.
-- `/resume` · `/resume/:company` — 이력서(`pages/ResumePage`). 3D 없이 읽는 A4 문서 화면이고 뒷자리가 `content/coverLetters`의 자기소개를 선택한다. 아래 이력서 화면 절이 여기다.
+- `/resume` · `/resume/:company` — 이력서(`pages/ResumePage`). 3D 없이 읽는 A4 문서 화면이고 뒷자리가 Firestore `resume`의 문서 id다. 아래 이력서 화면 절이 여기다.
 - `/list` — 목록 보기(`pages/ListViewPage`, 굽는 일은 `scene/ListBaker`). 3D를 돌아다니지 않고 주요 화면만 한 장씩 넘겨 본다. 들어오면 화면 밖 캔버스에서 화면들을 이미지로 굽고, 다 구우면 굽는 자리를 걷어 이미지만 남긴다. 그 이미지를 그대로 PDF로 묶어 내려받는다. (DECISIONS 048)
 - `/crayon` — 크레파스 스튜디오 단독 페이지(`pages/CrayonStudioPage`, 그림판은 `tools/CrayonStudio`). 맵 없이 그림판만 띄운다. 배포본에도 포함돼 방문자가 크레파스로 그려 PNG로 저장할 수 있다.
 
@@ -126,7 +126,7 @@ Canvas 밖(`pages/ProjectsGalleryPage`): `BackButton`(좌상단) · `GalleryPage
   - `ResumeHeader` · `ResumeCoverLetter` · `ResumeExperience` · `ResumeEducation` · `ResumeAward` · `ResumeSkill` · `ResumeSpec` · `ResumeProject` — 영역을 그리는 전용 컴포넌트. 기간과 내용을 두 칸으로 배치하는 `ResumePeriodEntry`와 항목 사이 선(`ResumeDivider`)을 함께 쓴다.
   - `ResumeDownload` — 우측 하단 PDF 저장 버튼과 인쇄 전용 전역 스타일(`ResumePrintStyle`). (DECISIONS 059)
 
-**읽는 데이터와 코드가 갖는 글의 경계가 나뉜다.** 순서·개수·항목 값은 Firestore(`profile`·`experiences`·`education`·`awards`·`skills`·`spec`·`projects`)가 갖고, 화면에 맞춰 다듬어야 하는 글은 `content/`가 갖는다 — 프로젝트 글은 `content/projects.ts`(전시 칸 첫 장과 공유), 회사별 자기소개는 `content/coverLetters`, 이력서에만 싣는 기술은 `content/extraSkills.ts`. 포트폴리오 Skills가 성격별로 잘게 나눠 보여주는 묶음(`groups`)은 이력서에서 대응표로 기존 분류에 합친다.
+**읽는 데이터와 코드가 갖는 글의 경계가 나뉜다.** 순서·개수·항목 값과 회사별 자기소개(`resume`)는 Firestore가 갖고, 화면에 맞춰 다듬어야 하는 글은 `content/`가 갖는다 — 프로젝트 글은 `content/projects.ts`(전시 칸 첫 장과 공유), 이력서에만 싣는 기술은 `content/extraSkills.ts`. 포트폴리오 Skills가 성격별로 잘게 나눠 보여주는 묶음(`groups`)은 이력서에서 대응표로 기존 분류에 합친다.
 
 **PDF는 이미지로 굽지 않고 브라우저 인쇄를 부른다.** 장이 이미 A4 실치수로 짜여 있고, 본문이 텍스트로 남아야 읽는 쪽에서 검색·복사할 수 있으며 링크도 눌린다. 인쇄에서는 장의 치수를 mm로 변환하지 않고 **화면 좌표계 그대로 축소**해 글자·여백·선이 한 비율로 함께 줄어든다. 페이지 분리는 장이 아니라 A4 실치수 자리를 차지하는 `SheetFrame`이 갖는다 — `transform`은 렌더링 크기만 줄이고 레이아웃 자리는 원래 크기로 남긴다. (DECISIONS 059)
 
