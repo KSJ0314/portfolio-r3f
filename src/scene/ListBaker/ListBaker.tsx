@@ -1,5 +1,6 @@
 import { Suspense, useCallback, useMemo, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
+import { configureDracoDecoder } from '../../lib/draco'
 import { SceneErrorBoundary } from '../SceneErrorBoundary'
 import { useSceneReadyStore } from '../../state/useSceneReadyStore'
 import { useThemeStore } from '../../state/useThemeStore'
@@ -11,6 +12,9 @@ import { ListBakerCapture } from './ListBaker.capture'
 import { ListBakerContent } from './ListBaker.content'
 import { Stage } from './ListBaker.styled'
 import type { ListBakerProps } from './ListBaker.types'
+
+// 굽는 화면도 맵과 같은 모델을 쓰므로 디코더 자리를 함께 잡아 둔다.
+configureDracoDecoder()
 
 /**
  * 화면들을 PNG로 굽는 자리.

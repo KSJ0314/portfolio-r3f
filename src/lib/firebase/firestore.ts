@@ -22,6 +22,7 @@ export const COLLECTIONS = {
   spec: 'spec',
   projects: 'projects',
   guestbook: 'guestbook',
+  resume: 'resume',
 } as const
 
 export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS]

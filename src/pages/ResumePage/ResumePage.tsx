@@ -1,0 +1,153 @@
+import { Fragment, useMemo, useRef, type ReactNode } from 'react'
+import { useParams } from 'react-router-dom'
+import { useCollection, useDoc } from '../../lib/firebase/hooks'
+import { ResumeAward, sortAwards, type AwardDoc } from './ResumeAward'
+import { ResumeCoverLetter, type CoverLetterDoc } from './ResumeCoverLetter'
+import { ResumeDivider } from './ResumeDivider'
+import { ResumeDownload, ResumePrintStyle } from './ResumeDownload'
+import { ResumeEducation, sortEducation, type EducationDoc } from './ResumeEducation'
+import { ResumeExperience, sortExperiences, type ExperienceDoc } from './ResumeExperience'
+import { ResumeHeader, type ResumeProfileDoc } from './ResumeHeader'
+import { projectTroubles, ResumeProject, toProjectItems, type ProjectDoc } from './ResumeProject'
+import { ResumeSection } from './ResumeSection'
+import { ResumeSkill, toSkillRows, type SkillDoc } from './ResumeSkill'
+import { ResumeSpec, sortSpecs, type SpecDoc } from './ResumeSpec'
+import { ResumeSheets, type ResumeBlock } from './ResumeSheets'
+import { Page } from './ResumePage.styled'
+
+/**
+ * 이력서 페이지(`/resume`) — 3D 없이 읽는 순수 문서 화면.
+ *
+ * 포트폴리오(`/portfolio`)와 주소를 나눠 제출하므로 서로의 코드를 참조하지 않는다.
+ * 이 컴포넌트는 데이터를 읽어 블록 목록을 조립하는 데까지만 맡고,
+ * 장을 나눠 쌓는 일은 `ResumeSheets`가, 각 영역을 그리는 일은 전용 컴포넌트가 한다.
+ *
+ * 주소 뒷자리(`/resume/<키>`)가 자기소개를 고른다. 등록된 글이 없으면 그 영역을 두지 않는다.
+ */
+export function ResumePage() {
+  const { data: profile } = useDoc<ResumeProfileDoc>('profile', 'main')
+  const { data: experienceDocs } = useCollection<ExperienceDoc>('experiences')
+  const experiences = useMemo(() => sortExperiences(experienceDocs), [experienceDocs])
+  const { data: educationDocs } = useCollection<EducationDoc>('education')
+  const education = useMemo(() => sortEducation(educationDocs), [educationDocs])
+  const { data: awardDocs } = useCollection<AwardDoc>('awards')
+  const awards = useMemo(() => sortAwards(awardDocs), [awardDocs])
+  const { data: skillDocs } = useCollection<SkillDoc>('skills')
+  const skills = useMemo(() => toSkillRows(skillDocs), [skillDocs])
+  const { data: specDocs } = useCollection<SpecDoc>('spec')
+  const specs = useMemo(() => sortSpecs(specDocs), [specDocs])
+  const { data: projectDocs } = useCollection<ProjectDoc>('projects')
+  const projects = useMemo(() => toProjectItems(projectDocs), [projectDocs])
+  // 주소 뒷자리가 곧 문서 id다. 없으면(`/resume`) 읽지 않고 자기소개 영역도 두지 않는다.
+  const { company } = useParams()
+  const { data: coverLetterDoc } = useDoc<CoverLetterDoc>('resume', company ?? '')
+  const coverLetter = coverLetterDoc?.content
+  // 종이를 쌓아 둔 자리가 스스로 스크롤한다. 내려받기 버튼이 그 스크롤바 폭을 알아야 여백이 맞는다.
+  const pageRef = useRef<HTMLElement>(null)
+
+  const blocks = useMemo<ResumeBlock[]>(() => {
+    const list: ResumeBlock[] = [{ key: 'header', node: <ResumeHeader profile={profile} /> }]
+
+    /** 영역 하나가 블록 하나다. 한 장을 넘기면 영역을 쪼개지 않고 통째로 다음 장에서 그린다. */
+    const pushSection = (title: string, items: ReactNode[]) => {
+      list.push({
+        key: title,
+        node: (
+          <ResumeSection title={title}>
+            {items.map((item, index) => (
+              // 항목이 여럿이면 사이에 선을 그어 경계를 보인다.
+              <Fragment key={index}>
+                {index > 0 && <ResumeDivider />}
+                {item}
+              </Fragment>
+            ))}
+          </ResumeSection>
+        ),
+      })
+    }
+
+    /**
+     * 항목마다 블록을 두는 영역. 한 항목이 커서 영역 전체가 한 장을 넘기는 곳에 쓴다.
+     * 항목을 다시 조각으로 나눠 받아, 조각이 넘치면 그 조각부터 다음 장에서 이어진다.
+     *
+     * 제목은 첫 조각과 한 블록에 담아 제목만 장 끝에 남지 않게 하고,
+     * 항목은 저마다 새 장에서 시작한다 — 앞 영역 끝에 붙으면 한 항목을 이어 읽기 어렵다.
+     */
+    const pushSplitSection = (title: string, items: ReactNode[][]) => {
+      items.forEach((parts, item) => {
+        parts.forEach((part, index) => {
+          const head = item === 0 && index === 0
+          list.push({
+            key: `${title}:${item}:${index}`,
+            tight: !head,
+            breakBefore: index === 0,
+            node: head ? (
+              <ResumeSection title={title}>{part}</ResumeSection>
+            ) : (
+              <ResumeSection>{part}</ResumeSection>
+            ),
+          })
+        })
+      })
+    }
+
+    // 지원하는 곳에 맞춰 쓴 글이라, 그 글이 없으면 제목까지 두지 않는다.
+    if (coverLetter) pushSection('자기소개', [<ResumeCoverLetter text={coverLetter} />])
+
+    // 읽어 온 문서가 없으면 제목만 남지 않도록 영역을 두지 않는다(자기소개와 같은 규칙).
+    if (experiences.length > 0) {
+      pushSection(
+        '경력',
+        experiences.map((doc) => <ResumeExperience doc={doc} />),
+      )
+    }
+
+    if (education.length > 0) {
+      pushSection(
+        '교육',
+        education.map((doc) => <ResumeEducation doc={doc} />),
+      )
+    }
+
+    if (awards.length > 0) {
+      pushSection(
+        '수상',
+        awards.map((doc) => <ResumeAward doc={doc} />),
+      )
+    }
+
+    if (skills.length > 0) {
+      pushSection(
+        '기술',
+        skills.map((row) => <ResumeSkill row={row} />),
+      )
+    }
+
+    if (specs.length > 0) {
+      pushSection(
+        '자격증',
+        specs.map((doc) => <ResumeSpec doc={doc} />),
+      )
+    }
+
+    // 프로젝트는 항목마다 담을 내용이 많아 영역 전체가 한 장을 넘긴다.
+    if (projects.length > 0) {
+      pushSplitSection(
+        '프로젝트',
+        // 트러블슈팅은 조각마다 블록이라 분량이 넘치면 그 갈래부터 다음 장에서 이어진다.
+        projects.map((item) => [<ResumeProject {...item} />, ...projectTroubles(item.projectKey)]),
+      )
+    }
+
+    return list
+  }, [profile, coverLetter, experiences, education, awards, skills, specs, projects])
+
+  return (
+    <Page ref={pageRef}>
+      {/* 이 화면에서만 인쇄를 푼다. 전역 스타일이 3D 씬에 맞춰 높이·넘침을 묶어 두고 있다. */}
+      <ResumePrintStyle />
+      <ResumeSheets blocks={blocks} />
+      <ResumeDownload scrollHost={pageRef} />
+    </Page>
+  )
+}

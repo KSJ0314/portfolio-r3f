@@ -8,15 +8,19 @@ _작성 예정_
 
 ## 라우팅
 
-`main.tsx` → `BrowserRouter` → `App`(테마·전역 스타일 공유 + 라우트 + 장면 전환 덮개·모바일 안내) → 라우트 셋.
+`main.tsx` → `BrowserRouter` → `App`(테마·전역 스타일 공유 + 라우트 + 장면 전환 덮개·모바일 안내) → 라우트 여섯.
 
 **라우트가 그리는 페이지 컴포넌트는 전부 `src/pages/` 밑에 둔다.** 페이지가 갖는 것은 그 주소가 무엇을 띄우는지다 — 씬 하나와 화면 밖 요소(뒤로 가기·안내·개발용 패널)·키 입력뿐이고, **`<Canvas>`를 세우는 일은 씬이 한다**(`scene/Experience` · `ProjectsLobby/LobbyScene` · `ProjectsGallery/GalleryScene` · `scene/ListBaker`).
 
 **주소는 `src/routes.ts` 한 곳에 모은다.** 페이지 하나의 소유물이 아니라 라우팅이 공유하는 값이다. **씬은 주소를 알지 못한다** — 장면을 옮기는 쪽은 목적지 이름(`'map'`·`'lobby'`·`'gallery'`)만 알리고(`useSceneTransitionStore`), 그것을 주소로 바꾸는 일은 덮개(`ui/SceneTransition`)가 한다.
 
-- `/` — 3D 포트폴리오(`pages/MainPage`). 아래 씬 그래프가 여기다.
+**페이지는 `React.lazy`로 주소마다 나눠 받는다.** 3D 화면이 three·drei·leva를 통째로 물고 있어, 한 덩어리로 묶으면 이력서만 열어도 그것이 함께 내려온다. 받는 동안 덮을 것은 두지 않는다 — 화면마다 로딩 연출이 달라 공통으로 그리면 겹친다. (DECISIONS 057)
+
+- `/` — `/portfolio`로 넘기는 자리. 되돌아올 화면이 아니라 히스토리에 남기지 않는다.
+- `/portfolio` — 3D 포트폴리오(`pages/MainPage`). 아래 씬 그래프가 여기다.
 - `/projects` — 프로젝트 건물 **안**(`pages/ProjectsLobbyPage` + `LobbyScene`). 맵과 **다른 Canvas·다른 카메라(원근)** 다. 세계가 통째로 달라 이동 상태·판정·카메라를 맵과 나눠 갖는다. (DECISIONS 034)
 - `/projects/gallery` — 로비 통로 안쪽 전시 공간(`pages/ProjectsGalleryPage` + `GalleryScene`). 로비와도 **다른 Canvas**다. 밟는 바닥·막는 것·카메라 규칙이 로비와 다르고, 모델은 완성된 방이 아니라 부품이라 Firestore `projects` 개수만큼 코드에서 조립한다.
+- `/resume` · `/resume/:company` — 이력서(`pages/ResumePage`). 3D 없이 읽는 A4 문서 화면이고 뒷자리가 Firestore `resume`의 문서 id다. 아래 이력서 화면 절이 여기다.
 - `/list` — 목록 보기(`pages/ListViewPage`, 굽는 일은 `scene/ListBaker`). 3D를 돌아다니지 않고 주요 화면만 한 장씩 넘겨 본다. 들어오면 화면 밖 캔버스에서 화면들을 이미지로 굽고, 다 구우면 굽는 자리를 걷어 이미지만 남긴다. 그 이미지를 그대로 PDF로 묶어 내려받는다. (DECISIONS 048)
 - `/crayon` — 크레파스 스튜디오 단독 페이지(`pages/CrayonStudioPage`, 그림판은 `tools/CrayonStudio`). 맵 없이 그림판만 띄운다. 배포본에도 포함돼 방문자가 크레파스로 그려 PNG로 저장할 수 있다.
 
@@ -24,7 +28,7 @@ _작성 예정_
 
 **장면 전환 덮개(`ui/SceneTransition`)는 라우트보다 위, `App`에 있다.** 라우트가 갈리면 Canvas가 통째로 새로 서고 모델을 받는 동안 화면이 빈다. 덮개가 원형으로 조여들어 **다 덮인 뒤에 주소를 바꾸고**, 도착한 장면이 준비를 알리면(`scene/SceneArrival`) 연다. 조여드는 중심은 씬이 매 프레임 채우는 초점(건물 문 자리)이라, 문으로 빨려 들어가고 문에서 나오는 것으로 읽힌다. 덮개가 라우트 안에 있으면 그 자신이 언마운트되므로 이 자리라야 한다.
 
-`main.tsx`는 Draco 디코더 경로도 여기서 못 박는다 — 디코더는 앱 전체가 모듈 하나를 공유하므로 모델마다 지정하지 않고 기본값 자체를 바꾼다(`lib/draco`, DECISIONS 039).
+**Draco 디코더 경로는 씬을 세우는 모듈이 못 박는다**(`Experience`·`ListBaker`·`LobbyScene`·`GalleryScene`). 디코더는 앱 전체가 모듈 하나를 공유하므로 모델마다 지정하지 않고 기본값 자체를 바꾸는데(`lib/draco`, DECISIONS 039), 그 모듈이 drei를 참조해 **진입점에서 부르면 3D를 그리지 않는 화면에도 three가 내려온다.** (DECISIONS 057)
 
 ## 씬 그래프 (3D)
 
@@ -112,6 +116,21 @@ Canvas 밖(`pages/ProjectsLobbyPage`): `BackButton`(좌상단 — 책을 보고 
 Canvas 밖(`pages/ProjectsGalleryPage`): `BackButton`(좌상단) · `GalleryPageHUD`(dev 전용).
 
 **페이지 정의는 `contents/` 밑에 프로젝트 번호로 둔다.** `index.ts`가 `번호 → 페이지 목록`을 갖고, 등록 전이거나 번호가 없는 프로젝트는 자리표시 페이지를 쓴다(빈 목록을 돌려주면 확대했을 때 아무것도 없는 판만 남는다). **페이지에 들어가는 글은 Firestore가 아니라 여기에 직접 쓴다** — 장마다 필요한 내용이 다르고 줄바꿈·강조까지 화면에 맞춰야 해서, 컬렉션 필드로 관리하면 오히려 비용이 크다. 페이지 컴포넌트는 그 Firestore 문서를 props로 받지만 쓰지 않아도 된다. 장들이 함께 쓰는 컴포넌트는 `contents/shared/`에 둔다 — `PageIcon`(이미지 한 장, 판 크기는 세로 기준이고 가로는 이미지 비율에서 계산한다) · `PageLink`(그 위에 누르는 판을 얹어 새 탭으로 연다) · `IntroPage`(첫 장의 배치를 담당하는 공용 컴포넌트. 프로젝트 폴더는 글과 링크만 전달한다). 절차·기준은 [PROJECT_PAGES.md](./PROJECT_PAGES.md). (DECISIONS 040)
+
+### 이력서 (`/resume`)
+
+3D를 거치지 않고 읽는 A4 문서 화면이다. **포트폴리오와 주소를 나눠 제출하므로 서로의 코드를 참조하지 않는다.** 씬도 Canvas도 없어 전용 스토어를 두지 않는다.
+
+- `ResumePage`(`pages/`) — Firestore를 읽어 **블록 목록**을 조립하는 데까지만 담당한다. 영역 하나가 블록 하나이고, 프로젝트만 항목마다 블록을 둬 분량이 넘치면 그 갈래부터 다음 장에서 이어진다. 읽어 온 문서가 없는 영역은 제목까지 두지 않는다.
+  - `ResumeSheets` — 블록을 A4 장에 나눠 담아 쌓는다. 높이는 글자 수·줄바꿈·글꼴에 따라 달라져 미리 알 수 없으므로 **화면 밖 같은 폭·여백의 자리(`MeasureSheet`)에서 측정**하고, 한 장을 넘기는 블록은 분할하지 않고 다음 장에서 시작한다. `breakBefore`를 지정한 블록은 자리가 남아도 새 장에서 연다. 데이터가 늦게 도착하거나 글꼴이 뒤늦게 적용되면 높이가 달라지므로 `ResizeObserver`·`document.fonts.ready`를 보고 다시 나눈다. (DECISIONS 058)
+  - `ResumeHeader` · `ResumeCoverLetter` · `ResumeExperience` · `ResumeEducation` · `ResumeAward` · `ResumeSkill` · `ResumeSpec` · `ResumeProject` — 영역을 그리는 전용 컴포넌트. 기간과 내용을 두 칸으로 배치하는 `ResumePeriodEntry`와 항목 사이 선(`ResumeDivider`)을 함께 쓴다.
+  - `ResumeDownload` — 우측 하단 PDF 저장 버튼과 인쇄 전용 전역 스타일(`ResumePrintStyle`). (DECISIONS 059)
+
+**읽는 데이터와 코드가 갖는 글의 경계가 나뉜다.** 순서·개수·항목 값과 회사별 자기소개(`resume`)는 Firestore가 갖고, 화면에 맞춰 다듬어야 하는 글은 `content/`가 갖는다 — 프로젝트 글은 `content/projects.ts`(전시 칸 첫 장과 공유), 이력서에만 싣는 기술은 `content/extraSkills.ts`. 포트폴리오 Skills가 성격별로 잘게 나눠 보여주는 묶음(`groups`)은 이력서에서 대응표로 기존 분류에 합친다.
+
+**PDF는 이미지로 굽지 않고 브라우저 인쇄를 부른다.** 장이 이미 A4 실치수로 짜여 있고, 본문이 텍스트로 남아야 읽는 쪽에서 검색·복사할 수 있으며 링크도 눌린다. 인쇄에서는 장의 치수를 mm로 변환하지 않고 **화면 좌표계 그대로 축소**해 글자·여백·선이 한 비율로 함께 줄어든다. 페이지 분리는 장이 아니라 A4 실치수 자리를 차지하는 `SheetFrame`이 갖는다 — `transform`은 렌더링 크기만 줄이고 레이아웃 자리는 원래 크기로 남긴다. (DECISIONS 059)
+
+Canvas 밖: `ResumeDownload`(우측 하단 · 공용 `ui/CornerButton`). 종이 목록이 자체 스크롤해 창에 고정된 버튼과 내용 사이에 스크롤바가 끼므로, 그 폭을 측정해 그만큼 안쪽으로 이동시킨다.
 
 ### 목록 보기 (`/list`)
 

@@ -1,5 +1,6 @@
 import { Suspense, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
+import { configureDracoDecoder } from '../../lib/draco'
 import { AERIAL_OFFSET, useCameraStore } from '../../state/useCameraStore'
 import { useThemeStore } from '../../state/useThemeStore'
 import { themes } from '../../theme/themes'
@@ -14,6 +15,9 @@ import { SceneArrival } from '../SceneArrival'
 import { DevicePerfProbe } from '../DevicePerfProbe'
 import { ActiveStationScene } from '../../stations'
 import { fitAerialZoom } from './Experience.zoom'
+
+// 문 앞에서 미리 받는 로비 모델이 Draco로 압축돼 있어, 이 씬에서도 디코더 자리를 잡아 둔다.
+configureDracoDecoder()
 
 export function Experience() {
   const mode = useThemeStore((s) => s.mode)

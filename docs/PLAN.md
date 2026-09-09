@@ -73,12 +73,15 @@ src/stations/sections/projects/
   ProjectsLobby/              # 건물 안(/projects). 실내 씬·이동·판정·카메라·트리거·책
   ProjectsGallery/            # 로비 통로 안쪽(/projects/gallery). 전시 칸을 Firestore 개수대로 조립
   interior/                   # 로비·전시 공간이 함께 쓰는 판정·캐릭터·입력·환경광·콜라이더 보기
+  contents/                   # 전시 칸에 보이는 페이지. index.ts가 `key -> 페이지 목록`
+    shared/                   # 장들이 함께 쓰는 컴포넌트 (IntroPage · PageIcon · PageLink)
+    <key>/                    # 그 프로젝트의 장들
   demos/
     registry.ts               # demoKey -> 데모 컴포넌트 매핑
     <demoKey>/
       index.ts · Demo.tsx · Demo.styled.ts · Demo.types.ts
 ```
-Firestore `projects` 문서 예: `{ title, summary, startDate, endDate, link, order }`. Firebase는 다른 프로젝트와 공유하는 DB라 최소 정보만 두고, `tech`·`images`·`demoKey` 등 상세 필드는 로컬에 별도 저장한다(스테이션 상세 구현 시 확정, [DECISIONS 012]).
+Firestore `projects` 문서: `{ title, summary, startDate, endDate, link, order, key }`. Firebase는 다른 프로젝트와 공유하는 DB라 칸 개수·이름·목차·`key`만 두고, 화면에 보이는 글은 코드가 갖는다. 첫 장의 글과 링크는 이력서와 함께 읽으므로 `content/projects.ts`에 모으고, 나머지 장은 `contents/<key>/`에 직접 쓴다. ([DECISIONS 040])
 
 ## 7. 폴더/컴포넌트 규칙
 
@@ -92,20 +95,24 @@ ComponentName/
   (필요 시) .hooks.ts / .constants.ts
 ```
 
-예상 전체 구조:
+전체 구조:
 ```text
 src/
-  main.tsx · App.tsx
-  scene/        # Experience(<Canvas>) · World · CameraRig · Stations(배치·근접·클릭)
+  main.tsx · App.tsx · routes.ts
+  pages/        # 라우트가 띄우는 화면 (MainPage · ResumePage · ProjectsLobbyPage · ProjectsGalleryPage · ListViewPage · CrayonStudioPage)
+  scene/        # Experience(<Canvas>) · World · CameraRig · Stations(배치·근접·클릭) · MapDecorations · ListBaker
   stations/     # 스테이션 프레임워크(registry·라이프사이클·types) + sections/ 섹션별 구현
-    sections/   # about(AboutIntro …) · projects(+demos) · guestbook
-  ui/           # PrintView(Phase 9) · Minimap · ThemeToggle · DevHUD(dev 전용 HUD 묶음)
+    sections/   # about(AboutIntro …) · projects(실내·전시 칸 contents·demos) · guestbook
+  ui/           # Minimap · WorldMap · BackButton · CornerButton · Credits · ListViewButton · SceneTransition · DevHUD(dev 전용 HUD 묶음)
   state/        # zustand 스토어
-  lib/          # firebase · raycast
+  lib/          # firebase · Crayon · PaperSticker · gridPaper · geometryIslands · draco · logger
   content/      # 로컬 콘텐츠/상수
+  tools/        # 개발용 저작 도구 (CrayonStudio)
   theme/        # light/dark 토큰 · styled.d.ts
   styles/       # GlobalStyle
 ```
+
+**라우트가 그리는 페이지는 전부 `pages/` 밑에 두고 `<Canvas>`를 세우는 일은 씬이 한다.** 주소는 `routes.ts` 한 곳에 모은다. ([DECISIONS 051])
 
 ## 8. 로드맵 (★ = MVP 핵심)
 
@@ -130,6 +137,7 @@ src/
 | **10. 폴리싱** | 로딩, 성능(Draco·instancing), SEO, 반응형·모바일(마우스 없는 기기는 가로 화면·터치 조작) |
 | **11. 캐릭터** | 맵과 실내가 함께 쓰는 모델. 이동 방향 회전과 걸음 애니메이션, 활성화 시 대상 바라보기 ([DECISIONS 055]) |
 | **12. 테마·후처리·접근성** (후순위) | 낮/밤 전환 연출(테마 완성), Bloom·네온, 접근성 |
+| **13. 이력서** | 3D를 거치지 않고 읽는 A4 문서 화면(`/resume`). Firestore 콘텐츠를 페이지 단위로 나눠 싣고, 회사별 자기소개는 주소 뒷자리로 선택한다. 우측 하단 버튼으로 PDF 저장 |
 
 - 범례: ★ = MVP 핵심 · ☆ = 아트 전용 단계
 - **우선순위**: 콘텐츠 & 맵 & 프로젝트 데모 우선.
@@ -141,6 +149,7 @@ src/
 
 - **Vercel** (Git 연동 자동 CI/CD, 별도 Actions 불필요).
 - 환경: `main` → 프로덕션(라이브) / `develop` → 스테이징 프리뷰 / PR·`release/*` → 자동 프리뷰.
+- 주소: `/`는 `/portfolio`로 넘기고, 3D 포트폴리오와 이력서(`/resume`)가 주소를 나눠 선다.
 - Vite 자동 감지(build `npm run build`, output `dist`), 루트 도메인 + SPA 처리로 base 경로 문제 없음.
 - Firebase 등 환경변수는 Vercel 프로젝트 설정에 주입.
 - 브랜치 전략: Git Flow (main+develop+feature, 운영 시 release·hotfix 추가) — 상세는 CONVENTIONS.
@@ -164,3 +173,4 @@ src/
 - 프로젝트: Firestore 정보 + 구역 전체가 스테이션 하나(건물) + 전시대는 문서 개수대로 + "체험하기" 버튼(코드 데모)
 - 배포: Vercel (main=프로덕션 / develop=스테이징 / PR=프리뷰), 미니맵 우상단
 - 브랜치: Git Flow (main+develop+feature, 운영 시 release·hotfix)
+- 이력서: 3D와 주소를 나눈 A4 문서 화면(`/resume`), 페이지는 주소마다 나눠 로드 ([DECISIONS 057])
