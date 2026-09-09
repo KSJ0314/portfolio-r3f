@@ -6,7 +6,8 @@ import { useCollection } from '../../lib/firebase'
 import { BackButton } from '../../ui/BackButton'
 import type { GalleryProject } from '../../stations/sections/projects/ProjectsGallery/GalleryNameplates'
 import { ListBaker, buildShotsPdf, saveShotsPdf } from '../../scene/ListBaker'
-import { ChevronIcon, DownloadIcon } from './ListViewPage.icons'
+import { DownloadIcon } from '../../ui/DownloadIcon'
+import { ChevronIcon } from './ListViewPage.icons'
 import {
   BackSlot,
   Bar,

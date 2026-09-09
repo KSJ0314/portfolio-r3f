@@ -98,6 +98,10 @@ export function useCollection<T extends DocBase = DocBase>(name: CollectionName)
 /**
  * 문서 하나를 읽는 훅. 그 문서의 모든 필드를 오브젝트(`data`)로 반환한다(없으면 null).
  * `name`·`id`가 바뀌면 다시 읽는다. 예: `useDoc('profile', 'main')`.
+ *
+ * **`id`가 비어 있으면 읽지 않고 `data`를 `null`로 둔다.** 읽을 문서를 주소에서 정하는 화면은
+ * 그 값이 없는 경우가 있는데(`/resume`), 훅은 조건부로 부를 수 없어 여기서 가른다.
+ * 문서가 없을 때와 결과가 같아 쓰는 쪽은 분기를 더하지 않는다.
  */
 export function useDoc<T extends DocBase = DocBase>(
   name: CollectionName,
@@ -113,6 +117,9 @@ export function useDoc<T extends DocBase = DocBase>(
   const refetch = useCallback(() => setAttempt((n) => n + 1), [])
 
   useEffect(() => {
+    // 읽을 문서가 정해지지 않았다. 빈 경로로 부르면 Firestore가 예외를 던진다.
+    if (!id) return
+
     let alive = true
     let timer: ReturnType<typeof setTimeout> | undefined
 
@@ -142,7 +149,8 @@ export function useDoc<T extends DocBase = DocBase>(
     }
   }, [name, id, attempt])
 
-  const loading = result.forName !== name || result.forId !== id
+  // 읽을 문서가 정해지지 않았으면 기다릴 것도 없다.
+  const loading = Boolean(id) && (result.forName !== name || result.forId !== id)
   return {
     data: loading ? null : result.data,
     loading,
