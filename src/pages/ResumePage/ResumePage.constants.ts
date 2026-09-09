@@ -16,9 +16,6 @@ export const SHEET_WIDTH = 1000
 /** 화면에서 한 장 안쪽에 두는 여백(px). 폭이 고정이라 이 값도 고정이다. */
 export const SHEET_PADDING = Math.round(SHEET_WIDTH * SHEET_PADDING_RATIO)
 
-/** 인쇄에서 한 장 안쪽에 두는 여백(mm). 화면과 같은 비율이다. */
-export const SHEET_PADDING_MM = Math.round(A4_WIDTH_MM * SHEET_PADDING_RATIO * 10) / 10
-
 /**
  * 블록 위에 두는 여백(px). 페이지를 나눌 때 이 값이 높이에 포함되도록 `padding`으로 준다.
  * 새 영역이 시작될 때는 `BLOCK_GAP`, 같은 영역의 항목이 이어질 때는 `ITEM_GAP`이다.

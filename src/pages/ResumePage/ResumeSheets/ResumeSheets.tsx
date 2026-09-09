@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { usePagination } from './ResumeSheets.hooks'
-import { Block, MeasureSheet, Sheet } from './ResumeSheets.styled'
+import { Block, MeasureSheet, Sheet, SheetFrame } from './ResumeSheets.styled'
 import type { ResumeSheetsProps } from './ResumeSheets.types'
 
 /**
@@ -25,16 +25,19 @@ export function ResumeSheets({ blocks }: ResumeSheetsProps) {
       </MeasureSheet>
 
       {pages.map((indexes, page) => (
-        <Sheet key={page}>
-          {indexes.map((index) => {
-            const { key, tight, node } = blocks[index]
-            return (
-              <Block key={key} $tight={tight}>
-                {node}
-              </Block>
-            )
-          })}
-        </Sheet>
+        // 틀은 인쇄에서만 자리를 갖는다. 화면에서는 없는 것처럼 지나가 장이 그대로 쌓인다.
+        <SheetFrame key={page}>
+          <Sheet>
+            {indexes.map((index) => {
+              const { key, tight, node } = blocks[index]
+              return (
+                <Block key={key} $tight={tight}>
+                  {node}
+                </Block>
+              )
+            })}
+          </Sheet>
+        </SheetFrame>
       ))}
     </>
   )
