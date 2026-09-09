@@ -15,8 +15,14 @@
 - `guestbook` → guestbook
 
 `awards`는 원래 `about-award` 몫이었으나 Career의 칸 구성이 교육·수상내역·자격증이라 그쪽으로 옮기고
-`about-award`는 없앴다([DECISIONS 013] 갱신). **`experiences`는 지금 어느 스테이션에도 매핑되지 않는다** —
-Career의 칸 셋에 자리가 없어 미뤄 뒀고, 어디에 담을지는 이후에 정한다.
+`about-award`는 없앴다([DECISIONS 013] 갱신).
+
+**이력서(`/resume`)는 스테이션이 아니라 화면 하나가 콘텐츠 7종을 모두 읽는다** —
+`profile`·`experiences`·`education`·`awards`·`skills`·`spec`·`projects`. 순서·개수·항목 값만 가져오고,
+화면에 맞춰 다듬어야 하는 글은 `content/`가 갖는다([DECISIONS 057]).
+
+**`experiences`는 이력서에만 실린다.** Career의 칸 셋에 자리가 없어 맵의 스테이션에는 매핑되지 않았고,
+어느 스테이션에 담을지는 이후에 정한다.
 
 읽기는 매핑을 참고해 각 스테이션 구현이 필요한 것만 직접 가져온다(예: Intro는 `useDoc('profile', 'main')`).
 
