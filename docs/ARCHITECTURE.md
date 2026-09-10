@@ -125,6 +125,7 @@ Canvas 밖(`pages/ProjectsGalleryPage`): `BackButton`(좌상단) · `GalleryPage
   - `ResumeSheets` — 블록을 A4 장에 나눠 담아 쌓는다. 높이는 글자 수·줄바꿈·글꼴에 따라 달라져 미리 알 수 없으므로 **화면 밖 같은 폭·여백의 자리(`MeasureSheet`)에서 측정**하고, 한 장을 넘기는 블록은 분할하지 않고 다음 장에서 시작한다. `breakBefore`를 지정한 블록은 자리가 남아도 새 장에서 연다. 데이터가 늦게 도착하거나 글꼴이 뒤늦게 적용되면 높이가 달라지므로 `ResizeObserver`·`document.fonts.ready`를 보고 다시 나눈다. (DECISIONS 058)
   - `ResumeHeader` · `ResumeCoverLetter` · `ResumeExperience` · `ResumeEducation` · `ResumeAward` · `ResumeSkill` · `ResumeSpec` · `ResumeProject` — 영역을 그리는 전용 컴포넌트. 기간과 내용을 두 칸으로 배치하는 `ResumePeriodEntry`와 항목 사이 선(`ResumeDivider`)을 함께 쓴다.
   - `ResumeDownload` — 우측 하단 PDF 저장 버튼과 인쇄 전용 전역 스타일(`ResumePrintStyle`). (DECISIONS 059)
+  - `ResumePrintUrl` — 인쇄에서만 나오는 이력서 주소. `ResumeHeader` 안에 두고 상단 여백으로 올려 이후 내용의 위치를 바꾸지 않는다. 머리가 첫 블록이므로 첫 페이지에만 표시된다. (DECISIONS 059)
 
 **읽는 데이터와 코드가 갖는 글의 경계가 나뉜다.** 순서·개수·항목 값과 회사별 자기소개(`resume`)는 Firestore가 갖고, 화면에 맞춰 다듬어야 하는 글은 `content/`가 갖는다 — 프로젝트 글은 `content/projects.ts`(전시 칸 첫 장과 공유), 이력서에만 싣는 기술은 `content/extraSkills.ts`. 포트폴리오 Skills가 성격별로 잘게 나눠 보여주는 묶음(`groups`)은 이력서에서 대응표로 기존 분류에 합친다.
 
