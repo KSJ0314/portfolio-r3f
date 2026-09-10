@@ -40,3 +40,9 @@ export const CREDIT_MODEL_LIGHT = { intensity: 0.05, range: 0.3 }
  * 미리보기 카메라가 정한다.
  */
 export const CREDIT_STICKER_POSE = { tilt: 60, spin: 10 }
+
+/**
+ * 캐릭터 재질에 곱하는 밝기. 맵이 쓰는 값(`CHARACTER_PLACEMENT.brightness`)과 같게 둔다.
+ * 미리보기와 맵의 캐릭터 색이 달라 보이지 않아야 한다.
+ */
+export const CHARACTER_PREVIEW_BRIGHTNESS = 2.5

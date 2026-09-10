@@ -157,8 +157,8 @@ export const ASSET_CREDITS: AssetCredit[] = [
   {
     title: '캐릭터',
     ...AI_CHARACTER_WORK,
-    // 재질 밝기를 씬에서 되올려 둔 데다 톤 매핑까지 빼, 여기 광량 그대로면 색이 씻긴다.
-    lightScale: 0.6,
+    // 맵의 광량(ambient 0.9)에 맞춘 배수. 재질을 맵과 같게 두었으므로 광량까지 맞아야 색이 같다.
+    lightScale: 0.56,
     cameraYaw: -45,
     // 씬에서 애니메이션이 도는 모델이라 캐시를 나눠 쓴다. 복제하면 그 순간의 자세를 물려받는다.
     preview: { kind: 'model', url: CHARACTER_URL, ownInstance: true },
