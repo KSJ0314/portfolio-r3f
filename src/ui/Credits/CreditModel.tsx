@@ -1,6 +1,15 @@
 import { useEffect, useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
-import { Box3, Mesh, MeshStandardMaterial, PointLight, SpotLight, Vector3, type Object3D } from 'three'
+import {
+  Box3,
+  Mesh,
+  MeshPhysicalMaterial,
+  MeshStandardMaterial,
+  PointLight,
+  SpotLight,
+  Vector3,
+  type Object3D,
+} from 'three'
 import { useCreditsPreviewStore } from '../../state/useCreditsPreviewStore'
 import { InteriorEnvironment } from '../../stations/sections/projects/interior'
 import {
@@ -8,7 +17,7 @@ import {
   LOBBY_LIGHT_COLOR,
   LOBBY_LIGHT_DECAY,
 } from '../../stations/sections/projects/ProjectsLobby/ProjectsLobby.constants'
-import { PREVIEW_HIDDEN_PREFIXES } from './Credits.constants'
+import { CHARACTER_PREVIEW_BRIGHTNESS, PREVIEW_HIDDEN_PREFIXES } from './Credits.constants'
 import type { CreditModelProps } from './Credits.types'
 
 /**
@@ -30,17 +39,19 @@ export function CreditModel({ url, tuneLights, ownInstance }: CreditModelProps) 
     const model = ownInstance ? scene : scene.clone(true)
 
     // 씬이 재질에 손본 것을 물려받지 못하므로 같은 처리를 여기서 한다.
-    // 내보낸 emissive가 흰색으로 차 있어 그대로 두면 조명과 무관하게 하얗게 뜬다.
+    // 값은 맵의 캐릭터(`CharacterModel`)와 같게 둬 두 화면의 색이 갈리지 않게 한다.
     if (ownInstance) {
       model.traverse((child) => {
         if (!(child instanceof Mesh)) return
         const materials = Array.isArray(child.material) ? child.material : [child.material]
         for (const material of materials) {
           if (!(material instanceof MeshStandardMaterial)) continue
-          material.emissiveIntensity = 0.3
-          material.metalness = 0.3
+          material.emissiveIntensity = 0
+          material.metalness = 0
           material.roughness = 1
-          material.color.setScalar(1.7)
+          material.toneMapped = false
+          material.color.setScalar(CHARACTER_PREVIEW_BRIGHTNESS)
+          if (material instanceof MeshPhysicalMaterial) material.specularIntensity = 0
         }
       })
     }
