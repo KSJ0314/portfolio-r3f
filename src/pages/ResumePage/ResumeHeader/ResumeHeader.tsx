@@ -1,3 +1,4 @@
+import { ResumePrintUrl } from '../ResumePrintUrl'
 import { CONTACT_ICON, PHOTO_URL } from './ResumeHeader.constants'
 import {
   ContactItem,
@@ -29,6 +30,7 @@ function highlightName(tagline: string, name: string | undefined) {
 export function ResumeHeader({ profile }: ResumeHeaderProps) {
   return (
     <Header>
+      <ResumePrintUrl />
       <Photo src={PHOTO_URL} alt="" />
       <HeaderText>
         <HeaderIntro>
