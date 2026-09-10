@@ -7,6 +7,8 @@ export const Header = styled.header`
   align-items: center;
   gap: 32px;
   padding-bottom: 32px;
+  /* 인쇄용 주소가 위 여백으로 올라가는 기준. */
+  position: relative;
 `
 
 /** 문서에서 가장 큰 글씨. 이 문장 안의 이름만 굵게 둔다. */
