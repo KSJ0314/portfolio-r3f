@@ -34,6 +34,10 @@ import {
 } from '../../interior'
 import {
   LOBBY_ARTWORK,
+  LOBBY_ARTWORK_LIFT,
+  LOBBY_ARTWORK_PANELS,
+  LOBBY_ARTWORK_SCALE,
+  LOBBY_ARTWORK_TILT,
   LOBBY_BLOCKER_EXTEND_DOWN,
   LOBBY_BLOCKER_TAPER_FRONT,
   LOBBY_DRACO_PATH,
@@ -84,6 +88,61 @@ function applyArtwork(mesh: Mesh, artworks: Record<string, Texture>): void {
   standard.map = texture
   standard.color.set('#ffffff')
   standard.needsUpdate = true
+}
+
+/**
+ * 액자를 방 배율 밖으로 빼내 벽면과 나란하게 세운다. 돌려주는 것은 액자들을 담은 새 뿌리다.
+ *
+ * 액자마다 그룹을 하나 만들어 **회전을 배율 위에** 둔다. 배율 안에서 돌리면 비균등 배율이
+ * 회전을 찌그러뜨려 각이 펴지지 않는다(LEARNING 2026-08-20).
+ * 빼내면 앞뒤로 늘어나지도 않아 사진이 원래 비율로 돌아온다.
+ *
+ * 그룹은 액자 중심에 두고 그 안에서 메시를 중심만큼 되돌린다. 그래야 회전축이 액자 한가운데다.
+ * 중심 z에 깊이 배율을 곱하는 것은 액자가 걸린 벽이 그만큼 멀어졌기 때문이다.
+ */
+function levelArtwork(model: Object3D): Object3D {
+  const root = new Object3D()
+  root.name = 'Artworks'
+  const box = new Box3()
+  const center = new Vector3()
+
+  for (const [id, panel] of Object.entries(LOBBY_ARTWORK_PANELS)) {
+    const meshes: Mesh[] = []
+    model.traverse((object) => {
+      const mesh = object as Mesh
+      if (mesh.isMesh && mesh.name.startsWith(panel.prefix)) meshes.push(mesh)
+    })
+    if (meshes.length === 0) continue
+
+    // 배율이 걸리기 전 좌표가 필요하므로 월드 행렬이 아니라 지오메트리에서 잰다.
+    box.makeEmpty()
+    for (const mesh of meshes) {
+      mesh.geometry.computeBoundingBox()
+      if (mesh.geometry.boundingBox) box.union(mesh.geometry.boundingBox)
+    }
+    box.getCenter(center)
+
+    const holder = new Object3D()
+    holder.name = `Artwork_${id}`
+    holder.userData.triggerId = id
+    holder.position.set(
+      center.x,
+      center.y + LOBBY_ARTWORK_LIFT,
+      center.z * LOBBY_MODEL_DEPTH_SCALE,
+    )
+    holder.rotation.y = panel.side * LOBBY_ARTWORK_TILT
+    holder.scale.setScalar(LOBBY_ARTWORK_SCALE)
+
+    const centered = new Object3D()
+    centered.position.copy(center).negate()
+    holder.add(centered)
+    // `add`가 이전 부모에서 떼어 온다. 늘어난 방에서 빠져나오는 것이 곧 크기를 되돌리는 일이다.
+    for (const mesh of meshes) centered.add(mesh)
+
+    root.add(holder)
+  }
+
+  return root
 }
 
 /**
@@ -166,8 +225,18 @@ export function LobbyModel() {
   // 여기서는 텍스처만 받아 물려 두면 된다.
   const pageTextures = useLobbyBookPages()
 
-  const { model, walkables, blockers, triggers, parts, stepCenters, corridor, bounds, passage } =
-    useMemo(() => {
+  const {
+    model,
+    artwork,
+    walkables,
+    blockers,
+    triggers,
+    parts,
+    stepCenters,
+    corridor,
+    bounds,
+    passage,
+  } = useMemo(() => {
     const model = scene.clone(true)
     // 늘어나면 안 되는 것을 먼저 골라 둔다. 배율을 걸기 전이라 여기서 잰 값이 곧 모델 좌표다.
     model.updateMatrixWorld(true)
@@ -313,6 +382,26 @@ export function LobbyModel() {
       parts.push({ mesh, kind: blocker ? 'blocker' : 'none', extendDown })
     })
 
+    // 재질을 다 입힌 뒤에 빼낸다. 먼저 빼내면 액자만 재질·사진을 받지 못한다.
+    const artwork = levelArtwork(model)
+    artwork.updateMatrixWorld(true)
+
+    // 액자도 트리거로 올린다. 누를 판·카메라 전환·닫기는 책·통로와 같은 코드를 탄다.
+    // 막는 것으로는 올리지 않는다 — 벽 콜라이더가 이미 뒤를 막고 있다.
+    for (const holder of artwork.children) {
+      box.setFromObject(holder)
+      box.getSize(size)
+      box.getCenter(center)
+      triggers[holder.userData.triggerId as string] = {
+        x: center.x,
+        y: center.y,
+        z: center.z,
+        width: size.x,
+        height: size.y,
+        depth: size.z,
+      }
+    }
+
     stepCenters.sort((a, b) => a - b)
 
     // 둘 다 재지 못했으면 세울 자리를 모르는 것이라 가림 면을 두지 않는다.
@@ -327,7 +416,18 @@ export function LobbyModel() {
           }
         : null
 
-    return { model, walkables, blockers, triggers, parts, stepCenters, corridor, bounds, passage }
+    return {
+      model,
+      artwork,
+      walkables,
+      blockers,
+      triggers,
+      parts,
+      stepCenters,
+      corridor,
+      bounds,
+      passage,
+    }
   }, [scene, artworks, pageTextures])
 
   // 그림자를 **한 번만 굽고 얼린다.** 방은 정지해 있어 다시 그릴 이유가 없고,
@@ -374,6 +474,8 @@ export function LobbyModel() {
   return (
     <>
       <primitive object={model} />
+      {/* 액자는 방 배율 밖이다. 늘어나지 않고 기울기도 펴진 채로 선다. */}
+      <primitive object={artwork} />
       {/* 콜라이더를 눈으로 보는 표시. dev 게이트를 마운트 자리에 둬 프로덕션 번들에서 빠진다. */}
       {import.meta.env.DEV && <InteriorColliderView parts={parts} show={showColliders} />}
     </>

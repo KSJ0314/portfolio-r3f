@@ -20,6 +20,21 @@ export const LOBBY_ARTWORK: Record<string, string> = {
   M_Artwork_Right: '/images/lobby/right.jpg',
 }
 
+/** 액자 트리거 이름. */
+export const LOBBY_ARTWORK_LEFT = 'Artwork_Left'
+export const LOBBY_ARTWORK_RIGHT = 'Artwork_Right'
+
+/**
+ * 누를 액자 — 트리거 id → 메시 이름 접두와 카메라 위치의 x 부호.
+ *
+ * 액자에는 모델 트리거가 없어 이름이 접두로 시작하는 메시를 모아 경계 상자를 트리거로 등록한다(`LobbyModel`).
+ * 좌우 벽에 마주 보고 붙어 있어 카메라 위치가 액자마다 반대다.
+ */
+export const LOBBY_ARTWORK_PANELS: Record<string, { prefix: string; side: number }> = {
+  [LOBBY_ARTWORK_LEFT]: { prefix: 'Panel_Left_', side: 1 },
+  [LOBBY_ARTWORK_RIGHT]: { prefix: 'Panel_Right_', side: -1 },
+}
+
 /**
  * 밟고 다니는 콜라이더. 나머지 콜라이더는 막는 것으로 다룬다.
  * `Collider_Stair_*`는 계단 모양이 아니라 1층에서 2층까지 이어진 **경사 슬래브**라,
@@ -92,15 +107,29 @@ export const LOBBY_MODEL_DEPTH_SCALE = 2.5
  * 흩어지므로, 함께 움직여야 하는 것은 한 줄에 적는다.
  * 늘어나면 비율이 깨지는 것을 여기 적는다. 자리는 늘어난 그대로 두고 크기만 되돌린다.
  *
- * **액자(`Panel_Left`·`Panel_Right`)는 아직 넣지 않는다.** 그 액자는 벽면과 나란하지 않고
- * 평면상 기울어 있어(좌우 테두리가 x로 0.25 어긋나 있다), 원본 크기로 되돌리면 기울기가
- * 3.8°에서 9.5°로 서면서 한쪽 끝이 벽을 파고든다. 모델에서 액자를 벽면에 맞춘 뒤에 넣는다.
+ * **액자는 여기 넣지 않는다.** 기울기를 펴야 해서 배율 밖으로 통째로 빼낸다(`LOBBY_ARTWORK_TILT`).
  */
 export const LOBBY_KEEP_DEPTH_GROUPS: readonly (readonly string[])[] = [
   // 연단과 그 위의 책. 기둥·테두리가 둥글어 늘어나면 눌린 타원이 된다.
   // 누를 판·막는 상자가 책과 어긋나지 않도록 트리거도 같은 덩어리로 넣는다.
   ['Book_', 'Lectern_', 'Trigger_Book'],
 ]
+
+/**
+ * 액자를 펴는 각(라디안). 좌우가 같은 크기이고 부호만 `LOBBY_ARTWORK_PANELS`를 따른다.
+ *
+ * 모델에서 액자가 벽면과 나란하지 않아 한쪽 끝이 벽으로 들어간다. 액자를 배율 밖으로
+ * 빼내고(`LobbyModel`) 그만큼 되돌린다.
+ * **배율 안에서는 펼 수 없다** — 비균등 배율은 회전을 찌그러뜨려 각을 줘도 펴지지 않는다.
+ * 모델에서 액자를 벽면에 맞춰 다시 내보내면 이 값은 0이 된다.
+ */
+export const LOBBY_ARTWORK_TILT = (5 * Math.PI) / 180
+
+/** 액자 크기 배율. 액자 중심을 기준으로 커진다. 1이면 모델 그대로다. */
+export const LOBBY_ARTWORK_SCALE = 1.3
+
+/** 액자를 올리는 높이. 0이면 모델에 놓인 자리 그대로다. */
+export const LOBBY_ARTWORK_LIFT = 0.3
 
 /** 들어와 서는 자리(월드 x, z). 열려 있는 남쪽 면 바로 안쪽이다. */
 export const LOBBY_START: readonly [number, number] = [0, -1.2]
@@ -220,20 +249,37 @@ export const LOBBY_CAMERA_SHIFT = { x: 0, y: -0.85 }
  */
 export const LOBBY_MARKED_TRIGGERS = [LOBBY_BOOK_TRIGGER, LOBBY_PASSAGE_TRIGGER]
 
+/** 트리거를 열었을 때의 카메라 위치(트리거 중심 기준)와 구도. */
+export interface LobbyTriggerFocus {
+  offset: readonly [number, number, number]
+  /**
+   * 대상을 화면 중앙에서 옮기는 양(화면 반크기 대비, -1~1).
+   * 카메라가 대상을 바라보므로 이것이 없으면 대상이 늘 정중앙에 박힌다.
+   */
+  shift: { x: number; y: number }
+}
+
 /**
- * 트리거를 열었을 때의 화면 — 카메라가 서는 자리(트리거 중심 기준)와 구도.
+ * 트리거 이름 → 열었을 때의 카메라 위치와 구도.
  *
- * 대상마다 보는 각이 다르므로 이름으로 나눠 둔다. 여기 없는 트리거는 카메라가 돌지 않는다.
- * 연단 위 책은 남쪽(열린 면 쪽)에서 조금 위로 내려다본다.
- *
- * `shift`는 대상을 화면 한가운데에서 비켜 놓는 정도(화면 반크기 대비, -1~1)다.
- * 카메라가 대상을 바라보므로 이것이 없으면 대상이 늘 정중앙에 박힌다.
+ * 액자는 좌우가 같은 값을 쓰므로 여기가 아니라 `LOBBY_ARTWORK_FOCUS`에 둔다.
+ * 둘 중 어디에도 없는 트리거는 카메라가 돌지 않는다.
  */
-export const LOBBY_TRIGGER_FOCUS: Record<
-  string,
-  { offset: readonly [number, number, number]; shift: { x: number; y: number } }
-> = {
+export const LOBBY_TRIGGER_FOCUS: Record<string, LobbyTriggerFocus> = {
   [LOBBY_BOOK_TRIGGER]: { offset: [0, 0.85, 0.7], shift: { x: 0, y: -0.85 } },
+}
+
+/**
+ * 액자를 열었을 때의 카메라 위치와 구도. 좌우 액자가 함께 쓰고 x 부호만 `LOBBY_ARTWORK_PANELS`를 따른다.
+ *
+ * `distance`는 액자와 카메라 사이의 거리, `y`는 높이 차, `z`는 앞뒤 거리다. 셋 다 액자 중심 기준이다.
+ * 액자가 벽면과 나란하지 않고 평면상 기울어 있어 x축이 곧 정면은 아니므로 개발용 HUD로 맞춘다.
+ */
+export const LOBBY_ARTWORK_FOCUS = {
+  distance: 6,
+  y: 0,
+  z: 0,
+  shift: { x: 0, y: 0 },
 }
 
 /** 트리거를 보러 도는 데 걸리는 시간(초). 닫힐 때도 같다. */

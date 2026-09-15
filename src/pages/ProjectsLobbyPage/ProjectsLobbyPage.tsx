@@ -5,6 +5,7 @@ import { LobbyPageHUD } from '../../ui/DevHUD/LobbyPageHUD'
 import { InteriorCharacterHUD } from '../../ui/DevHUD/InteriorCharacterHUD'
 import { useCoarsePointer } from '../../ui/MobileNotice'
 import { LobbyScene } from '../../stations/sections/projects/ProjectsLobby/LobbyScene'
+import { LOBBY_BOOK_TRIGGER } from '../../stations/sections/projects/ProjectsLobby/LobbyBook'
 import { goBack } from '../../stations/sections/projects/ProjectsLobby/ProjectsLobby.travel'
 
 /**
@@ -14,7 +15,7 @@ import { goBack } from '../../stations/sections/projects/ProjectsLobby/ProjectsL
  * 나가는 방법은 좌상단 버튼과 ESC 두 가지이고, 둘 다 같은 판단(`goBack`)을 탄다.
  */
 export function ProjectsLobbyPage() {
-  // 책을 보고 있으면 책을 닫는 버튼, 아니면 맵으로 나가는 버튼이다.
+  // 트리거를 보고 있으면 그것을 닫는 버튼, 아니면 맵으로 나가는 버튼이다.
   const activeId = useLobbyTriggerStore((s) => s.activeId)
   const mobile = useCoarsePointer()
 
@@ -30,10 +31,10 @@ export function ProjectsLobbyPage() {
   return (
     <>
       <LobbyScene />
-      {/* 로비는 밝은 대리석이라 검정, 책을 볼 때는 화면이 어두워져 흰색이다. */}
+      {/* 책을 볼 때는 화면이 어두워져 흰색이다. 로비와 액자는 밝은 대리석이라 검정이다. */}
       <BackButton
         label={activeId ? 'Back' : 'Go home'}
-        color={activeId ? '#ffffff' : '#000000'}
+        color={activeId === LOBBY_BOOK_TRIGGER ? '#ffffff' : '#000000'}
         onClick={goBack}
       />
 
