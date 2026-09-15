@@ -9,8 +9,8 @@
 export const INTERIOR_COLLIDER_PREFIX = 'Collider_'
 export const INTERIOR_TRIGGER_PREFIX = 'Trigger_'
 
-/** 걸음 속도(유닛/초). 실내는 방이 좁아 맵(4)보다 느리다. */
-export const INTERIOR_MOVE_SPEED = 2.2
+/** 걸음 속도(유닛/초). 실내는 방이 좁아 맵(6)보다 느리다. */
+export const INTERIOR_MOVE_SPEED = 4
 
 /**
  * 한 걸음에 오를 수 있는 높이. 바닥을 찾는 레이가 지금 발밑에서 이만큼 위에서 시작한다.

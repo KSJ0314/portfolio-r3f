@@ -4,6 +4,7 @@ import { turnCharacterTo } from '../../CharacterModel'
 import { useCameraStore } from '../../../state/useCameraStore'
 import { useMapDecorationsStore } from '../../../state/useMapDecorationsStore'
 import { type StationPhase, useStationStore } from '../../../state/useStationStore'
+import { didJumpToStation } from '../../../stations/jump'
 import { PROJECTS_CAR_AFTER_STATION } from './ProjectsCar.constants'
 
 const _point = new Vector3()
@@ -63,6 +64,8 @@ export function useReturnOnClose(returned: boolean): void {
     const check = (state: { activeId: string | null; phase: StationPhase }) => {
       if (sent.current || useMapDecorationsStore.getState().carReturned) return
       if (state.activeId !== PROJECTS_CAR_AFTER_STATION || state.phase !== 'exiting') return
+      // 바로 가기로 옮겨 온 경우에는 부르지 않는다 — 방문자가 누른 화면에서 끌려 나온다.
+      if (didJumpToStation()) return
       sent.current = true
       useCameraStore.getState().setTarget(boardPoint())
       acquireLock()
@@ -79,6 +82,12 @@ export function useReturnOnClose(returned: boolean): void {
     // 이미 데려온 뒤에 다시 마운트된 것(로비를 다녀옴)이면 그 자리에 그대로 둔다.
     if (useMapDecorationsStore.getState().carReturned) return
     started.current = true
+
+    // 바로 가기로 옮겨 온 경우에는 부르지 않는다. 차는 제자리에 그대로 나타난다.
+    if (didJumpToStation()) {
+      useMapDecorationsStore.getState().markCarReturned()
+      return
+    }
 
     // 닫히는 순간을 놓쳤으면 여기서 잠근다.
     acquireLock()

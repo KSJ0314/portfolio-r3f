@@ -3,10 +3,19 @@ import { useFrame } from '@react-three/fiber'
 import { MathUtils, type PerspectiveCamera, Vector3 } from 'three'
 import gsap from 'gsap'
 import { useLobbyGeometryStore } from '../../../../../state/useLobbyGeometryStore'
-import { useLobbyPageStore } from '../../../../../state/useLobbyPageStore'
+import {
+  useLobbyPageStore,
+  type LobbyTriggerTuning,
+} from '../../../../../state/useLobbyPageStore'
 import { useInteriorStore } from '../../../../../state/useInteriorStore'
 import { useLobbyTriggerStore } from '../../../../../state/useLobbyTriggerStore'
-import { LOBBY_CAMERA_LIMIT, LOBBY_START, LOBBY_TRIGGER_FOCUS } from '../ProjectsLobby.constants'
+import {
+  LOBBY_ARTWORK_PANELS,
+  LOBBY_CAMERA_LIMIT,
+  LOBBY_START,
+  LOBBY_TRIGGER_FOCUS,
+  type LobbyTriggerFocus,
+} from '../ProjectsLobby.constants'
 import { LOBBY_BOOK_TRIGGER } from '../LobbyBook'
 
 /** 화면 기준 오른쪽·위를 구할 때 쓰는 기준 축. */
@@ -56,6 +65,33 @@ function applyShift(
 }
 
 /**
+ * 그 트리거를 열었을 때의 카메라 위치와 구도.
+ *
+ * 책·액자는 개발용 HUD로 맞추므로 튜닝 값을 먼저 보고, 나머지 트리거는 상수 그대로다.
+ * 액자는 좌우가 같은 값을 쓰고 x 부호만 액자마다 다르다.
+ */
+function focusFor(id: string | null, tuning: LobbyTriggerTuning): LobbyTriggerFocus | undefined {
+  if (!id) return undefined
+
+  if (id === LOBBY_BOOK_TRIGGER) {
+    return {
+      offset: [tuning.bookX, tuning.bookY, tuning.bookZ],
+      shift: { x: tuning.bookShiftX, y: tuning.bookShiftY },
+    }
+  }
+
+  const panel = LOBBY_ARTWORK_PANELS[id]
+  if (panel) {
+    return {
+      offset: [panel.side * tuning.artworkDistance, tuning.artworkY, tuning.artworkZ],
+      shift: { x: tuning.artworkShiftX, y: tuning.artworkShiftY },
+    }
+  }
+
+  return LOBBY_TRIGGER_FOCUS[id]
+}
+
+/**
  * 실내 팔로우 카메라. 캐릭터와의 고정 오프셋을 지키며 따라간다.
  *
  * 다만 **캐릭터를 그대로 따라가지는 않는다.** 방이 좁아 그대로 따라가면 화면이 계속 흔들린다.
@@ -94,16 +130,7 @@ export function LobbyCameraRig() {
 
   useEffect(() => {
     const trigger = activeId ? triggers[activeId] : undefined
-    // 책은 HUD로 맞추므로 튜닝 값을 먼저 본다. 나머지 트리거는 상수 그대로다.
-    const focus =
-      activeId === LOBBY_BOOK_TRIGGER
-        ? {
-            offset: [tuning.bookX, tuning.bookY, tuning.bookZ] as const,
-            shift: { x: tuning.bookShiftX, y: tuning.bookShiftY },
-          }
-        : activeId
-          ? LOBBY_TRIGGER_FOCUS[activeId]
-          : undefined
+    const focus = focusFor(activeId, tuning)
 
     // 볼 자리가 정해진 트리거만 카메라를 돌린다. 닫힐 때는 마지막 자리를 그대로 둬야 되돌아가는 길이 이어진다.
     if (trigger && focus) {

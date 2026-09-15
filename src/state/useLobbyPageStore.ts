@@ -5,6 +5,7 @@ import {
   LOBBY_TRIGGER_MARKER_SIZE,
 } from '../stations/sections/projects/ProjectsLobby/LobbyTriggers/LobbyTriggers.constants'
 import {
+  LOBBY_ARTWORK_FOCUS,
   LOBBY_CAMERA_FOV,
   LOBBY_CAMERA_OFFSET,
   LOBBY_CAMERA_SHIFT,
@@ -53,6 +54,18 @@ export interface LobbyTriggerTuning {
    */
   bookShiftX: number
   bookShiftY: number
+  /** 액자를 볼 때 액자와 카메라 사이의 거리. 좌우 액자가 함께 쓰고 x 부호만 액자마다 다르다. */
+  artworkDistance: number
+  /** 액자 중심과의 높이 차. */
+  artworkY: number
+  /** 액자 중심에서의 앞뒤 거리. */
+  artworkZ: number
+  /**
+   * 액자를 화면 중앙에서 옮기는 양(화면 반크기 대비, -1~1).
+   * 카메라가 액자를 바라보므로 이것이 없으면 액자가 늘 정중앙에 박힌다.
+   */
+  artworkShiftX: number
+  artworkShiftY: number
   /** 보러 도는 데 걸리는 시간(초). 닫힐 때도 같다. */
   focusSeconds: number
 }
@@ -91,6 +104,11 @@ export const useLobbyPageStore = create<LobbyPageState>((set) => ({
     bookZ: BOOK_FOCUS.offset[2],
     bookShiftX: BOOK_FOCUS.shift.x,
     bookShiftY: BOOK_FOCUS.shift.y,
+    artworkDistance: LOBBY_ARTWORK_FOCUS.distance,
+    artworkY: LOBBY_ARTWORK_FOCUS.y,
+    artworkZ: LOBBY_ARTWORK_FOCUS.z,
+    artworkShiftX: LOBBY_ARTWORK_FOCUS.shift.x,
+    artworkShiftY: LOBBY_ARTWORK_FOCUS.shift.y,
     focusSeconds: LOBBY_TRIGGER_FOCUS_SECONDS,
   },
   setTrigger: (trigger) => set({ trigger }),

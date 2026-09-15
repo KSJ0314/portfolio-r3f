@@ -15,7 +15,6 @@ export const RESUME_ROUTE = '/resume'
 export const RESUME_COMPANY_ROUTE = '/resume/:company'
 export const LOBBY_ROUTE = '/projects'
 export const GALLERY_ROUTE = '/projects/gallery'
-export const LIST_ROUTE = '/list'
 export const CRAYON_ROUTE = '/crayon'
 
 /** 장면 전환이 알리는 목적지 → 실제 주소. */

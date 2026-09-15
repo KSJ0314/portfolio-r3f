@@ -10,9 +10,29 @@ import {
   SHOT_IMAGE_TYPE,
 } from './ListBaker.constants'
 import { collectShotLinks } from './ListBaker.links'
-import type { ListBakerCaptureProps, ListScreen, ListShot } from './ListBaker.types'
+import type {
+  ListBakerCaptureProps,
+  ListScreen,
+  ListShot,
+  ListShotTarget,
+} from './ListBaker.types'
 
 const log = createLogger('list:bake')
+
+/** 그 화면으로 가는 길. 무엇을 그렸는지 아는 쪽이 만든다. */
+function targetOf(screen: ListScreen): ListShotTarget {
+  const { kind } = screen
+  switch (kind.type) {
+    case 'intro':
+      return { kind: 'station', id: 'about-intro' }
+    case 'skills':
+      return { kind: 'station', id: 'about-skills', page: kind.page }
+    case 'career':
+      return { kind: 'station', id: 'about-career' }
+    case 'project':
+      return { kind: 'project', projectId: kind.project.id, page: kind.page }
+  }
+}
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -63,7 +83,12 @@ export function ListBakerCapture({ screens, ready, onProgress, onDone }: ListBak
         const [blob, links] = await shoot(screen)
         if (cancelled) return
         if (blob) {
-          shots.push({ id: screen.id, url: URL.createObjectURL(blob), links })
+          shots.push({
+            id: screen.id,
+            url: URL.createObjectURL(blob),
+            links,
+            target: targetOf(screen),
+          })
         }
         onProgress(shots.length)
         await wait(SHOT_GAP_MS)

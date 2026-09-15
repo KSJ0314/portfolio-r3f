@@ -4,6 +4,7 @@ import { BODY_FONT, HAND_FONT } from '../../../../../content/fonts'
 import { INK } from '../AboutSkills.constants'
 import { useCollection } from '../../../../../lib/firebase'
 import { useSkillsPageStore } from '../../../../../state/useSkillsPageStore'
+import { useSkillsViewStore } from '../../../../../state/useSkillsViewStore'
 import { LoadFailed } from '../../../../LoadFailed'
 import { useStationGate } from '../../../../useStationGate'
 import { SkillsPager } from '../SkillsPager'
@@ -38,7 +39,8 @@ export function SkillsPages({ page: fixedPage, showPager = true }: SkillsPagesPr
   const list = useSkillsPageStore((s) => s.list)
   const level = useSkillsPageStore((s) => s.level)
   const pager = useSkillsPageStore((s) => s.pager)
-  const [ownPage, setPage] = useState(0)
+  const ownPage = useSkillsViewStore((s) => s.page)
+  const setPage = useSkillsViewStore((s) => s.setPage)
   const page = fixedPage ?? ownPage
   const { data: skills, loading, error, refetch } = useCollection<SkillDoc>('skills')
   // 목록은 Firestore를 기다린다. 그동안 나가기·페이지 넘김만 먼저 뜨지 않도록 상세 전체를 잡아둔다.

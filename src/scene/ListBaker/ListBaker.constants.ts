@@ -43,3 +43,10 @@ export const SHOT_IMAGE_QUALITY = 0.9
 
 /** 내려받는 PDF 이름(확장자 제외). */
 export const PDF_FILE_NAME = 'KimSoJung_portfolio'
+
+/**
+ * 굽는 동안 쓰는 열쇠 꾸러미 이름.
+ *
+ * 맵과 동시에 떠 있고 열쇠 이름까지 같아, 한 꾸러미를 쓰면 서로의 상세를 감추거나 일찍 드러낸다.
+ */
+export const BAKE_GATE_SCOPE = 'list-bake'
