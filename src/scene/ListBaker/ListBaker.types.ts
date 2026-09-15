@@ -38,12 +38,25 @@ export type ListShotLink =
   | ({ kind: 'open'; url: string } & ListShotRect)
   | ({ kind: 'copy'; value: string } & ListShotRect)
 
+/**
+ * 그 화면으로 가는 길.
+ *
+ * 누르는 쪽이 id 문자열(`skills-2`)을 뜯어보지 않도록 굽는 쪽이 만들어 싣는다.
+ * 프로젝트는 칸 번호가 아니라 **문서 id**로 가리킨다 — 굽는 쪽과 전시 공간이 정렬 기준이 달라
+ * (여기는 `order`와 문서 id, 전시 공간은 `order`) 번호가 어긋날 수 있다.
+ */
+export type ListShotTarget =
+  | { kind: 'station'; id: string; page?: number }
+  | { kind: 'project'; projectId: string; page: number }
+
 /** 구운 한 장. `url`은 blob 주소라 쓰는 쪽이 화면을 떠날 때 되돌린다. */
 export interface ListShot {
   id: string
   url: string
   /** 이 장에 있는 링크. 그림에는 그림만 남으므로 누를 자리를 따로 들고 있는다. */
   links: ListShotLink[]
+  /** 이 화면으로 가는 길. */
+  target: ListShotTarget
 }
 
 export interface ListBakerProps {

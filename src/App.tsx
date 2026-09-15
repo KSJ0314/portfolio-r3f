@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { ThemeProvider } from 'styled-components'
 import { GlobalStyle } from './styles/GlobalStyle'
 import { themes } from './theme/themes'
@@ -7,7 +7,6 @@ import { useThemeStore } from './state/useThemeStore'
 import {
   CRAYON_ROUTE,
   GALLERY_ROUTE,
-  LIST_ROUTE,
   LOBBY_ROUTE,
   MAIN_ROUTE,
   RESUME_COMPANY_ROUTE,
@@ -29,12 +28,15 @@ const ProjectsLobbyPage = lazy(() =>
 const ProjectsGalleryPage = lazy(() =>
   import('./pages/ProjectsGalleryPage').then((m) => ({ default: m.ProjectsGalleryPage })),
 )
-const ListViewPage = lazy(() =>
-  import('./pages/ListViewPage').then((m) => ({ default: m.ListViewPage })),
-)
 const CrayonStudioPage = lazy(() =>
   import('./pages/CrayonStudioPage').then((m) => ({ default: m.CrayonStudioPage })),
 )
+
+/**
+ * 사이드바도 나눠 받는다. Firestore를 읽으므로 그대로 가져오면 firebase가 진입 청크에 얹혀,
+ * 3D도 이력서도 열지 않은 방문자까지 함께 받는다. 접힌 손잡이만 한 박자 늦게 나타난다.
+ */
+const SidePanel = lazy(() => import('./ui/SidePanel').then((m) => ({ default: m.SidePanel })))
 
 /**
  * 앱 셸. 테마·전역 스타일·라우트를 갖고, 라우트보다 위에 있어야 하는 것(전환 덮개·안내)을 둔다.
@@ -42,6 +44,8 @@ const CrayonStudioPage = lazy(() =>
  */
 export function App() {
   const mode = useThemeStore((s) => s.mode)
+  // 이력서는 채용 담당자가 읽고 출력하는 문서다. 3D 화면의 조작 요소를 얹지 않는다.
+  const onResume = useLocation().pathname.startsWith(RESUME_ROUTE)
 
   return (
     <ThemeProvider theme={themes[mode]}>
@@ -58,7 +62,6 @@ export function App() {
             <Route path={RESUME_COMPANY_ROUTE} element={<ResumePage />} />
             <Route path={LOBBY_ROUTE} element={<ProjectsLobbyPage />} />
             <Route path={GALLERY_ROUTE} element={<ProjectsGalleryPage />} />
-            <Route path={LIST_ROUTE} element={<ListViewPage />} />
             <Route path={CRAYON_ROUTE} element={<CrayonStudioPage />} />
             {/* SPA rewrite로 오타 주소도 여기까지 오므로, 받아 줄 자리를 끝에 둔다. */}
             <Route
@@ -72,6 +75,12 @@ export function App() {
       <SceneTransition />
       {/* 마우스 없는 기기 안내. 어느 화면에서나 같으므로 라우트가 아니라 여기 하나만 둔다. */}
       <MobileNotice />
+      {/* 프로필·연락처와 주요 화면을 담은 사이드바. 라우트가 갈려도 구운 그림을 들고 남아 있는다. */}
+      {!onResume && (
+        <Suspense fallback={null}>
+          <SidePanel />
+        </Suspense>
+      )}
     </ThemeProvider>
   )
 }

@@ -6,7 +6,7 @@ import { useSceneReadyStore } from '../../state/useSceneReadyStore'
 import { useThemeStore } from '../../state/useThemeStore'
 import { useStationGateOpen } from '../../stations/useStationGate'
 import { themes } from '../../theme/themes'
-import { FOCUS_HEIGHT, LIST_BACKGROUND } from './ListBaker.constants'
+import { BAKE_GATE_SCOPE, FOCUS_HEIGHT, LIST_BACKGROUND } from './ListBaker.constants'
 import { useListScreens } from './ListBaker.screens'
 import { ListBakerCapture } from './ListBaker.capture'
 import { ListBakerContent } from './ListBaker.content'
@@ -31,7 +31,7 @@ export function ListBaker({ projects, onProgress, onDone }: ListBakerProps) {
   const { scene } = themes[mode]
   const screens = useListScreens(projects)
   const [drawn, setDrawn] = useState(false)
-  const gateOpen = useStationGateOpen()
+  const gateOpen = useStationGateOpen(BAKE_GATE_SCOPE)
   const introReady = useSceneReadyStore((s) => Boolean(s.ready['intro-text']))
   const handleReady = useCallback(() => setDrawn(true), [])
   // 렌더마다 새 객체를 주면 R3F가 카메라 값을 다시 적용해, 찍는 도중에 자세가 처음으로 돌아간다.

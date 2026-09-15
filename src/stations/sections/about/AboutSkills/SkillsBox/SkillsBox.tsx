@@ -5,6 +5,7 @@ import { PaperSticker } from '../../../../../lib/PaperSticker'
 import { useSkillsPageStore } from '../../../../../state/useSkillsPageStore'
 import { useSkillsSequenceStore } from '../../../../../state/useSkillsSequenceStore'
 import { useStationStore } from '../../../../../state/useStationStore'
+import { useLogoTurnOverride } from '../../../../useLogoTurn'
 import { SKILLS_LOGO_SECONDS, SKILLS_TURN_EASE } from '../AboutSkills.constants'
 import { SKILLS_BOX_URL, SKILLS_BOX_Y } from './SkillsBox.constants'
 import type { SkillsBoxProps } from './SkillsBox.types'
@@ -31,6 +32,7 @@ export function SkillsBox({ stationId }: SkillsBoxProps) {
   const logo = useSkillsPageStore((s) => s.logo)
   const area = useSkillsPageStore((s) => s.area)
   const group = useRef<Group>(null)
+  const forced = useLogoTurnOverride()
   const pose = useRef({ progress: initialProgress(stationId) })
 
   /** 두 자세를 섞어 그룹에 적용한다. 0이면 평소 자리, 1이면 로고 자리. */
@@ -54,18 +56,28 @@ export function SkillsBox({ stationId }: SkillsBoxProps) {
 
   // 첫 프레임부터 제자리에 놓는다. HUD로 값을 바꿀 때도 지금 자세 그대로 다시 적용된다.
   useLayoutEffect(() => {
+    if (forced !== null) pose.current.progress = forced ? 1 : 0
     applyPose(pose.current.progress)
-  }, [applyPose])
+  }, [applyPose, forced])
 
   useEffect(() => {
+    // 밖에서 자세를 정해 주면 신호를 보지 않는다. 굽는 씬이 맵과 신호를 나눠 쓰지 않기 위함이다.
+    if (forced !== null) return
+
     let tween: gsap.core.Tween | null = null
     let target = pose.current.progress
 
-    const unsubscribe = useSkillsSequenceStore.subscribe((state) => {
+    const sync = (state: { logoTurn: boolean; instant: boolean }) => {
       const next = state.logoTurn ? 1 : 0
       if (next === target) return
       target = next
       tween?.kill()
+      // 보여줄 앞 구간이 없는 경우다. 미끄러지지 않고 그 자세로 바로 앉는다.
+      if (state.instant) {
+        pose.current.progress = next
+        applyPose(next)
+        return
+      }
       // 차례가 오면 곧바로 움직인다. 앞선 연출을 기다리는 몫은 신호를 내는 쪽(Scene)에 있다.
       tween = gsap.to(pose.current, {
         progress: next,
@@ -73,14 +85,18 @@ export function SkillsBox({ stationId }: SkillsBoxProps) {
         ease: SKILLS_TURN_EASE,
         onUpdate: () => applyPose(pose.current.progress),
       })
-    })
+    }
+
+    // 지금 값과 먼저 맞춘다. 구독은 값이 **바뀌는 순간**만 받으므로, 그 전에 켜진 신호는 놓친다.
+    sync(useSkillsSequenceStore.getState())
+    const unsubscribe = useSkillsSequenceStore.subscribe(sync)
 
     // 트윈도 함께 정리한다. 남겨두면 낡은 applyPose를 계속 부르며 새 트윈과 같은 값을 두고 다툰다.
     return () => {
       tween?.kill()
       unsubscribe()
     }
-  }, [applyPose])
+  }, [applyPose, forced])
 
   return (
     <group ref={group}>

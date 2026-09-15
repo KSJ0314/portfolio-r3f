@@ -7,6 +7,7 @@ import { useCameraStore } from '../../../state/useCameraStore'
 import { useDevicePerfStore } from '../../../state/useDevicePerfStore'
 import { useMapDecorationsStore } from '../../../state/useMapDecorationsStore'
 import { type StationPhase, useStationStore } from '../../../state/useStationStore'
+import { didJumpToStation } from '../../../stations/jump'
 import { moveToStand, walkToStand } from '../../../stations/registry'
 import { turnCharacterTo } from '../../CharacterModel'
 import { useAfterStation } from '../../useAfterStation'
@@ -134,6 +135,8 @@ export function Crosswalk() {
     const check = (s: { activeId: string | null; phase: StationPhase }) => {
       if (sent.current || useMapDecorationsStore.getState().crosswalkReturned) return
       if (s.activeId !== CROSSWALK_AFTER_STATION || s.phase !== 'exiting') return
+      // 바로 가기로 옮겨 온 경우에는 부르지 않는다 — 방문자가 누른 화면에서 끌려 나온다.
+      if (didJumpToStation()) return
       if (!moveToStand(CROSSWALK_AFTER_STATION)) return
       sent.current = true
       acquireLock()
@@ -154,8 +157,8 @@ export function Crosswalk() {
     // 닫히는 순간을 놓쳤으면 여기서 잠근다.
     acquireLock()
 
-    // 자리를 등록하지 않은 스테이션은 데려올 곳이 없으니 기다리지 않고 곧장 긋는다.
-    if (!walkToStand(CROSSWALK_AFTER_STATION)) {
+    // 데려올 곳이 없거나(자리 미등록) 바로 가기로 이미 옮겨 온 경우에는 기다리지 않고 곧장 긋는다.
+    if (didJumpToStation() || !walkToStand(CROSSWALK_AFTER_STATION)) {
       markReturned()
       const timer = window.setTimeout(() => setDrawing(true), 0)
       cleanup.current = () => window.clearTimeout(timer)

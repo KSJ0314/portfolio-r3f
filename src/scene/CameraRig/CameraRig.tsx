@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Vector3 } from 'three'
 import type { OrthographicCamera } from 'three'
-import { useCameraStore } from '../../state/useCameraStore'
+import { AERIAL_OFFSET, useCameraStore } from '../../state/useCameraStore'
 import { useStationStore } from '../../state/useStationStore'
 import { fitAerialZoom } from '../Experience/Experience.zoom'
 
@@ -30,25 +30,32 @@ export function CameraRig() {
   const walking = useCameraStore((s) => s.walking)
   const follow = !active || walking
 
-  // 오프셋을 카메라 초기 위치에서 유도한다(카메라 설정이 단일 소스).
+  // 오프셋은 **상수를 그대로** 쓴다(`AERIAL_OFFSET`이 단일 소스). Canvas의 첫 카메라 자리도
+  // 같은 상수로 만든다(`Experience`).
+  //
+  // 카메라와 캐릭터의 차로 유도하지 않는 것은, 그 둘을 읽는 시점 사이에 캐릭터가 옮겨질 수 있기
+  // 때문이다 — 사이드바 바로 가기로 맵에 들어오면 페이지가 캐릭터를 목적지로 순간이동시킨 뒤에야
+  // Canvas 안이 마운트된다. 그러면 오프셋이 옮긴 거리만큼 어긋나고, 스테이션이 이 값으로 계산하는
+  // 항공뷰 복귀 자세가 엉뚱한 자리에 선다.
+  //
   // useLayoutEffect는 커밋 직후 동기 실행된다.
   // 그래서 아래 useFrame이 등록되기 전, 첫 rAF 프레임보다 먼저 오프셋을 잡는다.
   useLayoutEffect(() => {
-    // 오프셋은 딱 한 번만 잡는다. 이펙트가 다시 실행될 때(StrictMode의 재실행·HMR) 카메라는
-    // 이미 스테이션이 옮겨놓은 자세일 수 있어서, 그걸 기준으로 다시 잡으면 팔로우가 그 자리에 굳는다.
+    // 오프셋은 딱 한 번만 잡는다. 이펙트가 다시 실행될 때(StrictMode의 재실행·HMR) 같은 값이지만,
+    // 미니맵 각도까지 다시 알릴 이유가 없다.
     if (ready.current) return
-    offset.current.copy(camera.position).sub(position)
+    offset.current.set(AERIAL_OFFSET[0], AERIAL_OFFSET[1], AERIAL_OFFSET[2])
     ready.current = true
     // 스테이션이 카메라를 넘겨받았을 때 돌아갈 자세를 계산할 수 있도록 오프셋을 공유한다.
     useCameraStore.getState().setFollowOffset(offset.current)
 
-    // 미니맵 회전각을 카메라에서 유도한다. 카메라가 캐릭터를 바라보는 방향을 지면에 투영한
+    // 미니맵 회전각을 오프셋에서 유도한다. 카메라가 캐릭터를 바라보는 방향을 지면에 투영한
     // (fx, fz)가 화면상 "위(멀어지는 방향)"에 해당 → 그 방향이 미니맵의 위(-y)로 가도록 하는
     // 회전각. 오프셋(=camera-캐릭터)의 반대가 바라보는 방향이므로 부호를 뒤집는다.
     const fx = -offset.current.x
     const fz = -offset.current.z
     useCameraStore.getState().setViewAngle(-Math.PI / 2 - Math.atan2(fz, fx))
-  }, [camera, position])
+  }, [])
 
   // 카메라는 useFrame이 넘겨주는 state에서 받아 쓴다(훅 반환값을 직접 변형하지 않기 위함).
   useFrame((state) => {

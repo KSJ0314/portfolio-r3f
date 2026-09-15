@@ -1,7 +1,7 @@
 /** 좌우 넘김 꺾쇠. `direction`이 -1이면 왼쪽이다. */
 export function ChevronIcon({ direction }: { direction: 1 | -1 }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M10 5l7 7-7 7"
         stroke="currentColor"

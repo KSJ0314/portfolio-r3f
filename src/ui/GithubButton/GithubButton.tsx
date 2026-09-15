@@ -11,7 +11,7 @@ export function GithubButton() {
   return (
     <CornerButton
       type="button"
-      $slot={2}
+      $slot={0}
       onClick={() => window.open(PORTFOLIO_REPO_URL, '_blank', 'noopener,noreferrer')}
       title="GitHub 저장소"
       aria-label="GitHub 저장소 열기"

@@ -1,37 +1,64 @@
-import { useLayoutEffect } from 'react'
+import { createContext, useContext, useLayoutEffect } from 'react'
 import { create } from 'zustand'
 
+/** 맵의 활성 상세가 쓰는 기본 꾸러미. */
+export const DEFAULT_GATE_SCOPE = 'station'
+
 interface StationGateState {
-  /** 걸려 있는 열쇠들. 하나라도 있으면 활성 상세를 아직 보여주지 않는다. */
-  pending: Record<string, boolean>
-  hold: (key: string) => void
-  release: (key: string) => void
-  /** 스테이션이 바뀔 때 남은 열쇠를 비운다. */
-  clear: () => void
+  /**
+   * 꾸러미별로 걸려 있는 열쇠들. 한 꾸러미가 비면 그쪽은 준비된 것이다.
+   *
+   * 꾸러미를 나누는 것은 같은 스테이션 구현이 두 곳에서 동시에 뜨기 때문이다 — 맵에 열린 상세와
+   * 목록 보기를 굽는 씬이 열쇠 이름까지 같다. 한 꾸러미에 담으면 굽는 쪽이 건 열쇠가 맵의 상세를
+   * 감추고, 굽는 쪽이 푼 열쇠가 아직 기다리는 맵의 상세를 일찍 드러낸다.
+   */
+  pending: Record<string, Record<string, boolean>>
+  hold: (scope: string, key: string) => void
+  release: (scope: string, key: string) => void
+  /** 스테이션이 바뀔 때 그 꾸러미에 남은 열쇠를 비운다. */
+  clear: (scope: string) => void
 }
 
 const useStationGateStore = create<StationGateState>((set) => ({
   pending: {},
-  hold: (key) =>
-    set((state) => (state.pending[key] ? state : { pending: { ...state.pending, [key]: true } })),
-  release: (key) =>
+  hold: (scope, key) =>
     set((state) => {
-      if (!state.pending[key]) return state
-      const pending = { ...state.pending }
-      delete pending[key]
-      return { pending }
+      const keys = state.pending[scope]
+      if (keys?.[key]) return state
+      return { pending: { ...state.pending, [scope]: { ...keys, [key]: true } } }
     }),
-  clear: () => set((state) => (Object.keys(state.pending).length === 0 ? state : { pending: {} })),
+  release: (scope, key) =>
+    set((state) => {
+      const keys = state.pending[scope]
+      if (!keys?.[key]) return state
+      const next = { ...keys }
+      delete next[key]
+      return { pending: { ...state.pending, [scope]: next } }
+    }),
+  clear: (scope) =>
+    set((state) => {
+      const keys = state.pending[scope]
+      if (!keys || Object.keys(keys).length === 0) return state
+      return { pending: { ...state.pending, [scope]: {} } }
+    }),
 }))
 
+/**
+ * 열쇠를 어느 꾸러미에 걸지. 기본은 맵이고, 굽는 씬이 자기 내용을 감싸 갈아 준다.
+ * 감싸는 쪽과 거는 쪽이 모두 같은 Canvas 안이라 R3F 트리를 그대로 타고 내려간다.
+ */
+const GateScopeContext = createContext(DEFAULT_GATE_SCOPE)
+
+export const StationGateScope = GateScopeContext.Provider
+
 /** 지금 활성 상세를 보여줘도 되는지. 걸린 열쇠가 없으면 준비된 것이다. */
-export function useStationGateOpen(): boolean {
-  return useStationGateStore((s) => Object.keys(s.pending).length === 0)
+export function useStationGateOpen(scope: string = DEFAULT_GATE_SCOPE): boolean {
+  return useStationGateStore((s) => Object.keys(s.pending[scope] ?? {}).length === 0)
 }
 
 /** 스테이션이 바뀔 때 남은 열쇠를 비운다(공통층에서 부른다). */
-export function clearStationGate() {
-  useStationGateStore.getState().clear()
+export function clearStationGate(scope: string = DEFAULT_GATE_SCOPE) {
+  useStationGateStore.getState().clear(scope)
 }
 
 /**
@@ -47,13 +74,15 @@ export function clearStationGate() {
  * 열쇠는 **첫 페인트 전에** 걸어야 한다. 그리고 나서 걸면 그 한 프레임 동안 준비되지 않은 상세가 보인다.
  */
 export function useStationGate(key: string, waiting: boolean) {
+  const scope = useContext(GateScopeContext)
+
   useLayoutEffect(() => {
     const { hold, release } = useStationGateStore.getState()
     if (!waiting) {
-      release(key)
+      release(scope, key)
       return
     }
-    hold(key)
-    return () => release(key)
-  }, [key, waiting])
+    hold(scope, key)
+    return () => release(scope, key)
+  }, [scope, key, waiting])
 }
