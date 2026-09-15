@@ -10,20 +10,35 @@ import { PHOTO_SIZE_CQW } from './SidePanelProfile.constants'
  * 크기는 패널 폭 대비(`cqw`)다. 테두리·그림자만 px로 두는데, 선 두께는 굵기가 아니라
  * 한 줄이라는 사실이 중요해 화면 크기를 따라갈 이유가 없다.
  *
- * **카드 자체가 Intro 화면으로 가는 버튼이다.** 안의 연락처 줄은 전파를 멈춰 제 동작만 한다.
+ * **Intro로 가는 버튼은 카드 전체를 덮는 판이 따로 받는다**(`OpenArea`). 카드 자체를 버튼으로 두면
+ * 안의 연락처 줄이 버튼 안에 들어가 중첩된 조작 요소가 된다.
  */
-export const Head = styled.button`
+export const Head = styled.header`
+  position: relative;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
   gap: 2.8cqw;
   padding: 5.6cqw 3.5cqw;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 2.1cqw;
   background: ${({ theme }) => theme.colors.surface};
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+`
+
+/**
+ * 카드 전체를 덮는 **Intro 화면으로 가는 버튼**.
+ *
+ * 연락처 줄을 이것보다 뒤에 둬 그 자리를 누르면 복사·열기가 걸린다.
+ * 카드 자체를 버튼으로 두면 그 줄들이 버튼 안에 들어가 중첩된 조작 요소가 된다.
+ */
+export const OpenArea = styled.button`
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: none;
+  border-radius: inherit;
+  background: none;
+  cursor: pointer;
 `
 
 /** 한 줄 소개. 머리에서 가장 먼저 읽히도록 맨 위에 두고 크게 쓴다. */
@@ -72,6 +87,8 @@ export const Contacts = styled.ul`
  * 무엇을 누른 것인지 알 수 없다.
  */
 export const Contact = styled.button`
+  /* 자리를 잡아야 카드를 덮는 OpenArea 위에 올라선다. */
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 1.4cqw;

@@ -31,17 +31,23 @@ export const Waiting = styled.p`
   opacity: 0.6;
 `
 
-/**
- * 그림이 놓이는 자리이자 **그 화면으로 가는 버튼**.
- *
- * 그림 위에 덮인 링크·복사 판이 이것보다 위에 있어, 그 자리를 누르면 이동이 아니라 링크가 걸린다.
- */
-export const Frame = styled.button`
+/** 그림이 놓이는 자리. 누를 자리를 덮으려면 기준이 되는 상자가 있어야 한다. */
+export const Frame = styled.div`
   position: relative;
   aspect-ratio: 16 / 9;
   /* 자리가 모자라면 눌리지 않고 패널이 스크롤된다. 눌리면 그림 비율이 깨진다. */
   flex-shrink: 0;
-  display: block;
+`
+
+/**
+ * 그림 전체를 덮는 **그 화면으로 가는 버튼**.
+ *
+ * 링크·복사 판을 이것보다 뒤에 둬 그 자리를 누르면 링크가 걸린다.
+ * 감싸는 자리를 버튼으로 두면 그 판들이 버튼 안에 들어가 중첩된 조작 요소가 된다.
+ */
+export const JumpArea = styled.button`
+  position: absolute;
+  inset: 0;
   padding: 0;
   border: none;
   background: none;

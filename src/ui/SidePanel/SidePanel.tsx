@@ -44,7 +44,7 @@ export function SidePanel() {
   const toggle = useSidePanelStore((s) => s.toggle)
   // 한 번이라도 펼쳤는지. 맵을 거치지 않은 방문자에게 굽기를 시작하는 신호다.
   const [asked, setAsked] = useState(false)
-  const { data: projects, loading } = useCollection<GalleryProject>('projects')
+  const { data: projects, loading, error } = useCollection<GalleryProject>('projects')
   const shots = useListShotsStore((s) => s.shots)
   const pdf = useListShotsStore((s) => s.pdf)
   const firstScreenReady = useSceneReadyStore((s) => REQUIRED_KEYS.every((key) => s.ready[key]))
@@ -118,8 +118,10 @@ export function SidePanel() {
     }
   }, [shots, pdf])
 
-  // 프로젝트 문서 개수가 굽는 장수를 정하므로 그것이 오기 전에는 세우지 않는다.
-  const baking = !shots && !loading && (firstScreenReady || asked)
+  // 프로젝트 문서 개수가 만들 장수를 정하므로 그것이 오기 전에는 세우지 않는다.
+  // 읽기에 실패해도 `loading`은 내려가고 빈 목록이 오므로 `error`를 함께 본다 —
+  // 그대로 만들면 프로젝트가 빠진 결과가 스토어에 남고, 재시도가 성공해도 다시 만들지 않는다.
+  const baking = !shots && !loading && !error && (firstScreenReady || asked)
 
   return (
     <>
@@ -132,7 +134,8 @@ export function SidePanel() {
       )}
 
       <Slider $open={open}>
-        <Panel aria-hidden={!open}>
+        {/* 접힌 동안에는 `inert`로 통째로 꺼 둔다. 화면 밖으로 밀어 둔 것뿐이라 그냥 두면 탭으로 들어간다. */}
+        <Panel inert={!open}>
           <Body>
             <SidePanelProfile onOpen={() => jump({ kind: 'station', id: INTRO_STATION_ID })} />
             <Divider />

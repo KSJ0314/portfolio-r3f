@@ -1,4 +1,4 @@
-import { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDoc } from '../../../lib/firebase'
 import { GithubIcon } from '../../GithubButton/GithubButton.icons'
 import {
@@ -14,6 +14,7 @@ import {
   ContactLabel,
   Contacts,
   Head,
+  OpenArea,
   Photo,
   Row,
   Tagline,
@@ -36,7 +37,7 @@ const ICONS = {
  * 3D를 거치지 않고도 연락처를 찾을 수 있게 어느 화면에서나 같은 자리에 둔다.
  * 줄을 고르는 규칙은 Intro 연락처와 같다 — 전화·메일은 복사하고, `links`에서 깃허브 주소 하나를 골라 연다.
  *
- * **카드 자체가 Intro 화면으로 가는 버튼이다.** 안의 연락처 줄은 제 동작만 하고 이동하지 않는다.
+ * **Intro 화면으로 가는 버튼이 카드 전체를 덮는다.** 연락처 줄은 그 위에 올라서 제 동작만 한다.
  */
 export function SidePanelProfile({ onOpen }: SidePanelProfileProps) {
   const { data: profile } = useDoc<SidePanelProfileDoc>('profile', 'main')
@@ -70,9 +71,7 @@ export function SidePanelProfile({ onOpen }: SidePanelProfileProps) {
     return list
   }, [profile])
 
-  const press = useCallback((line: ContactLine, e: MouseEvent<HTMLButtonElement>) => {
-    // 카드 전체가 Intro로 가는 버튼이라, 막지 않으면 복사하면서 화면까지 옮겨 간다.
-    e.stopPropagation()
+  const press = useCallback((line: ContactLine) => {
     if (line.open) {
       window.open(line.open, '_blank', 'noopener,noreferrer')
       return
@@ -87,7 +86,10 @@ export function SidePanelProfile({ onOpen }: SidePanelProfileProps) {
   }, [])
 
   return (
-    <Head type="button" onClick={onOpen} aria-label="소개 화면으로 가기">
+    <Head>
+      {/* 연락처 줄보다 앞에 둬 그 자리는 그쪽이 받는다. */}
+      <OpenArea type="button" onClick={onOpen} aria-label="소개 화면으로 가기" />
+
       {profile?.tagline && <Tagline>{profile.tagline}</Tagline>}
 
       <Row>
@@ -98,7 +100,7 @@ export function SidePanelProfile({ onOpen }: SidePanelProfileProps) {
               <li key={line.key}>
                 <Contact
                   type="button"
-                  onClick={(e) => press(line, e)}
+                  onClick={() => press(line)}
                   aria-label={line.open ? `${line.text} 열기` : `${line.text} 복사`}
                 >
                   <ContactIcon>

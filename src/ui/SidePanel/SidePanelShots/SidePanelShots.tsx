@@ -11,6 +11,7 @@ import {
   DownloadButton,
   Frame,
   Head,
+  JumpArea,
   LinkArea,
   NavButton,
   Section,
@@ -90,8 +91,10 @@ export function SidePanelShots({ onJump }: SidePanelShotsProps) {
         <Waiting>{baked > 0 ? `화면을 준비하는 중 — ${baked}장째` : '화면을 준비하는 중'}</Waiting>
       ) : (
         <>
-          <Frame type="button" onClick={() => onJump(shot.target)} aria-label="이 화면으로 가기">
+          <Frame>
             <Shot src={shot.url} alt={`${page + 1}번째 화면`} />
+            {/* 링크·복사 판보다 앞에 둬 그 자리는 그쪽이 받는다. */}
+            <JumpArea type="button" onClick={() => onJump(shot.target)} aria-label="이 화면으로 가기" />
             {shot.links.map((link) => {
               const place = {
                 left: `${link.left}%`,
@@ -108,8 +111,6 @@ export function SidePanelShots({ onJump }: SidePanelShotsProps) {
                     rel="noopener noreferrer"
                     aria-label={link.url}
                     style={place}
-                    // 그림 전체가 그 화면으로 가는 버튼이라, 막지 않으면 링크를 열면서 이동까지 한다.
-                    onClick={(e) => e.stopPropagation()}
                   />
                 )
               }
@@ -117,11 +118,9 @@ export function SidePanelShots({ onJump }: SidePanelShotsProps) {
                 <CopyArea
                   key={link.value}
                   type="button"
-                  onClick={(e) => {
-                    // 복사만 하고 그 화면으로 가지는 않는다. 누른 자리가 하는 일이 둘이 되지 않게.
-                    e.stopPropagation()
+                  onClick={() =>
                     copy(link.value, { left: link.left + link.width / 2, top: link.top })
-                  }}
+                  }
                   aria-label={`${link.value} 복사`}
                   style={place}
                 />

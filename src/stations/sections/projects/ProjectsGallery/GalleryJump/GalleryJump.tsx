@@ -20,14 +20,16 @@ export function GalleryJump({ projects }: GalleryJumpProps) {
   const pending = usePendingJump()
 
   useEffect(() => {
-    if (!pending || artworks.length === 0) return
+    if (pending?.kind !== 'project' || artworks.length === 0) return
 
-    const target = takePendingProjectJump()
-    if (!target || target.kind !== 'project') return
-
-    const bay = projects.findIndex((project) => project.id === target.projectId)
+    // 칸과 액자를 먼저 찾는다. 읽기가 실패해 대체 칸이 선 상태에서 목적지를 먼저 꺼내면,
+    // 그 자리에서 열지도 못하고 재시도가 성공했을 때 꺼낼 것도 남지 않는다.
+    const bay = projects.findIndex((project) => project.id === pending.projectId)
     const artwork = artworks[bay]
     if (!artwork) return
+
+    const target = takePendingProjectJump()
+    if (target?.kind !== 'project') return
 
     // 칸 앞에 세운다. 닫으면 카메라가 캐릭터 자리로 돌아오므로 그 자리가 그 칸이어야 한다.
     const { position } = useInteriorStore.getState()
