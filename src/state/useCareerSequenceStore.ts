@@ -3,7 +3,14 @@ import { create } from 'zustand'
 interface CareerSequenceState {
   /** 그림들이 로고 자리로 물러날 차례인지. */
   logoTurn: boolean
-  setLogoTurn: (on: boolean) => void
+  /**
+   * 트윈 없이 그 자세로 곧바로 갈지.
+   *
+   * 화면이 이미 활성인 채로 붙는 경우(사이드바에서 눌러 바로 열기·HMR 재마운트)에는 물러나는
+   * 과정을 보여줄 앞 구간이 없다. 그대로 트윈을 돌리면 다 열린 화면에서 그림만 미끄러진다.
+   */
+  instant: boolean
+  setLogoTurn: (on: boolean, instant?: boolean) => void
 }
 
 /**
@@ -14,5 +21,6 @@ interface CareerSequenceState {
  */
 export const useCareerSequenceStore = create<CareerSequenceState>((set) => ({
   logoTurn: false,
-  setLogoTurn: (logoTurn) => set({ logoTurn }),
+  instant: false,
+  setLogoTurn: (logoTurn, instant = false) => set({ logoTurn, instant }),
 }))

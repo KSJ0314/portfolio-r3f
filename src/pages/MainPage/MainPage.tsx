@@ -1,5 +1,4 @@
 import { useLayoutEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
 import { Experience } from '../../scene/Experience'
 import { SceneGate } from '../../ui/SceneGate'
 import { Minimap } from '../../ui/Minimap'
@@ -8,10 +7,9 @@ import { Credits } from '../../ui/Credits'
 import { DevHUD } from '../../ui/DevHUD'
 import { CrayonStudio } from '../../tools/CrayonStudio'
 import { GithubButton } from '../../ui/GithubButton'
-import { ListViewButton } from '../../ui/ListViewButton'
-import { REDIRECT_MOBILE_TO_LIST, useCoarsePointer } from '../../ui/MobileNotice'
-import { LIST_ROUTE } from '../../routes'
+import { useCoarsePointer } from '../../ui/MobileNotice'
 import { StationLifecycle } from '../../stations'
+import { openStationAt, takePendingStationJump } from '../../stations/jump'
 import { ensureOutsideBuilding } from '../../stations/sections/projects/ProjectsLobby'
 import { useStationStore } from '../../state/useStationStore'
 
@@ -27,13 +25,10 @@ export function MainPage() {
   // 첫 화면에서 그리기 전에 맞춰야 한 프레임도 어긋나 보이지 않는다.
   useLayoutEffect(() => {
     ensureOutsideBuilding()
+    // 사이드바에서 맵 밖에 있을 때 누른 화면. 넘어오며 남겨 둔 것을 여기서 꺼내 연다.
+    const jump = takePendingStationJump()
+    if (jump) openStationAt(jump)
   }, [])
-
-  // 마우스가 없으면 우클릭 홀드 이동이 성립하지 않아 맵을 돌아다닐 수 없다.
-  // 3D를 그리기 전에 목록 보기로 보내 모델·텍스처를 받지 않게 한다.
-  // 되돌아올 화면이 아니므로 히스토리에 남기지 않는다.
-  // 지금은 꺼 두었고 플래그 설명은 `MobileNotice.constants`에 있다.
-  if (REDIRECT_MOBILE_TO_LIST && mobile) return <Navigate to={LIST_ROUTE} replace />
 
   return (
     <>
@@ -52,8 +47,6 @@ export function MainPage() {
       {idle && <Credits />}
       {/* 이 포트폴리오의 코드를 바로 열어 볼 수 있게 둔다. */}
       {idle && <GithubButton />}
-      {/* 3D를 돌아다니지 않고 주요 화면만 훑는 자리. */}
-      <ListViewButton />
     </>
   )
 }

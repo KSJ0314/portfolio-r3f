@@ -59,6 +59,14 @@ interface StationState {
    * 없으므로 완료를 알릴 주체도 없고, 그대로 두면 다음에 돌아왔을 때 열린 채로 되살아난다.
    */
   closeImmediately: () => void
+  /**
+   * 애니메이션 없이 곧바로 연다.
+   *
+   * 사이드바에서 그 화면을 눌러 바로 갈 때 쓴다. `activate`는 진입 애니메이션(캐릭터 걷기·카메라
+   * 회전)을 재생하지만, 이쪽은 처음부터 활성으로 두어 스테이션 구현이 최종 자세를 그대로 적용한다
+   * (첫 화면 Intro가 이 상태로 시작하는 것과 같다).
+   */
+  openImmediately: (id: string) => void
 }
 
 export const useStationStore = create<StationState>((set, get) => ({
@@ -102,6 +110,15 @@ export const useStationStore = create<StationState>((set, get) => ({
     if (get().phase === 'idle' && get().activeId === null) return
     log('%s 즉시 닫기(연출 없음)', get().activeId)
     set({ activeId: null, phase: 'idle' })
+  },
+  openImmediately: (id) => {
+    const { visited } = get()
+    log('%s 즉시 열기(연출 없음)', id)
+    set({
+      activeId: id,
+      phase: 'active',
+      visited: visited[id] ? visited : { ...visited, [id]: true },
+    })
   },
 }))
 

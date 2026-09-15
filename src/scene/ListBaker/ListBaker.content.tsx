@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
 import { getStation } from '../../content/stations'
 import { useCareerPageStore } from '../../state/useCareerPageStore'
-import { useCareerSequenceStore } from '../../state/useCareerSequenceStore'
 import { useSkillsPageStore } from '../../state/useSkillsPageStore'
-import { useSkillsSequenceStore } from '../../state/useSkillsSequenceStore'
+import { LogoTurnScope } from '../../stations/useLogoTurn'
+import { StationGateScope } from '../../stations/useStationGate'
 import { AboutIntroInactive } from '../../stations/sections/about/AboutIntro'
 import {
   CareerColumns,
@@ -12,7 +12,7 @@ import {
 } from '../../stations/sections/about/AboutCareer'
 import { SkillsBox, SkillsPages, SkillsTitle } from '../../stations/sections/about/AboutSkills'
 import { projectPages } from '../../stations/sections/projects/contents'
-import { LIST_BACKGROUND, PAGE_HEIGHT } from './ListBaker.constants'
+import { BAKE_GATE_SCOPE, LIST_BACKGROUND, PAGE_HEIGHT } from './ListBaker.constants'
 import type {
   ListBakerContentProps,
   ListProjectScreenProps,
@@ -42,7 +42,7 @@ function SkillsScreen({ page }: SkillsScreenProps) {
 
   return (
     <>
-      {/* 공구함은 영역 중심 기준 좌표라 그 자리에 놓는다. 로고 자세는 스스로 신호를 보고 잡는다. */}
+      {/* 공구함은 영역 중심 기준 좌표라 그 자리에 놓는다. 로고 자세는 감싼 범위가 정해 준다. */}
       <group position={[topLeft.x + area.width / 2, 0, topLeft.z + area.height / 2]}>
         <SkillsBox stationId={SKILLS_ID} />
       </group>
@@ -103,23 +103,6 @@ function Screen({ screen }: { screen: ListScreen }) {
   }
 }
 
-/**
- * 그림을 로고 자리로 물린다.
- *
- * 그림들보다 **뒤에** 두어야 한다 — 각 그림이 신호를 구독한 뒤에 켜야 그 변화를 받는다.
- */
-function LogoTurn() {
-  useEffect(() => {
-    useSkillsSequenceStore.getState().setLogoTurn(true)
-    useCareerSequenceStore.getState().setLogoTurn(true)
-    return () => {
-      useSkillsSequenceStore.getState().setLogoTurn(false)
-      useCareerSequenceStore.getState().setLogoTurn(false)
-    }
-  }, [])
-  return null
-}
-
 /** 이 경계 안이 전부 그려졌음을 알린다. 서스펜드하는 것이 하나라도 있으면 여기까지 커밋되지 않는다. */
 function ReadyMark({ onReady }: { onReady: () => void }) {
   useEffect(() => onReady(), [onReady])
@@ -132,18 +115,22 @@ function ReadyMark({ onReady }: { onReady: () => void }) {
  * **3D가 쓰는 컴포넌트를 그대로** 쓰고, 찍을 때는 카메라만 옮긴다. 굽기 전용으로 다시 그리지 않아
  * 맵에서 보던 배치와 같다. 다만 바탕은 모눈종이가 아니라 흰색이다.
  * 나가기·페이지 넘김은 조작 요소라 두지 않는다.
+ *
+ * **그림 자세와 열쇠 꾸러미를 맵과 나눠 갖는다.** 맵이 떠 있는 채로 굽기 때문에, 전역 신호를 켜면
+ * 맵의 그림까지 로고 자리로 물러나고 여기서 건 열쇠가 맵의 활성 상세를 감춘다.
  */
 export function ListBakerContent({ screens, onReady }: ListBakerContentProps) {
   return (
-    <>
-      {screens.map((screen) => (
-        <group key={screen.id} position={[screen.offsetX, 0, 0]}>
-          <Screen screen={screen} />
-        </group>
-      ))}
+    <LogoTurnScope value={true}>
+      <StationGateScope value={BAKE_GATE_SCOPE}>
+        {screens.map((screen) => (
+          <group key={screen.id} position={[screen.offsetX, 0, 0]}>
+            <Screen screen={screen} />
+          </group>
+        ))}
 
-      <LogoTurn />
-      <ReadyMark onReady={onReady} />
-    </>
+        <ReadyMark onReady={onReady} />
+      </StationGateScope>
+    </LogoTurnScope>
   )
 }

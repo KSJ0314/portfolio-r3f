@@ -12,6 +12,7 @@ import { GalleryCameraRig } from '../GalleryCameraRig'
 import { GalleryFrames } from '../GalleryFrames'
 import { GalleryModel } from '../GalleryModel'
 import { GalleryNameplates, type GalleryProject } from '../GalleryNameplates'
+import { GalleryJump } from '../GalleryJump'
 import { GalleryPages } from '../GalleryPages'
 import { GalleryTriggers } from '../GalleryTriggers'
 import {
@@ -120,6 +121,8 @@ export function GalleryScene() {
         </Suspense>
         {/* 확대한 칸의 페이지. 액자 사진 위에 판을 세워 덮는다. */}
         <GalleryPages projects={sorted} />
+        {/* 사이드바에서 누른 칸이 있으면 액자를 다 잰 뒤에 그 칸을 연다. */}
+        <GalleryJump projects={sorted} />
       </SceneErrorBoundary>
     </Canvas>
   )

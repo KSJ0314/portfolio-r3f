@@ -1,7 +1,7 @@
 import { CHARACTER_FACING } from '../CharacterModel/CharacterModel.constants'
 
 /** 이동 속도(유닛/초). 거리와 무관하게 항상 일정. */
-export const MOVE_SPEED = 4
+export const MOVE_SPEED = 6
 
 /** 목표점에 닿았다고 보는 거리. */
 export const ARRIVE_EPSILON = 1e-4

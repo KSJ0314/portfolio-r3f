@@ -80,7 +80,8 @@ export function AboutCareerScene({ phase }: StationDetailProps) {
     // 활성 중에 다시 붙었으면(HMR·재마운트) 전환할 이전 자세가 없으므로 바로 정면뷰에 놓는다.
     if (useStationStore.getState().phase === 'active') {
       applyPose(1)
-      useCareerSequenceStore.getState().setLogoTurn(true)
+      // 카메라가 이미 정면인 자리에 붙는 것이라 그림도 트윈 없이 로고 자리에 있어야 한다.
+      useCareerSequenceStore.getState().setLogoTurn(true, true)
     }
   }, [area, topCenter, applyPose])
 

@@ -1,0 +1,1 @@
+export { SidePanelShots } from './SidePanelShots'

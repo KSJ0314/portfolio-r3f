@@ -4,6 +4,7 @@ import { Matrix4, Quaternion, Vector3 } from 'three'
 import gsap from 'gsap'
 import { useCameraStore } from '../../../../state/useCameraStore'
 import { useSkillsPageStore } from '../../../../state/useSkillsPageStore'
+import { useSkillsViewStore } from '../../../../state/useSkillsViewStore'
 import { useSkillsSequenceStore } from '../../../../state/useSkillsSequenceStore'
 import { useStationStore } from '../../../../state/useStationStore'
 import { type StationDetailProps, faceStation, walkToStand } from '../../../registry'
@@ -84,7 +85,8 @@ export function AboutSkillsScene({ phase }: StationDetailProps) {
     // 활성 중에 다시 붙었으면(HMR·재마운트) 공구함도 로고 자리에 있어야 한다.
     if (useStationStore.getState().phase === 'active') {
       applyPose(1)
-      useSkillsSequenceStore.getState().setLogoTurn(true)
+      // 카메라가 이미 정면인 자리에 붙는 것이라 그림도 트윈 없이 로고 자리에 있어야 한다.
+      useSkillsSequenceStore.getState().setLogoTurn(true, true)
     }
   }, [area, topLeft, applyPose])
 
@@ -124,6 +126,9 @@ export function AboutSkillsScene({ phase }: StationDetailProps) {
 
       walkToStand('about-skills')
     } else {
+      // 다음에 열 때는 첫 장이다. 언마운트가 아니라 여기서 되돌린다 —
+      // StrictMode는 마운트 직후 정리를 한 번 더 돌려, 열어 준 쪽이 정해 둔 쪽까지 지운다.
+      useSkillsViewStore.getState().reset()
       // 공구상자가 제자리로 돌아온 뒤에 카메라가 움직인다.
       setLogoTurn(false)
       timeline = gsap.timeline({ onComplete: complete })

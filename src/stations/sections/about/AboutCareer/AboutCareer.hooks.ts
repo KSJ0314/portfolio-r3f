@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { useCareerSequenceStore } from '../../../../state/useCareerSequenceStore'
 import { useStationStore } from '../../../../state/useStationStore'
+import { useLogoTurnOverride } from '../../../useLogoTurn'
 import { CAREER_TURN_EASE, CAREER_TURN_SECONDS } from './AboutCareer.constants'
 
 const CAREER_ID = 'about-career'
@@ -23,6 +24,7 @@ function initialProgress(): number {
  * 스토어를 구독해 gsap가 그룹만 건드리므로 매 프레임 리렌더는 없다.
  */
 export function useCareerLogoPose(applyPose: (progress: number) => void) {
+  const forced = useLogoTurnOverride()
   const pose = useRef({ progress: initialProgress() })
   // 자세 적용은 늘 최신 것을 부르되, 그 갱신이 구독·트윈을 다시 만들지는 않게 ref로 들고 있는다.
   const apply = useRef(applyPose)
@@ -30,31 +32,45 @@ export function useCareerLogoPose(applyPose: (progress: number) => void) {
   // 첫 프레임부터 제자리에 놓는다. HUD로 값을 바꿀 때도 지금 자세 그대로 다시 적용된다.
   useLayoutEffect(() => {
     apply.current = applyPose
+    if (forced !== null) pose.current.progress = forced ? 1 : 0
     applyPose(pose.current.progress)
-  }, [applyPose])
+  }, [applyPose, forced])
 
   // 구독·트윈은 마운트 때 한 번만 건다. 리렌더마다 다시 걸면 그 사이 돌던 트윈이 죽어
   // 카메라만 돌고 그림은 다음 상태 변화(카메라가 다 돈 뒤)에야 뒤늦게 움직인다.
   useEffect(() => {
+    // 밖에서 자세를 정해 주면 신호를 보지 않는다. 굽는 씬이 맵과 신호를 나눠 쓰지 않기 위함이다.
+    if (forced !== null) return
+
     let tween: gsap.core.Tween | null = null
     let target = pose.current.progress
 
-    const unsubscribe = useCareerSequenceStore.subscribe((state) => {
+    const sync = (state: { logoTurn: boolean; instant: boolean }) => {
       const next = state.logoTurn ? 1 : 0
       if (next === target) return
       target = next
       tween?.kill()
+      // 보여줄 앞 구간이 없는 경우다. 미끄러지지 않고 그 자세로 바로 앉는다.
+      if (state.instant) {
+        pose.current.progress = next
+        apply.current(next)
+        return
+      }
       tween = gsap.to(pose.current, {
         progress: next,
         duration: CAREER_TURN_SECONDS,
         ease: CAREER_TURN_EASE,
         onUpdate: () => apply.current(pose.current.progress),
       })
-    })
+    }
+
+    // 지금 값과 먼저 맞춘다. 구독은 값이 **바뀌는 순간**만 받으므로, 그 전에 켜진 신호는 놓친다.
+    sync(useCareerSequenceStore.getState())
+    const unsubscribe = useCareerSequenceStore.subscribe(sync)
 
     return () => {
       tween?.kill()
       unsubscribe()
     }
-  }, [])
+  }, [forced])
 }

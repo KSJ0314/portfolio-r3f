@@ -1,0 +1,1 @@
+export { SidePanelProfile } from './SidePanelProfile'
