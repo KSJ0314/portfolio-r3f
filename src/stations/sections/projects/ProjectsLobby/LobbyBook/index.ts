@@ -1,4 +1,5 @@
 export { applyPageText } from './LobbyBook.pageText'
 export { useLobbyBookPages } from './useLobbyBookPages'
-export { LOBBY_BOOK_TRIGGER } from './LobbyBook.constants'
-export type { LobbyPageMargin, LobbyProject } from './LobbyBook.types'
+export { findBookSpot } from './LobbyBook.spots'
+export { LOBBY_BOOK_TRIGGER, LOBBY_PAGE_MESHES } from './LobbyBook.constants'
+export type { LobbyBookSpot, LobbyPageMargin, LobbyProject } from './LobbyBook.types'
