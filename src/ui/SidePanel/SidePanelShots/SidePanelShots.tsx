@@ -11,6 +11,7 @@ import {
   DownloadButton,
   Frame,
   Head,
+  Hint,
   JumpArea,
   LinkArea,
   NavButton,
@@ -75,6 +76,7 @@ export function SidePanelShots({ onJump }: SidePanelShotsProps) {
     <Section>
       <Head>
         <Title>주요 화면</Title>
+        <Hint>하단 이미지를 클릭하시면 해당 스테이션으로 이동됩니다.</Hint>
         <DownloadButton
           type="button"
           $ratio={pdfRatio}

@@ -2,6 +2,7 @@ import styled from 'styled-components'
 import {
   HANDLE_HEIGHT,
   HANDLE_WIDTH,
+  PANEL_WIDTH_COARSE_VW,
   PANEL_WIDTH_VW,
   PANEL_Z,
   SLIDE_SECONDS,
@@ -24,9 +25,9 @@ export const Slider = styled.div<{ $open: boolean }>`
   transform: translateX(${({ $open }) => ($open ? '0' : `-${PANEL_WIDTH_VW}vw`)});
   transition: transform ${SLIDE_SECONDS}s ease;
 
-  /* 마우스 없는 기기에서는 패널이 화면을 가득 채우므로 접는 거리도 그만큼이다. */
+  /* 마우스 없는 기기에서는 패널이 더 넓으므로 접는 거리도 그만큼이다. */
   @media (pointer: coarse) {
-    transform: translateX(${({ $open }) => ($open ? '0' : '-100vw')});
+    transform: translateX(${({ $open }) => ($open ? '0' : `-${PANEL_WIDTH_COARSE_VW}vw`)});
   }
 `
 
@@ -35,7 +36,7 @@ export const Slider = styled.div<{ $open: boolean }>`
  *
  * **안쪽 크기의 기준이 되는 컨테이너다.** 글자·여백을 px로 적으면 패널 폭은 화면을 따라 늘어나는데
  * 내용만 그대로라 넓은 화면에서 성기고 좁은 화면에서 넘친다. 안쪽은 `cqw`(이 폭의 %)로 적어
- * 패널이 몇 퍼센트든, 폰에서 화면을 가득 채우든 같은 인상이 나온다.
+ * 패널이 몇 퍼센트든 같은 인상이 나온다.
  */
 export const Panel = styled.aside`
   container-type: inline-size;
@@ -49,9 +50,9 @@ export const Panel = styled.aside`
   font-family: ${({ theme }) => theme.fonts.body};
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.28);
 
-  /* 손가락으로 쓰는 기기에서는 30%가 글을 읽기에 너무 좁아 화면을 가득 채운다. */
+  /* 손가락으로 쓰는 기기에서는 화면이 좁아 글을 읽을 만큼 폭을 넓힌다. */
   @media (pointer: coarse) {
-    width: 100vw;
+    width: ${PANEL_WIDTH_COARSE_VW}vw;
   }
 `
 
