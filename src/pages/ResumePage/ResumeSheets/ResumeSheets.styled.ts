@@ -54,6 +54,8 @@ export const SheetFrame = styled.div`
 export const Sheet = styled.section`
   /* 쌓아 놓은 장이 스크롤 안에서 눌리지 않도록 줄어들지 않게 둔다. */
   flex: 0 0 auto;
+  /* 쪽 번호가 이 안의 아래 여백에 자리를 잡는다. */
+  position: relative;
   width: ${SHEET_WIDTH}px;
   aspect-ratio: ${A4_WIDTH_MM} / ${A4_HEIGHT_MM};
   padding: ${SHEET_PADDING}px;
@@ -93,6 +95,23 @@ export const MeasureSheet = styled(Sheet).attrs({ as: 'div' })`
   @media print {
     display: none;
   }
+`
+
+/**
+ * 장 아래에 찍는 쪽 번호.
+ *
+ * **장의 아래 여백 안에 띄운다.** 본문 흐름에 두면 그만큼 담을 높이가 줄어드는데,
+ * 페이지를 나누는 쪽은 여백을 뺀 높이를 다 쓸 수 있다고 보고 세므로 마지막 블록이 넘친다.
+ */
+export const PageNumber = styled.span`
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: ${Math.round(SHEET_PADDING / 2)}px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1;
+  color: #696969;
 `
 
 /**
