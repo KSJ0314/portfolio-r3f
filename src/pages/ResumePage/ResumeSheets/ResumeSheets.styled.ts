@@ -5,6 +5,7 @@ import {
   BLOCK_GAP,
   ITEM_GAP,
   SHEET_PADDING,
+  SHEET_SCREEN_SCALES,
   SHEET_WIDTH,
 } from '../ResumePage.constants'
 
@@ -18,6 +19,15 @@ const PX_PER_MM = 96 / 25.4
  * 화면에서 보는 그림이 그대로 종이에 앉는다.
  */
 const PRINT_SCALE = (A4_WIDTH_MM * PX_PER_MM) / SHEET_WIDTH
+
+/**
+ * 화면 너비 구간별 `zoom` 규칙(`SHEET_SCREEN_SCALES`). 너비가 큰 구간이 뒤에 오므로 조건이 겹치면 뒤 규칙이 적용된다.
+ * `@media screen`으로 한정해 인쇄 배율과 충돌하지 않는다.
+ * `transform`은 레이아웃 크기가 그대로 남아 페이지 간격이 틀어지므로 `zoom`을 사용한다.
+ */
+const SCREEN_ZOOM = SHEET_SCREEN_SCALES.map(
+  ({ minWidth, scale }) => `@media screen and (min-width: ${minWidth}px) { zoom: ${scale}; }`,
+).join('\n')
 
 /**
  * 인쇄에서 한 페이지 자리를 차지하고 페이지를 끊는 틀.
@@ -54,6 +64,8 @@ export const SheetFrame = styled.div`
 export const Sheet = styled.section`
   /* 쌓아 놓은 장이 스크롤 안에서 눌리지 않도록 줄어들지 않게 둔다. */
   flex: 0 0 auto;
+  /* 쪽 번호가 이 안의 아래 여백에 자리를 잡는다. */
+  position: relative;
   width: ${SHEET_WIDTH}px;
   aspect-ratio: ${A4_WIDTH_MM} / ${A4_HEIGHT_MM};
   padding: ${SHEET_PADDING}px;
@@ -63,6 +75,8 @@ export const Sheet = styled.section`
   background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.border};
   box-shadow: 0 2px 12px rgb(0 0 0 / 8%);
+
+  ${SCREEN_ZOOM}
 
   @media print {
     border: none;
@@ -90,9 +104,31 @@ export const MeasureSheet = styled(Sheet).attrs({ as: 'div' })`
   border: none;
   box-shadow: none;
 
+  /* 화면 배율은 실제 페이지에만 적용한다. 측정용 요소에도 적용하면 측정 높이가 배율에 따라 달라진다. */
+  @media screen {
+    zoom: 1;
+  }
+
   @media print {
     display: none;
   }
+`
+
+/**
+ * 장 아래에 찍는 쪽 번호.
+ *
+ * **장의 아래 여백 안에 띄운다.** 본문 흐름에 두면 그만큼 담을 높이가 줄어드는데,
+ * 페이지를 나누는 쪽은 여백을 뺀 높이를 다 쓸 수 있다고 보고 세므로 마지막 블록이 넘친다.
+ */
+export const PageNumber = styled.span`
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: ${Math.round(SHEET_PADDING / 2)}px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1;
+  color: #696969;
 `
 
 /**

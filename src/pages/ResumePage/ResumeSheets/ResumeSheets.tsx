@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { usePagination } from './ResumeSheets.hooks'
-import { Block, MeasureSheet, Sheet, SheetFrame } from './ResumeSheets.styled'
+import { Block, MeasureSheet, PageNumber, Sheet, SheetFrame } from './ResumeSheets.styled'
 import type { ResumeSheetsProps } from './ResumeSheets.types'
 
 /**
@@ -29,13 +29,18 @@ export function ResumeSheets({ blocks }: ResumeSheetsProps) {
         <SheetFrame key={page}>
           <Sheet>
             {indexes.map((index) => {
-              const { key, tight, node } = blocks[index]
+              const { key, tight, anchor, node } = blocks[index]
               return (
-                <Block key={key} $tight={tight}>
+                // 옮겨 올 자리는 여기에만 둔다. 높이를 재는 자리에도 두면 id가 둘이라
+                // 화면 밖에 그려 둔 쪽으로 옮겨 간다.
+                <Block key={key} id={anchor} $tight={tight}>
                   {node}
                 </Block>
               )
             })}
+            <PageNumber>
+              {page + 1} / {pages.length}
+            </PageNumber>
           </Sheet>
         </SheetFrame>
       ))}

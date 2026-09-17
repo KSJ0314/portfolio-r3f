@@ -7,10 +7,14 @@ export const Section = styled.section`
   gap: 1.7cqw;
 `
 
-/** 제목과 내려받기가 나란히 서는 줄. 버튼은 제목 바로 오른쪽에 붙는다. */
+/**
+ * 제목과 안내, 내려받기가 나란히 서는 줄. 버튼은 줄 오른쪽 끝에 놓인다.
+ *
+ * 크기가 다른 제목과 안내 글씨를 같은 밑선에 세운다. 가운데로 맞추면 작은 글씨가 떠 보인다.
+ */
 export const Head = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 1.7cqw;
 `
 
@@ -18,6 +22,14 @@ export const Title = styled.h2`
   font-family: ${({ theme }) => theme.fonts.hand};
   font-size: 3.5cqw;
   font-weight: 400;
+`
+
+/** 그림을 누르면 그 화면으로 간다는 안내. 제목 옆에 작고 연하게 둔다. */
+export const Hint = styled.span`
+  /* 남는 자리를 여기서 먹어 내려받기 버튼을 줄 끝으로 민다. */
+  margin-right: auto;
+  font-size: 1.9cqw;
+  opacity: 0.65;
 `
 
 /** 아직 구우는 중일 때 자리를 지키는 안내. 그림 자리가 비었다 차면 목록이 흔들린다. */
@@ -142,6 +154,7 @@ export const Count = styled.p`
  * 테두리 자리에만 진행률을 그린다(`border-box`). 요소를 더 얹지 않아 아이콘 자리가 그대로다.
  */
 export const DownloadButton = styled.button<{ $ratio: number }>`
+  align-self: center;
   width: 4.5cqw;
   height: 4.5cqw;
   display: grid;

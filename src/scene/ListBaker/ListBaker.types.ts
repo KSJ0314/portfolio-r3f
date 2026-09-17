@@ -44,10 +44,14 @@ export type ListShotLink =
  * 누르는 쪽이 id 문자열(`skills-2`)을 뜯어보지 않도록 굽는 쪽이 만들어 싣는다.
  * 프로젝트는 칸 번호가 아니라 **문서 id**로 가리킨다 — 굽는 쪽과 전시 공간이 정렬 기준이 달라
  * (여기는 `order`와 문서 id, 전시 공간은 `order`) 번호가 어긋날 수 있다.
+ *
+ * 로비 책처럼 Firestore를 읽지 않는 쪽은 문서 id를 모르므로 프로젝트 번호(`key`)로 가리킨다.
+ * 둘을 한 갈래에 담지 않는 것은 한쪽만 채워진 값이 생기지 않게 하기 위함이다.
  */
 export type ListShotTarget =
   | { kind: 'station'; id: string; page?: number }
   | { kind: 'project'; projectId: string; page: number }
+  | { kind: 'project'; projectKey: number; page: number }
 
 /** 구운 한 장. `url`은 blob 주소라 쓰는 쪽이 화면을 떠날 때 되돌린다. */
 export interface ListShot {

@@ -11,8 +11,8 @@ import type { GalleryJumpProps } from './GalleryJump.types'
  * **액자를 다 측정한 뒤에** 연다 — 칸 앞에 세울 자리도, 확대할 대상도 그 값에서 나온다.
  * 방은 Firestore 개수만큼 조립하므로 마운트 시점에는 아직 잰 것이 없다.
  *
- * 칸은 번호가 아니라 **문서 id**로 찾는다. 굽는 쪽과 여기가 정렬 기준이 달라 번호로 주고받으면
- * 어긋날 수 있다.
+ * 칸은 **문서 id**로 찾는다. 굽는 쪽과 여기가 정렬 기준이 달라 칸 번호로 주고받으면 어긋날 수 있다.
+ * 로비 책은 Firestore를 읽지 않아 문서 id를 모르므로 프로젝트 번호(`key`)로 찾는다.
  */
 export function GalleryJump({ projects }: GalleryJumpProps) {
   const artworks = useGalleryGeometryStore((s) => s.artworks)
@@ -24,7 +24,10 @@ export function GalleryJump({ projects }: GalleryJumpProps) {
 
     // 칸과 액자를 먼저 찾는다. 읽기가 실패해 대체 칸이 선 상태에서 목적지를 먼저 꺼내면,
     // 그 자리에서 열지도 못하고 재시도가 성공했을 때 꺼낼 것도 남지 않는다.
-    const bay = projects.findIndex((project) => project.id === pending.projectId)
+    const bay =
+      'projectId' in pending
+        ? projects.findIndex((project) => project.id === pending.projectId)
+        : projects.findIndex((project) => project.key === pending.projectKey)
     const artwork = artworks[bay]
     if (!artwork) return
 

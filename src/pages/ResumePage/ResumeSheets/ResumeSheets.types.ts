@@ -9,6 +9,8 @@ export interface ResumeBlock {
   tight?: boolean
   /** 앞 장에 자리가 남아도 새 장에서 시작할지. 프로젝트처럼 장을 나눠 읽는 항목이 쓴다. */
   breakBefore?: boolean
+  /** 눌러서 옮겨 올 자리의 id. 목록에서 짚어 가는 블록만 갖는다. */
+  anchor?: string
   node: ReactNode
 }
 

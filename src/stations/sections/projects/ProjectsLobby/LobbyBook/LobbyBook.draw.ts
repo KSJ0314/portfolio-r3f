@@ -5,7 +5,7 @@ import {
   LOBBY_BOOK_PAPER,
   LOBBY_BOOK_TYPE,
 } from './LobbyBook.constants'
-import type { LobbyPageMargin, LobbyProject } from './LobbyBook.types'
+import type { LobbyBookSpot, LobbyPageMargin, LobbyProject } from './LobbyBook.types'
 
 /**
  * 책 페이지에 글을 그린다.
@@ -111,14 +111,20 @@ export function drawWelcomePage(canvas: HTMLCanvasElement, margin: LobbyPageMarg
   }
 }
 
-/** 오른쪽 페이지 — 전시 중인 프로젝트 목록. */
+/**
+ * 오른쪽 페이지 — 전시 중인 프로젝트 목록.
+ *
+ * 항목마다 차지한 세로 구간을 돌려준다. 누를 자리를 재는 쪽은 그리는 규칙을 모르므로
+ * 여기서 함께 모은다. 자리가 모자라 그리지 못한 항목은 빠지고, 그 항목은 누를 수도 없다.
+ */
 export function drawProjectsPage(
   canvas: HTMLCanvasElement,
   margin: LobbyPageMargin,
-  projects: LobbyProject[],
-): void {
+  projects: readonly LobbyProject[],
+): LobbyBookSpot[] {
+  const spots: LobbyBookSpot[] = []
   const ctx = canvas.getContext('2d')
-  if (!ctx) return
+  if (!ctx) return spots
   clear(ctx, canvas)
 
   const area = toArea(canvas, margin)
@@ -132,6 +138,7 @@ export function drawProjectsPage(
     // 안전 영역을 넘기면 거기서 멈춘다. 잘려 나온 글은 없느니만 못하다.
     if (y + titleSize + summaryLine > area.y + area.height) break
 
+    const top = y
     ctx.fillStyle = LOBBY_BOOK_INK
     ctx.font = `${titleSize}px ${BODY}`
     ctx.fillText(project.title, area.x, y)
@@ -139,13 +146,22 @@ export function drawProjectsPage(
 
     ctx.fillStyle = LOBBY_BOOK_INK_SOFT
     ctx.font = `${summarySize}px ${BODY}`
-    for (const line of wrap(ctx, project.summary ?? '', area.width)) {
-      if (y + summaryLine > area.y + area.height) break
-      ctx.fillText(line, area.x, y)
-      y += summaryLine
+    // 적어 둔 줄바꿈을 먼저 살리고, 그러고도 폭을 넘는 줄만 `wrap`이 접는다.
+    // 템플릿 리터럴로 쓰므로 들여쓴 공백이 글자로 들어온다.
+    for (const paragraph of project.summary.split('\n')) {
+      for (const line of wrap(ctx, paragraph.trim(), area.width)) {
+        if (y + summaryLine > area.y + area.height) break
+        ctx.fillText(line, area.x, y)
+        y += summaryLine
+      }
     }
+
+    // 누를 자리는 글이 놓인 데까지다. 항목 사이 여백까지 넣으면 빈 곳을 눌러도 걸린다.
+    spots.push({ key: project.key, top: top / canvas.height, bottom: y / canvas.height })
     y += area.height * type.itemGap
   }
+
+  return spots
 }
 
 /** 폰트를 미리 받아 둔다. 준비 전에 그리면 조용히 기본 글꼴로 나온다. */
