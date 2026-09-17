@@ -178,8 +178,12 @@ export function GalleryModel({ bays }: GalleryModelProps) {
 
   useEffect(() => {
     setGeometry(triggers, bounds, plates, artworks)
-    return () => clearGeometry()
-  }, [triggers, bounds, plates, artworks, setGeometry, clearGeometry])
+  }, [triggers, bounds, plates, artworks, setGeometry])
+
+  // 비우는 것은 **떠날 때만** 한다. 다시 잴 때마다 비우면 새 값이 들어가기 전까지 잰 것이 없는
+  // 구간이 생기고, 그것을 보는 쪽이 칸을 열지 못하거나(`GalleryJump`) 확대를 되감는다
+  // (`GalleryCameraRig`). 두 번의 유효한 측정 사이를 비워 둘 이유는 없다.
+  useEffect(() => () => clearGeometry(), [clearGeometry])
 
   return (
     <>

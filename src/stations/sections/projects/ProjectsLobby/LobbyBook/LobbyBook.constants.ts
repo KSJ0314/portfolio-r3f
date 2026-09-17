@@ -25,8 +25,8 @@ export const LOBBY_PAGE_MESHES = { left: 'Book_Page_L', right: 'Book_Page_R' }
  * 한쪽만 다시 재게 되는 날을 위해 페이지별로 둔다.
  */
 export const LOBBY_PAGE_MARGIN: Record<string, LobbyPageMargin> = {
-  [LOBBY_PAGE_MESHES.left]: { left: 0.25, right: 0.25, top: 0.15, bottom: 0.05 },
-  [LOBBY_PAGE_MESHES.right]: { left: 0.25, right: 0.25, top: 0.15, bottom: 0.05 },
+  [LOBBY_PAGE_MESHES.left]: { left: 0.24, right: 0.24, top: 0.15, bottom: 0.05 },
+  [LOBBY_PAGE_MESHES.right]: { left: 0.24, right: 0.24, top: 0.15, bottom: 0.05 },
 }
 
 /**
@@ -77,7 +77,7 @@ export const LOBBY_BOOK_TYPE = {
   /** 제목 아래 구분선까지의 간격. */
   titleGap: 0.1,
   /** 본문. */
-  bodySize: 0.038,
+  bodySize: 0.035,
   /** 본문 줄 간격(글자 크기 배수). */
   bodyLine: 1.6,
   /** 빈 줄이 만드는 문단 사이 여백(글자 크기 배수). */
@@ -85,7 +85,7 @@ export const LOBBY_BOOK_TYPE = {
   /** 목록의 제목. */
   itemTitleSize: 0.05,
   /** 목록의 요약. */
-  itemSummarySize: 0.034,
+  itemSummarySize: 0.028,
   /** 요약 줄 간격(글자 크기 배수). */
   itemSummaryLine: 1.5,
   /** 제목과 요약 사이 간격(안전 영역 높이 대비). */

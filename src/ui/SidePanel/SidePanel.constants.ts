@@ -2,9 +2,12 @@
  * 펼친 패널의 폭(화면 폭 대비 %).
  *
  * 화면 크기를 따라가므로 넓은 모니터에서 좁아 보이거나 작은 창에서 화면을 다 덮지 않는다.
- * 마우스 없는 기기에서는 이 값을 쓰지 않고 화면을 가득 채운다.
+ * 마우스 없는 기기는 이 값 대신 `PANEL_WIDTH_COARSE_VW`를 쓴다.
  */
 export const PANEL_WIDTH_VW = 40
+
+/** 손가락으로 쓰는 기기에서 펼친 패널의 폭(화면 폭 대비 %). */
+export const PANEL_WIDTH_COARSE_VW = 80
 
 /** 프로필 카드를 누르면 가는 스테이션. 카드에 담긴 것이 그 화면의 내용이다. */
 export const INTRO_STATION_ID = 'about-intro'

@@ -1,5 +1,4 @@
 import { useGLTF } from '@react-three/drei'
-import { COLLECTIONS, prefetchCollection } from '../../../../../lib/firebase'
 import { createLogger } from '../../../../../lib/logger'
 import { LOBBY_DRACO_PATH, LOBBY_MODEL_URL } from '../ProjectsLobby.constants'
 
@@ -9,8 +8,7 @@ const log = createLogger('asset:lobby')
 let started = false
 
 /**
- * 로비에 필요한 것을 미리 받아 둔다(그리는 것 없음). 모델과 함께 **연단 위 책이 싣는
- * `projects`** 도 읽어 둔다 — 넘어간 뒤에 읽기 시작하면 방은 떠 있는데 책만 늦게 채워진다.
+ * 로비 모델을 미리 받아 둔다(그리는 것 없음). 로비는 Firestore를 읽지 않아 모델만 받는다.
  *
  * 1.8MB라 앱이 뜰 때 받으면 첫 화면이 늦고, 전환을 시작한 뒤에 받기 시작하면 덮인 채로 오래 기다린다.
  * 그래서 건물 문 앞에 다가섰을 때 맵이 이것을 부른다.
@@ -22,8 +20,6 @@ let started = false
 export function preloadLobbyModel(): void {
   if (started) return
   started = true
-
-  prefetchCollection(COLLECTIONS.projects)
 
   log('내려받기 시작 %s', LOBBY_MODEL_URL)
   const start = performance.now()
