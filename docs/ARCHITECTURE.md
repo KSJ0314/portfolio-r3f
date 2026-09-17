@@ -42,7 +42,7 @@ _작성 예정_
       - `Stations` — 스테이션 배치 + 매 프레임 근접 판정(`nearId`) + 좌클릭 활성화(캔버스 `mousedown`을 직접 듣고 레이캐스트). **근접을 따지는 것은 `nearRadius`를 등록한 스테이션뿐이다**(건물 문처럼 들어가는 곳이 정해진 경우). 나머지는 어디에 서 있든 눌러서 열고 걸어서 멀어져도 닫히지 않는다. 그 구역을 벗어나 닫는 판단도 여기서 한다. 거리 재는 법은 스테이션이 등록한 `distanceTo`를 쓰고, 없으면 배치 좌표까지의 거리로 잰다. 배치 좌표가 없는 스테이션은 종이 위에 없으므로 근접 대상에서 빠진다. (DECISIONS 054)
         - `Station` — 레지스트리에 비활성 구현(`Inactive`)이 있으면 그것을 그리고, **없으면 아무것도 그리지 않는다**(종이 위에 놓을 그림이 정해지기 전이다). 배치 좌표가 없는 스테이션도 놓을 자리가 없어 그리지 않는다. 클릭 판정 대상은 `userData.stationId`를 실은 오브젝트이고 그것을 두는 것도 구현이다(판정은 `Stations`가 함). **경계는 스테이션마다 하나씩** 둬, 한 스테이션의 텍스처가 다른 스테이션을 붙잡지 않게 한다.
           - `AboutCareerInactive` — 클릭 판정 판 + 오려 붙인 종이 두 장(`CareerPaper` — 교육·자격증) + 트로피 모델(`CareerTrophy`). 종이끼리는 깊이를 쓰지 않고 `renderOrder`로 앞뒤를 못 박는다 — 반투명은 카메라 거리로 정렬돼, 아래쪽에 놓인 종이가 위로 올라온다. 트로피는 바닥 그림자를 따로 깐다(실루엣을 스텐실에 표시하고 그 자리만 한 겹 칠한다. DECISIONS 027). 셋은 활성 구현이 내는 차례 신호(`useCareerSequenceStore.logoTurn`)를 구독해 스스로 제 칸의 로고 자리로 물러난다.
-          - `ProjectsBuildingInactive` — 프로젝트 구역. **건물이 곧 스테이션**이고 전시대는 그 안의 내용이다(DECISIONS 031). 모델을 불러 앞문 한 장을 떼어 경첩에 매달고(`ProjectsBuilding.door`), 문간에 빛(`DoorGlow`)을 두며, 자기 발자국을 막는 사각형으로 올린다. 클릭 대상은 **문에 붙인 판 하나**뿐이고 건물 본체는 레이캐스트에서 뺀다. 문의 실제 자리·크기를 재서 `useProjectsDoorStore`에 올리므로 건물 크기를 바꿔도 판·표시·근접 구역이 따라온다(DECISIONS 033). 문 여닫힘은 `useProjectsSequenceStore`로 알린다. **문 앞에 서면 로비 모델과 `projects`를 함께 미리 받아 둔다** — 들어갈 때 덮개가 오래 덮여 있지 않게. 모델만 당겨 봐야 책이 싣는 데이터가 늦으면 그만큼 기다린다(DECISIONS 047).
+          - `ProjectsBuildingInactive` — 프로젝트 구역. **건물이 곧 스테이션**이고 전시대는 그 안의 내용이다(DECISIONS 031). 모델을 불러 앞문 한 장을 떼어 경첩에 매달고(`ProjectsBuilding.door`), 문간에 빛(`DoorGlow`)을 두며, 자기 발자국을 막는 사각형으로 올린다. 클릭 대상은 **문에 붙인 판 하나**뿐이고 건물 본체는 레이캐스트에서 뺀다. 문의 실제 자리·크기를 재서 `useProjectsDoorStore`에 올리므로 건물 크기를 바꿔도 판·표시·근접 구역이 따라온다(DECISIONS 033). 문 여닫힘은 `useProjectsSequenceStore`로 알린다. **문 앞에 서면 로비 모델을 미리 받아 둔다** — 들어갈 때 덮개가 오래 덮여 있지 않게(DECISIONS 047).
           - `AboutSkillsInactive` — 클릭 판정 판 + 공구함 스티커(`SkillsBox`). 스티커는 차례를 알리는 신호(`useSkillsSequenceStore.logoTurn`)를 구독해 스스로 줄어들어 영역 좌상단으로 물러나 로고가 된다. 전환을 활성 구현에 두지 않는 이유는 같은 오브젝트가 이어서 변형돼야 하기 때문이다. (DECISIONS 020)
       - `ActiveStationScene` — 활성 스테이션의 3D 상세 마운트 자리(레지스트리에 등록된 `Scene`). 상세는 **다 준비된 뒤 한 번에** 보여준다 — 스테이션이 `useStationGate`로 건 열쇠가 남아 있으면 마운트한 채 감춰, 그동안 텍스처를 굽고 글자 크기를 재는 일이 끝난다.
         - `AboutCareerScene` — 캐릭터 이동과 카메라 각도 전환. 캐릭터가 **가장 가까운 영역 테두리**로 걸어간 뒤, 카메라 회전과 그림들의 로고 전환이 **동시에** 돈다(영역 안에서 열면 이동을 건너뛴다). 완전히 활성인 동안 페이지 내용을 함께 그린다. (DECISIONS 026)
@@ -88,8 +88,8 @@ Canvas 밖(`MainPage`): `SceneGate` — 첫 화면 가림막. **진짜 첫 방�
   - `LobbyCharacter` — 실내 캐릭터(`interior/InteriorCharacter`). 맵과 같은 모델(`scene/CharacterModel`)을 쓰고 크기·밝기·톤 매핑만 방이 정한다. 매 프레임 목표점으로 고정 속도 이동하고, 밟는 바닥에 레이캐스트해 높이를 정한다. 막는 것에 겹치면 밀려난다.
   - `LobbyCameraRig` — 제한된 기준점을 따라간다. 좌우는 **방 좌우 끝에서 화면이 덮는 폭만큼 물러선** 범위이고(전시 공간과 같은 방식. 방 끝은 `LobbyModel`이 1층 바닥에서 재 `useLobbyGeometryStore.bounds`에 올린다), 앞뒤는 계단 중턱을 넘어선 뒤 그 몫의 절반만. 트리거를 열면 **한 진행도**로 기준점·오프셋·비켜 놓기를 함께 보간한다. 자세를 다 잡은 뒤 월드 행렬을 마무리한다 — `lookAt`이 행렬을 굳혀, 그 뒤의 비켜 놓기가 같은 프레임의 조준에 반영되지 않는다. (DECISIONS 037)
   - `LobbyInput` — 우클릭 홀드 이동(맵과 조작 규칙이 같다). 밟는 바닥을 맞히면 그 지점, 못 맞히면 캐릭터 높이의 평면으로 받는다. 계단을 찍으면 **가장 가까운 단 중앙**에 선다. 전환 중이거나 트리거를 보고 있는 동안에는 입력을 받지 않는다.
-  - `LobbyTriggers` — 모델에서 잰 자리에 누를 판을 세운다. 마우스 커서·클릭 표시(맵과 같은 둥둥 뜨는 표시)를 붙이고, **한 번이라도 연 트리거에는 표시를 걷는다.** 문에는 표시를 두지 않는다.
-  - `LobbyBook/` — 연단 위 펼친 책. 페이지 메시를 **글 쓰는 면과 옆면**으로 갈라 앞쪽에만 캔버스 텍스처를 얹는다. 왼쪽은 전시관 소개, 오른쪽은 Firestore `projects`를 `order`순으로 흘려 넣는다. (DECISIONS 038)
+  - `LobbyTriggers` — 모델에서 잰 자리에 누를 판을 세운다. 마우스 커서·클릭 표시(맵과 같은 둥둥 뜨는 표시)를 붙이고, **한 번이라도 연 트리거에는 표시를 걷는다.** 문에는 표시를 두지 않는다. **책을 보는 동안의 클릭은 닫기보다 오른쪽 페이지를 먼저 본다** — 페이지 메시를 레이캐스트해 교차점 UV가 목록 항목에 들면 그 전시 칸으로 이동하고(`stations/jump`), 아니면 기존대로 닫는다. 같은 판정으로 항목 위에서 손가락 커서를 켠다.
+  - `LobbyBook/` — 연단 위 펼친 책. 페이지 메시를 **글 쓰는 면과 옆면**으로 갈라 앞쪽에만 캔버스 텍스처를 얹는다. 왼쪽은 전시관 소개, 오른쪽은 `LobbyBook.content`의 프로젝트 목록 상수(`LOBBY_BOOK_PROJECTS`)를 적힌 순서대로 그린다. 그리면서 항목마다 차지한 세로 구간을 `LobbyBook.spots`에 모아 두고, 누르는 쪽이 그것으로 항목을 찾는다. (DECISIONS 038)
   - `LobbyColliderView` — 개발용. 막는 것을 단색으로 그려 눈으로 확인한다.
 
 Canvas 밖(`pages/ProjectsLobbyPage`): `BackButton`(좌상단 — 책을 보고 있으면 `Back`, 아니면 `Go home`) · `LobbyPageHUD`(dev 전용 튜닝 패널). ESC도 버튼과 같은 판단(`goBack`)을 탄다.
@@ -121,8 +121,8 @@ Canvas 밖(`pages/ProjectsGalleryPage`): `BackButton`(좌상단) · `GalleryPage
 3D를 거치지 않고 읽는 A4 문서 화면이다. **포트폴리오와 주소를 나눠 제출하므로 서로의 코드를 참조하지 않는다.** 씬도 Canvas도 없어 전용 스토어를 두지 않는다.
 
 - `ResumePage`(`pages/`) — Firestore를 읽어 **블록 목록**을 조립하는 데까지만 담당한다. 영역 하나가 블록 하나이고, 프로젝트만 항목마다 블록을 둬 분량이 넘치면 그 갈래부터 다음 장에서 이어진다. 읽어 온 문서가 없는 영역은 제목까지 두지 않는다.
-  - `ResumeSheets` — 블록을 A4 장에 나눠 담아 쌓는다. 높이는 글자 수·줄바꿈·글꼴에 따라 달라져 미리 알 수 없으므로 **화면 밖 같은 폭·여백의 자리(`MeasureSheet`)에서 측정**하고, 한 장을 넘기는 블록은 분할하지 않고 다음 장에서 시작한다. `breakBefore`를 지정한 블록은 자리가 남아도 새 장에서 연다. 데이터가 늦게 도착하거나 글꼴이 뒤늦게 적용되면 높이가 달라지므로 `ResizeObserver`·`document.fonts.ready`를 보고 다시 나눈다. (DECISIONS 058)
-  - `ResumeHeader` · `ResumeCoverLetter` · `ResumeExperience` · `ResumeEducation` · `ResumeAward` · `ResumeSkill` · `ResumeSpec` · `ResumeProject` — 영역을 그리는 전용 컴포넌트. 기간과 내용을 두 칸으로 배치하는 `ResumePeriodEntry`와 항목 사이 선(`ResumeDivider`)을 함께 쓴다.
+  - `ResumeSheets` — 블록을 A4 장에 나눠 담아 쌓는다. 높이는 글자 수·줄바꿈·글꼴에 따라 달라져 미리 알 수 없으므로 **화면 밖 같은 폭·여백의 자리(`MeasureSheet`)에서 측정**하고, 한 장을 넘기는 블록은 분할하지 않고 다음 장에서 시작한다. `breakBefore`를 지정한 블록은 자리가 남아도 새 장에서 연다. 데이터가 늦게 도착하거나 글꼴이 뒤늦게 적용되면 높이가 달라지므로 `ResizeObserver`·`document.fonts.ready`를 보고 다시 나눈다. 블록에 `anchor`가 있으면 실제 장에만 `id`로 붙여 목차에서 스크롤해 올 자리로 쓴다. 장마다 아래 여백 안에 `현재 / 전체` 페이지 번호를 절대 위치로 둬 분할 높이에 끼어들지 않게 한다. (DECISIONS 058)
+  - `ResumeHeader` · `ResumeCoverLetter` · `ResumeExperience` · `ResumeEducation` · `ResumeAward` · `ResumeSkill` · `ResumeSpec` · `ResumeProjectList` · `ResumeProject` — 영역을 그리는 전용 컴포넌트. `ResumeProjectList`는 프로젝트 영역 머리의 목차로, 프로젝트명을 누르면 해당 프로젝트 블록으로 스크롤한다. 기간과 내용을 두 칸으로 배치하는 `ResumePeriodEntry`와 항목 사이 선(`ResumeDivider`)을 함께 쓴다.
   - `ResumeDownload` — 우측 하단 PDF 저장 버튼과 인쇄 전용 전역 스타일(`ResumePrintStyle`). (DECISIONS 059)
   - `ResumePrintUrl` — 인쇄에서만 나오는 이력서 주소. `ResumeHeader` 안에 두고 상단 여백으로 올려 이후 내용의 위치를 바꾸지 않는다. 머리가 첫 블록이므로 첫 페이지에만 표시된다. (DECISIONS 059)
 
@@ -149,8 +149,9 @@ Canvas 밖: `ResumeDownload`(우측 하단 · 공용 `ui/CornerButton`). 종이 
   이동하므로, 그 두 판은 전파를 중단해 이동 없이 제 동작만 한다. PDF는 누른 뒤가 아니라 이미지가 다 만들어지는
   대로 미리 묶어두고, 그동안 내려받기 버튼 테두리에 진행률을 표시한다.
 - **안쪽 크기는 패널 폭 대비(`cqw`)다.** 패널에 `container-type: inline-size`를 걸어 컨테이너로 삼는다.
-  px로 적으면 패널 폭은 화면을 따라 늘어나는데 내용만 그대로이고, `vw`로 적으면 마우스 없는 기기에서 패널이
-  화면을 가득 채울 때 글자만 함께 커진다.
+  px로 적으면 패널 폭은 화면을 따라 늘어나는데 내용만 그대로다. 패널 폭은 `PANEL_WIDTH_VW`이고, 마우스 없는
+  기기(`pointer: coarse`)는 `PANEL_WIDTH_COARSE_VW`로 따로 둔다. 안쪽이 패널 폭을 따라가므로 이 값을 바꾸면
+  글자·사진 크기도 함께 바뀐다.
 - 층위는 105다. 좌상단 뒤로 가기(100)보다 위이고, 가로 회전 안내(110)와 전환 덮개(200)보다 아래다.
 
 만들어 둔 이미지는 `useListShotsStore`에 담긴다. **만들기는 첫 화면이 준비된 뒤 시작한다** — 그 전에는
@@ -174,7 +175,8 @@ Canvas 밖: `ResumeDownload`(우측 하단 · 공용 `ui/CornerButton`). 종이 
 곧바로 활성으로 둬 진입 연출이 재생되지 않고, 전시 칸은 라우트가 갈리므로 목적지를 남겨 두고 도착한 쪽
 (`GalleryJump`)이 액자를 측정한 뒤 꺼내 연다. 어느 화면에 있는지는 주소를 아는 사이드바가 판단하고 씬은
 주소를 알지 못한다. 프로젝트는 칸 번호가 아니라 **문서 id**로 가리킨다 — 만드는 쪽과 전시 공간의 정렬 기준이
-달라 번호로 주고받으면 어긋난다.
+달라 번호로 주고받으면 어긋난다. 로비 책에서 가는 길은 Firestore를 읽지 않아 문서 id를 모르므로 프로젝트
+번호(`key`)로 가리키고, `GalleryJump`가 받은 갈래에 따라 칸을 찾는다.
 
 ## 상태 관리 (zustand)
 

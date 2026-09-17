@@ -11,7 +11,7 @@
 - `about-intro` → profile
 - `about-skills` → skills
 - `about-career` → education · awards · spec
-- `projects` → projects (건물 **안**에서도 읽는다 — 로비 책 오른쪽 페이지가 `order`순으로 목록을 싣는다)
+- `projects` → projects (건물 **안**에서도 읽는다 — 전시 공간이 문서 개수로 칸을 세우고 이름판에 제목을 적는다)
 - `guestbook` → guestbook
 
 `awards`는 원래 `about-award` 몫이었으나 Career의 칸 구성이 교육·수상내역·자격증이라 그쪽으로 옮기고
@@ -103,8 +103,6 @@
 
 **projects** (프로젝트 1개 = 문서 1개). **문서 개수가 곧 건물 안 전시대 개수**다 — 프로젝트마다 스테이션을 두지 않으므로 문서를 더하는 것으로 프로젝트가 늘어난다. ([DECISIONS 031])
 
-**로비 책 오른쪽 페이지**가 같은 컬렉션을 `order`순으로 읽어 `title`·`summary`를 싣는다 — 전시대에 들어가기 전 목차 노릇이다.
-
 | 필드 | 타입 | 설명 |
 |---|---|---|
 | `title` | string | 프로젝트명 |
@@ -117,7 +115,7 @@
 
 Firebase는 다른 프로젝트와도 공유하는 DB라 최소 정보만 둔다. 상세 필드를 로컬에 두기로 한 것([DECISIONS 012])은
 Phase 8에서 **데이터가 아니라 페이지 컴포넌트**로 확정됐다 — 전시 칸에 보이는 글은 컬렉션이 아니라
-`contents/<key>/`에 직접 쓰고, Firestore가 맡는 것은 칸 개수·이름판 이름·로비 책 목록·`key`다. ([DECISIONS 040])
+`contents/<key>/`에 직접 쓰고, Firestore가 맡는 것은 칸 개수·이름판 이름·`key`다. ([DECISIONS 040])
 
 **resume** (지원처 1곳 = 문서 1개). **문서 id가 곧 이력서 주소의 뒷자리**다 — `/resume/<문서 id>`.
 
