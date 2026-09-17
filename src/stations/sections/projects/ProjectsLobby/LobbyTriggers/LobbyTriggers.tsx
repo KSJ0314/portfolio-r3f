@@ -171,9 +171,15 @@ export function LobbyTriggers() {
       if (bookSpotAt(scene)) bookCursorRef.current.onPointerOver?.()
       else bookCursorRef.current.onPointerOut?.()
     }
+    // 항목 위에서 캔버스 밖으로 나가면 `pointermove`가 더 오지 않아 커서가 남으므로 여기서 해제한다.
+    const onPointerLeave = () => bookCursorRef.current.onPointerOut?.()
 
     canvas.addEventListener('pointermove', onPointerMove)
-    return () => canvas.removeEventListener('pointermove', onPointerMove)
+    canvas.addEventListener('pointerleave', onPointerLeave)
+    return () => {
+      canvas.removeEventListener('pointermove', onPointerMove)
+      canvas.removeEventListener('pointerleave', onPointerLeave)
+    }
   }, [activeId, camera, gl, scene])
 
   return (
