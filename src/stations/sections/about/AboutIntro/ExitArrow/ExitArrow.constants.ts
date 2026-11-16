@@ -6,14 +6,14 @@ import type { CrayonDrawing } from '../../../../../lib/Crayon'
  */
 export const EXIT_ARROW = {
   /** 화살표의 길이. 화살촉 크기는 여기에 비례한다. */
-  size: 1.25,
+  size: 1.5,
   /** 페이지 오른쪽 끝에서 얼마나 들일지. */
-  right: 0.05,
+  right: 0.06,
   /** 페이지 아래 끝에서 얼마나 올릴지. */
-  bottom: 0.7,
+  bottom: 0.84,
   color: '#55bcf0',
   /** 크레파스 획 굵기(월드 단위). */
-  strokeWidth: 0.135,
+  strokeWidth: 0.162,
   roughness: 0.55,
   opacity: 0.7,
 } as const
