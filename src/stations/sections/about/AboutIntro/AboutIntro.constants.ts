@@ -65,7 +65,7 @@ export const CONTENT_Y = 0.02
 export const INK = '#3a3a3a'
 
 /** Intro 페이지 영역. 개발용 HUD(IntroPageHUD)로 정면뷰에서 맞춘 값이다. */
-export const DEFAULT_INTRO_PAGE_AREA: StationArea = { width: 11, height: 6.5 }
+export const DEFAULT_INTRO_PAGE_AREA: StationArea = { width: 13.2, height: 7.8 }
 
 /** 캐릭터가 서는 자리(월드 x, z). 페이지 바깥 아래쪽이다. */
 export const INTRO_STAND: readonly [number, number] = [0, 5]
@@ -74,19 +74,19 @@ export const INTRO_STAND: readonly [number, number] = [0, 5]
 export const DEFAULT_INTRO_PAGE_LAYOUT: IntroPageLayout = {
   paddingX: 0,
   paddingY: 0,
-  taglineTop: 0.75,
-  taglineSize: 0.5,
-  introTop: 0.6,
-  introLeft: 1.25,
-  introSize: 0.26,
+  taglineTop: 0.9,
+  taglineSize: 0.6,
+  introTop: 0.72,
+  introLeft: 1.5,
+  introSize: 0.312,
   introLineHeight: 1.6,
-  quoteBarWidth: 0.06,
-  quoteBarGap: 0.3,
+  quoteBarWidth: 0.072,
+  quoteBarGap: 0.36,
   photoBottom: 0,
-  photoHeight: 3.3,
-  contactTop: 0.7,
-  contactSize: 0.2,
-  contactGap: 0.18,
+  photoHeight: 3.96,
+  contactTop: 0.84,
+  contactSize: 0.24,
+  contactGap: 0.216,
   contactLineHeight: 1.7,
   // 화살표 자체의 값은 화살표가 갖는다. 여기서는 페이지 배치 기본값으로 실어 HUD에 넘길 뿐이다.
   exitArrowSize: EXIT_ARROW.size,
